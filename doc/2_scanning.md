@@ -62,8 +62,23 @@ $\epsilon$-transition is a transition that may occur without consulting the inpu
 
 ```mermaid
 graph LR
-    A(( ))-- $\epsilon$ --> B(( ))
+    A(( ))-- e --> B(( ))
 ```
 
+$\epsilon$-transitions are somewhat counterintuitive, since they may occur "spontaneously," that is, without lookahead and without change to the input string, but they are useful in two ways.
+  
+  1. They can express a choice of alternatives in a way that does not involve combining states.
+     This has the advantage of keeping the original automata intact and only adding a new start state to connect them.
+```mermaid
+graph LR;
+    A(( ))-- e -->B(( ))-- : -->C(( ))-- = -->D(return ASSIGN);
+    A(( ))-- e -->E(( ))-- < -->F(( ))-- = -->G(return LE);
+    A(( ))-- e -->H(( ))-- = -->I(Return EQ);
+```
+
+  2. They can explicitly describe a match of the empty string
+
+
+An NFA $M$ consists of an alphabet $\Sigma$, a set of state $S$, a transition function $T: S \times (\Sigma \cup \{\epsilon\})\rightarrow \wp(S)$, a start state $s_0$ from $S$, and a set of accepting state $A$ from $S$. The language accepted by $M$, written $L(M)$, is defined to be the set of strings of characters $c_1c_2\dots c_n$ with each $c_i$ from $\Sigma \cup \{\epsilon\}$ such that there exist states $s_1$ in $T(s_0, c_1)$, $s_2$ in $T(s_1,c_2) \dots, s_n$ in $T(s_{n-1},c_n)$ with $s_n$ an element of $A$.
 
 
