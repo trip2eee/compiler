@@ -31,7 +31,7 @@ typedef struct
 ## 2.3 Finite Automata
 ### 2.3.1 Deterministic Finite Automata (DFA)
 
-A DFA $M$ consists of an alphabet $\Sigma$, a set of state $S$, a transition function $T: S \times \Sigma \rightarrow S$, a start state $s_0 \in S$, and a set of accepting state $A \sub S$. The language accepted by $M$, written $L(M)$, is defined to be the set of strings of characters $c_1c_2\dots c_n$ with each $c_i \in \Sigma$ such that there exist states $s_1 = T(s_0, c_1), s_2 = T(s_1,c_2) \dots, s_n=T(s_{n-1},c_n)$ with $s_n$ an element of $A$ (i.e., an accepting state).
+A DFA $M$ consists of an alphabet $\Sigma$, a set of state $S$, a transition function $T: S \times \Sigma \rightarrow S$, a start state $s_0 \in S$, and a set of accepting state $A \subset S$. The language accepted by $M$, written $L(M)$, is defined to be the set of strings of characters $c_1c_2\dots c_n$ with each $c_i \in \Sigma$ such that there exist states $s_1 = T(s_0, c_1), s_2 = T(s_1,c_2) \dots, s_n=T(s_{n-1},c_n)$ with $s_n$ an element of $A$ (i.e., an accepting state).
 
 
 
@@ -60,7 +60,10 @@ A solution to this problem is to expand the definition of a finite automation to
 ### 2.3.2 Nondeterministic Finite Automata (NFA)
 $\epsilon$-transition is a transition that may occur without consulting the input struing (and without consuming any characters).
 
-
+```mermaid
+graph LR
+    A(( ))-- $\epsilon$ --> B(( ))
+```
 
 
 
