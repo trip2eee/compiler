@@ -1,0 +1,29 @@
+/**
+ * C-- Language Test
+ */
+
+char s8Var;
+short s16Var;
+int s32Var;
+float f32Var;
+double f64Var;
+
+s8Var = 10;
+f32Var = 10.234;
+
+int a = 0;
+int b = 10;
+int max = 0;
+int min = 0;
+if(a < b)
+{
+    min = a;
+    max = b;
+}
+else
+{
+    min = b;
+    max = a;
+}
+
+

@@ -178,6 +178,21 @@ graph LR
 
 ### 2.4.4 Minimizing the Number of States in a DFA
 
+DFA derived from a regular expression may be more complex than necessary. Since efficiency is extremely important in a scanner, we would like to be able to construct, if possible, a DFA that is minimal in some sense. An important result from automata theory states that, given any DFA, there is an equivalent DFA containing a minimum number of states, and that this minimum-state DFA is unique.
+
+```mermaid
+graph LR
+  A(( )) -- a --> B(( ))
+  B -- a --> B
+```
+
+```mermaid
+graph LR
+  A(( )) -- a --> A
+```
+
+
+The algorithm proceeds by creating sets of states to be unified into single states. It begins with the most optimistic assumption possible: it creates two sets, one consisting of all the accepting states and the other consisting of all the nonaccepting states. Given this partition of the states of the original DFA, consider the transition on each character $a$ of the alphabet. If all accepting states have transitions on $a$ to nonaccepting states, then this defines an $a$-transition from the new accepting state to the new nonaccepting state. On the other hand, if there are two accepting states $s$ and $t$ that have transitions on $a$ that land in different sets, then no $a$-transition can be defined for this grouping of the states. We say that $a$ distinguishes the states $s$ and $t$.
 
 ```mermaid
 graph LR
@@ -186,8 +201,73 @@ graph LR
   B -- digit --> B
 ```
 
+## 2.5 Implementation of a Scanner
+C-- (minus minus) a C-like language scanner
+
+### Reserved Words
+- Control : if, else, for, while
+- Type : void, char, short, int, long, float, double
+
+### Special Symbols  
+- Operators : +, -, *, /, !, =, <, >, ==, <=, >=, !=
+- Parentheses (OTHER) : (, ), [, ], {, }
+- Other (OTHER) : ;
+
+### Other
+- Number (NUM) : 1 or more letters
+
+- Identifier (ID) : 1 or more letters
+
+- Comments (CMNT) : //, /* */
 
 
 
+```mermaid
+graph LR
+  START(( START ))
+  DONE(( DONE ))
+  NUM_INT(( NUM_INT ))
+  NUM_FRAC(( NUM_FRAC ))
+  ID(( ID ))
+  S1(( S1 ))
+  OP1(( OP1 ))
+
+  C1(( CMNT1 ))
+  C2(( CMNT2 ))
+  C3(( CMNT2-1 ))
+
+  START -- digit --> NUM_INT
+  START -- white space --> START
+  NUM_INT -- digit --> NUM_INT
+  NUM_INT -- other --> DONE
+  NUM_INT -- u,U --> DONE
+  NUM_INT -- . --> NUM_FRAC
+
+  NUM_FRAC -- digit --> NUM_FRAC
+  NUM_FRAC -- other --> DONE
+  NUM_FRAC -- f,F --> DONE
+  
+  START -- letter --> ID
+  ID -- digit --> ID
+  ID -- letter --> ID
+  ID -- other --> DONE
+
+  START -- =,<,>,! --> OP1
+  OP1 -- = --> DONE
+  OP1 -- other --> DONE
+
+  START -- other --> DONE
+
+  START -- / --> S1
+  S1 -- other --> DONE
+
+  S1 -- / --> C1
+  C1 -- other --> C1
+  C1 -- \n --> DONE
+
+  S1 -- * --> C2
+  C2 -- * --> C3
+  C3 -- / --> DONE
 
 
+```
