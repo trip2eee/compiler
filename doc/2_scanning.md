@@ -58,11 +58,11 @@ In principle, we should be able to combine all the tokens into one giant DFA in 
 A solution to this problem is to expand the definition of a finite automation to include the case where more than one transition from a state may exist for a particular character, whie at the same time developing an algorithm for systematically turning these new, generalized finite automata into DFAs.
 
 ### 2.3.2 Nondeterministic Finite Automata (NFA)
-$\epsilon$-transition is a transition that may occur without consulting the input struing (and without consuming any characters).
+$\epsilon$-transition is a transition that may occur without consulting the input string (and without consuming any characters).
 
 ```mermaid
 graph LR
-    A(( ))-- e --> B(( ))
+    A(( ))-- ε --> B(( ))
 ```
 
 $\epsilon$-transitions are somewhat counterintuitive, since they may occur "spontaneously," that is, without lookahead and without change to the input string, but they are useful in two ways.
@@ -71,14 +71,123 @@ $\epsilon$-transitions are somewhat counterintuitive, since they may occur "spon
      This has the advantage of keeping the original automata intact and only adding a new start state to connect them.
 ```mermaid
 graph LR;
-    A(( ))-- e -->B(( ))-- : -->C(( ))-- = -->D(return ASSIGN);
-    A(( ))-- e -->E(( ))-- < -->F(( ))-- = -->G(return LE);
-    A(( ))-- e -->H(( ))-- = -->I(Return EQ);
+    A(( ))-- ε -->B(( ))-- : -->C(( ))-- = -->D(return ASSIGN);
+    A(( ))-- ε -->E(( ))-- < -->F(( ))-- = -->G(return LE);
+    A(( ))-- ε -->H(( ))-- = -->I(Return EQ);
 ```
 
   2. They can explicitly describe a match of the empty string
 
 
 An NFA $M$ consists of an alphabet $\Sigma$, a set of state $S$, a transition function $T: S \times (\Sigma \cup \{\epsilon\})\rightarrow \wp(S)$, a start state $s_0$ from $S$, and a set of accepting state $A$ from $S$. The language accepted by $M$, written $L(M)$, is defined to be the set of strings of characters $c_1c_2\dots c_n$ with each $c_i$ from $\Sigma \cup \{\epsilon\}$ such that there exist states $s_1$ in $T(s_0, c_1)$, $s_2$ in $T(s_1,c_2) \dots, s_n$ in $T(s_{n-1},c_n)$ with $s_n$ an element of $A$.
+
+
+## 2.4 From Regular expressions to DFAs
+```mermaid
+graph LR
+A((Regular<br>Expressions))-->B((NFA))-->C((DFA))-->D((Program))
+```
+
+### 2.4.1 From a Regular Expression to an NFA
+Thomson's construction: It uses $\epsilon$-transitions to glue together the machines of each piece of regular expression to form a machine that corresponds to the whole expression.
+
+#### Basic Regular Expressions
+```mermaid
+graph LR
+  A(( )) -- ε --> C( T );
+```
+
+#### Concatenation
+We wish to construct an NFA equivalent to the regular expression $rs$, where $r$ and $s$ are regular expressions. We assume (inductively) that NFAs equivalent to $r$ and $s$ have already been constructed.
+
+We can connect the accepting state of the machine of $r$ to the start state of the machine of $s$ by an $\epsilon$-transition. The new machine has the start state of the machine of $r$ as its start state and the accepting state of the machine $s$ as its accepting state.
+```mermaid
+graph LR
+  r( r ) -- ε --> s( s );
+```
+Clearly, this machine accepts $L(rs) = L(r)L(s)$ and so corresponds to the regular expression $rs$.
+
+
+#### Choice Among Alternatives
+We wish to construct an NFA corresponding to $r|s$ under the same assumption as before. We do this as follows.
+```mermaid
+graph LR
+  A( ) -- ε --> r( r ) -- ε --> C( T );
+  A( ) -- ε --> s( s ) -- ε --> C( T );
+```
+
+This machine accepts language $L(r|s) = L(r) \cup L(s) $.
+
+#### Repetition
+We want to construct a machine that corresponds to $r^*$, given a machine that corresponds to $r$. We do this as follows.
+```mermaid
+graph LR
+  r -- ε --> r;
+  A( ) -- ε --> r( r ) -- ε --> C( T );  
+  A( ) -- ε --> C( T );
+```
+
+
+### 2.4.2 From an NFA to a DFA
+#### The $\epsilon$-Closure of a Set of States
+We define the $\epsilon$-closure of a single sate $s$ as the set of states reachable by a series of zero or more $\epsilon$-transitions, and we write this set as $\bar{s}$. Note that the $\epsilon$-closure of a state always contains the state itself.
+
+##### Example
+```mermaid
+graph LR
+  1(( 1 ))  -- ε --> 2(( 2 ))  -- a --> 3(( 3 ))  -- ε --> 4(( 4 ))
+  1 -- ε --> 4
+  3  -- ε -->  2
+```
+In this NFA, we have $\bar{1}=\{1, 2, 4\}, \bar{2}=\{2\}, \bar{3}=\{2, 3, 4\}, \bar{4}=\{4\}$.
+
+We now define the $\epsilon$-closure of a set of states to be the union of the $\epsilon$-closures of each individual state. In symbols, if $S$ is a set of states, then we have 
+$$ \bar{S} = \bigcup_{s \in S} \bar{s} $$
+
+#### The Subset Construction
+Now we can construct DFA from a given NFA $M$, which we will call $\bar{M}$. We first compute the $\epsilon$-closure of the start state of $M$; this becomes the start state of $\bar{M}$. For this set, and for each subsequent set, we compute transition on charactor $a$ as follows. Given a set $S$ of states and a charactor $a$ in the alphabet, compute the set $S'_a=\{t | \text{for some } s \text{ in } S \text{ there is a transition from } s \text{ to } t \text{ on } a\}$. Then, compute $\bar{S'_a}$, the $\epsilon$-closure of $S'_a$. This defines a new state in the subset constructio, together with a new transition $S \xrightarrow{a}{} \bar{S'_a}$ Continue with this process until no new states or transitions are created. Mark as accepting those states constructed in this manner that conatin an accepting state of $M$. This is the DFA $\bar{M}$.
+
+##### Example
+letter(letter|digit)*
+
+```mermaid
+graph LR
+  1(( 1 )) -- letter --> 2(( 2 )) -- ε --> 3(( 3 )) -- ε --> 4(( 4 ))
+  4 -- ε --> 5(( 5 )) -- letter --> 6(( 6 )) -- ε --> 9(( 9 )) --> 10(( 10 ))
+  4 -- ε --> 7(( 7 )) -- digit --> 8(( 8 )) -- ε --> 9
+  9 -- ε --> 4
+  3 -- ε --> 10
+```
+Start state: $\overline{\{ 1 \}} = \{1\}$ 
+
+Transition on letter to $\overline{\{ 2 \}} = \{2, 3, 4, 5, 7, 10\}$ 
+
+Transition on digit to $\overline{\{ 8 \}} = \{ 4, 5, 7, 9, 10\}$
+
+```mermaid
+graph LR
+  A( 1 ) -- letter --> B(2,3,4,5,7,10)
+  B -- letter --> C( 4, 5, 6, 7, 9, 10)
+  B -- digit --> D(4, 5, 7, 8, 9, 10)
+  C -- letter --> C
+  C -- digit --> D
+  D -- letter --> C
+  D -- digit --> D
+
+```
+
+### 2.4.4 Minimizing the Number of States in a DFA
+
+
+```mermaid
+graph LR
+  A( 1 ) -- letter --> B( 2 )
+  B -- letter --> B
+  B -- digit --> B
+```
+
+
+
+
 
 
