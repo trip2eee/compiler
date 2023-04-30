@@ -41,6 +41,25 @@ class ScannerTest(unittest.TestCase):
         self.assertEqual(tokens[4].type, TokenType.ID)
         self.assertEqual(tokens[5].type, TokenType.SEMI)
 
+    def test_comments(self):
+        scanner = Scanner()
+        tokens = scanner.scan('unittest/comments.cmm')
+
+        self.assertEqual(len(tokens), 2)
+        self.assertEqual(tokens[0].type, TokenType.COMMENT)
+        self.assertEqual(tokens[1].type, TokenType.COMMENT)
+
+    def test_operator(self):
+        scanner = Scanner()
+        tokens = scanner.scan('unittest/operators.cmm')
+
+        self.assertEqual(len(tokens), 6)
+        self.assertEqual(tokens[0].type, TokenType.ID)
+        self.assertEqual(tokens[1].type, TokenType.OP_ASSIGN)
+        self.assertEqual(tokens[2].type, TokenType.ID)
+        self.assertEqual(tokens[3].type, TokenType.OP)
+        self.assertEqual(tokens[4].type, TokenType.ID)
+        self.assertEqual(tokens[5].type, TokenType.SEMI)
 
 if __name__ == '__main__':
     unittest.main()

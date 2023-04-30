@@ -236,11 +236,13 @@ graph LR
   OP2-1(( OP2-1 ))
   OP3(( OP3 ))
   OP3-1(( OP3-1 ))
-  DOT(( DOT ))
 
   C1(( CMNT1 ))
   C2(( CMNT2 ))
   C2-1(( CMNT2-1 ))
+
+  STR(( STR ))
+  CHAR(( CHAR ))
 
   START -- digit --> NUM_INT
   START -- white space --> START
@@ -283,12 +285,20 @@ graph LR
 
   S1 -- / --> C1
   C1 -- other --> C1
-  C1 -- \n --> DONE
+  C1 -- NewLine --> DONE
 
   S1 -- * --> C2
   C2 -- * --> C2-1
   C2 -- other --> C2
   C2-1 -- / --> DONE
   C2-1 -- other --> C2
+
+  START -- double quotation mark --> STR
+  STR -- double quotation mark --> DONE
+  STR -- other --> STR
+
+  START -- single quotation mark --> CHAR
+  CHAR -- single quotation mark --> DONE
+  CHAR -- other --> CHAR
 
 ```
