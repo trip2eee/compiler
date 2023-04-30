@@ -16,8 +16,11 @@ class State(enum.IntEnum):
     OP2 = 6
     OP2_1 = 7
     OP3 = 8
-    OP3_1 = 9    
+    OP3_1 = 9
     
+    STR = 10
+    CHR = 11
+
     CMNT1   = 90
     CMNT2   = 91
     CMNT2_1 = 92
@@ -48,7 +51,12 @@ class TokenType(enum.IntEnum):
     MUL    = 203          # *
     DIV    = 204          # /
 
-    OP_ASSIGN = 210          # =
+    SHL        = 205        # Shift Left <<
+    SHR        = 206        # Shift Right >>
+    
+    OP_ASSIGN = 210         # =
+    SHL_ASSIGN = 211        # <<=
+    SHR_ASSIGN = 212        # >>=
 
     OP_COMP = 220
     EQ      = 221          # ==
@@ -152,7 +160,8 @@ class Scanner:
         return token
 
     def get_token(self):
-
+        # TODO: To implement string, character
+        
         state = State.START
         token = None
 
@@ -272,6 +281,50 @@ class Scanner:
                     token.type = TokenType.OP_ASSIGN
                 state = State.DONE
             
+            elif state == State.OP2:
+                token.string_val += c
+                if c == '=':
+                    if token.string_val == '<=':
+                        token.type = TokenType.LTE
+                    elif token.string_val == '>=':
+                        token.type = TokenType.GTE
+                    state = State.DONE
+                elif c in '<>':
+                    state = State.OP2_1
+            
+            elif state == State.OP2_1:
+                if c == '=':
+                    token.string_val += c
+                    if token.string_val == '<<=':
+                        token.type = TokenType.OP_ASSIGN
+                    elif token.string_val == '>>=':
+                        token.type = TokenType.OP_ASSIGN
+                else:
+                    self.unget_next_char()
+                state = State.DONE
+
+            elif state == State.OP3:
+                if c == '=':
+                    token.string_val += c
+                    if token.string_val == '|=':
+                        token.type = TokenType.OP_ASSIGN
+                    elif token.string_val == '&=':
+                        token.type = TokenType.OP_ASSIGN
+                    else:
+                        token.type = TokenType.UNDEF
+                elif c in '|&':
+                    token.string_val += c
+                    if token.string_val == '||':
+                        token.type = TokenType.OP
+                    elif token.string_val == '&&':
+                        token.type = TokenType.OP
+                    else:
+                        token.type = TokenType.UNDEF
+                else:
+                    self.unget_next_char()
+                
+                state = State.DONE
+
         return token
         
     

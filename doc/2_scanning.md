@@ -267,15 +267,14 @@ graph LR
   START -- <,> --> OP2
   OP2 -- = --> DONE
   OP2 -- <, > --> OP2-1
+  OP2 -- other --> DONE
   OP2-1 -- = --> DONE
   OP2-1 -- other --> DONE
   
   START -- VerticalBar,&--> OP3
-  OP3 -- VerticalBar,&--> OP3-1
+  OP3 -- VerticalBar,&--> DONE
   OP3 -- = --> DONE
   OP3 -- other --> DONE
-  OP3-1 -- = --> DONE
-  OP3-1 -- other --> DONE
 
 
   START -- other --> DONE

@@ -53,13 +53,30 @@ class ScannerTest(unittest.TestCase):
         scanner = Scanner()
         tokens = scanner.scan('unittest/operators.cmm')
 
-        self.assertEqual(len(tokens), 6)
+        self.assertEqual(len(tokens), 18)
+
         self.assertEqual(tokens[0].type, TokenType.ID)
         self.assertEqual(tokens[1].type, TokenType.OP_ASSIGN)
         self.assertEqual(tokens[2].type, TokenType.ID)
         self.assertEqual(tokens[3].type, TokenType.OP)
         self.assertEqual(tokens[4].type, TokenType.ID)
         self.assertEqual(tokens[5].type, TokenType.SEMI)
+
+        self.assertEqual(tokens[6].type, TokenType.ID)
+        self.assertEqual(tokens[7].type, TokenType.OP_ASSIGN)
+        self.assertEqual(tokens[8].type, TokenType.ID)
+        self.assertEqual(tokens[9].type, TokenType.SEMI)
+
+        self.assertEqual(tokens[10].type, TokenType.ID)
+        self.assertEqual(tokens[11].type, TokenType.OP_ASSIGN)
+        self.assertEqual(tokens[12].type, TokenType.ID)
+        self.assertEqual(tokens[13].type, TokenType.SEMI)
+
+        self.assertEqual(tokens[14].type, TokenType.ID)
+        self.assertEqual(tokens[15].type, TokenType.OP_ASSIGN)
+        self.assertEqual(tokens[15].string_val, '<<=')
+        self.assertEqual(tokens[16].type, TokenType.ID)
+        self.assertEqual(tokens[17].type, TokenType.SEMI)
 
 if __name__ == '__main__':
     unittest.main()
