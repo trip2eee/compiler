@@ -209,7 +209,8 @@ C-- (minus minus) a C-like language scanner
 - Type : void, char, short, int, long, float, double
 
 ### Special Symbols  
-- Operators : +, -, *, /, !, =, <, >, ==, <=, >=, !=
+- Operators : +, -, *, /, !, =, <, >, ==, <=, >=, !=, <<=, >>=
+- Operators : &&, ||
 - Parentheses (OTHER) : (, ), [, ], {, }
 - Other (OTHER) : ;
 
@@ -231,10 +232,15 @@ graph LR
   ID(( ID ))
   S1(( S1 ))
   OP1(( OP1 ))
+  OP2(( OP2 ))
+  OP2-1(( OP2-1 ))
+  OP3(( OP3 ))
+  OP3-1(( OP3-1 ))
+  DOT(( DOT ))
 
   C1(( CMNT1 ))
   C2(( CMNT2 ))
-  C3(( CMNT2-1 ))
+  C2-1(( CMNT2-1 ))
 
   START -- digit --> NUM_INT
   START -- white space --> START
@@ -252,9 +258,23 @@ graph LR
   ID -- letter --> ID
   ID -- other --> DONE
 
-  START -- =,<,>,! --> OP1
+  START -- +,-,*,=,! --> OP1
   OP1 -- = --> DONE
   OP1 -- other --> DONE
+
+  START -- <,> --> OP2
+  OP2 -- = --> DONE
+  OP2 -- <, > --> OP2-1
+  OP2-1 -- = --> DONE
+  OP2-1 -- other --> DONE
+  
+  START -- VerticalBar,&--> OP3
+  OP3 -- VerticalBar,&--> OP3-1
+  OP3 -- = --> DONE
+  OP3 -- other --> DONE
+  OP3-1 -- = --> DONE
+  OP3-1 -- other --> DONE
+
 
   START -- other --> DONE
 
@@ -266,8 +286,7 @@ graph LR
   C1 -- \n --> DONE
 
   S1 -- * --> C2
-  C2 -- * --> C3
-  C3 -- / --> DONE
-
+  C2 -- * --> C2-1
+  C2-1 -- / --> DONE
 
 ```
