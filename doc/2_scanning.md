@@ -287,6 +287,8 @@ graph LR
 
   S1 -- * --> C2
   C2 -- * --> C2-1
+  C2 -- other --> C2
   C2-1 -- / --> DONE
+  C2-1 -- other --> C2
 
 ```

@@ -9,9 +9,9 @@ class State(enum.IntEnum):
     START = 0
     ID = 1
     NUM_INT = 2
-    NUM_FRAC = 3
+    NUM_FLOAT = 3
     OP1 = 4
-    S1 = 5
+    S1 = 5              # Slash(/) 1
     
     CMNT1   = 90
     CMNT2   = 91
@@ -22,66 +22,220 @@ class State(enum.IntEnum):
 class TokenType(enum.IntEnum):
     UNDEF = -1
     NUM = 0
-    NUM_FRAC = 1
-    STRING = 2
+    NUM_FLOAT = 1
+    ID = 2
+    STRING = 3
+    TYPE = 4
 
-    IF    = 10
-    ELSE  = 11
-    FOR   = 12
-    WHILE = 13
+    SEMI = 10             # ;
+    DOT  = 11             # .
 
-    PLUS   = 100          # +
-    MINUS  = 101          # -
-    MUL    = 102          # *
-    DIV    = 103          # /
-    ASSIGN = 104          # =
-    EQ     = 105          # ==
-    LT     = 106          # <
-    GT     = 107          # >
-    LTE    = 108          # <=
-    GTE    = 109          # >=
-    NEQ    = 110          # !=
+    IF    = 100
+    ELSE  = 101
+    FOR   = 102
+    WHILE = 103
+
+    OP     = 200          # operator
+    PLUS   = 201          # +
+    MINUS  = 202          # -
+    MUL    = 203          # *
+    DIV    = 204          # /
+    ASSIGN = 205          # =
+
+    OP_COMP = 210
+    EQ      = 211          # ==
+    LT      = 212          # <
+    GT      = 213          # >
+    LTE     = 214          # <=
+    GTE     = 215          # >=
+    NEQ     = 216          # !=
     
-    LPAREN   = 200        # (
-    RPAREN   = 201        # )
-    LBRACKET = 202        # [
-    RBRACKET = 203        # ]
-    LBRACE   = 204        # {
-    RBRACE   = 205        # }
+    LPAREN   = 300        # (
+    RPAREN   = 301        # )
+    LBRACKET = 302        # [
+    RBRACKET = 303        # ]
+    LBRACE   = 304        # {
+    RBRACE   = 305        # }
 
 
 class Token:
-    def __init__(self):
-        self.type = TokenType.UNDEF
+    def __init__(self, type, line_no, col_no):
+        self.type = type
         self.string_val = ''
         self.int_val = 0
-        self.frac_val = 0.0
-        self.line_number = 0
-        self.column_number = 0
+        self.float_val = 0.0
+        self.line_number = line_no   # line number
+        self.col_number = col_no     # column number
 
 class Scanner:
     def __init__(self):
-        self.line_number = 0
-        self.idx_char = 0
+        self.idx_line = -1
+        self.idx_char = -1
         self.line = ''
-        self.state = State.START
-        self.f = None
+        self.f = None           # file handle
         self.list_tokens = []
-
+        
     def scan(self, file_path):
         self.f = open(file_path, 'r')
+        self.list_tokens = []
 
+        if self.f is not None:
+            
+            while True:
+                token = self.get_token()
+                if token is not None:
+                    self.list_tokens.append(token)
+                else:
+                    break
 
+        return self.list_tokens
 
+    def get_token_other(self, c):
+        token = None
+        state = State.START
+
+        if c == ';':
+            token = Token(TokenType.SEMI, self.idx_line, self.idx_char)
+            state = State.DONE
+        elif c == '(':
+            token = Token(TokenType.LPAREN, self.idx_line, self.idx_char)
+            state = State.DONE
+        elif c == ')':
+            token = Token(TokenType.RPAREN, self.idx_line, self.idx_char)
+            state = State.DONE
+        elif c == '[':
+            token = Token(TokenType.LBRACKET, self.idx_line, self.idx_char)
+            state = State.DONE
+        elif c == ']':
+            token = Token(TokenType.RBRACKET, self.idx_line, self.idx_char)
+            state = State.DONE
+        elif c == '{':
+            token = Token(TokenType.LBRACE, self.idx_line, self.idx_char)
+            state = State.DONE
+        elif c == '}':
+            token = Token(TokenType.RBRACE, self.idx_line, self.idx_char)
+            state = State.DONE
+        elif c == '.':
+            token = Token(TokenType.DOT, self.idx_line, self.idx_char)
+            state = State.DONE
+
+        return token, state
+    
+    def is_digits(self, c):
+        if '0' <= c <= '9':
+            return True
+        else:
+            return False
+    
+    def is_letter(self, c):
+        if 'a' <= c <= 'z' or 'A' <= c <= 'Z' or c == '_':
+            return True
+        else:
+            return False
+    
+    def determine_id_type(self, token: Token):
+        if token.string_val == 'int':
+            token.type = TokenType.TYPE
+
+    def make_token(self, type: TokenType, c):
+        token = Token(type, self.idx_line, self.idx_char)
+        token.string_val = c
+        return token
 
     def get_token(self):
-        pass
+
+        state = State.START
+        token = None
+
+        while state != State.DONE:
+            c = self.get_next_char()
+            
+            # end of file
+            if c == -1:
+                break
+
+            # Start State
+            if state == State.START:
+                # if white space
+                if c == ' ' or c == '\t' or c == '\n':
+                    pass
+
+                # if digits
+                elif self.is_digits(c):
+                    token = self.make_token(TokenType.NUM, c)
+                    state = State.NUM_INT
+                
+                # if letters
+                elif self.is_letter(c):
+                    token = self.make_token(TokenType.ID, c)
+                    state = State.ID
+
+                elif c == '/':
+                    token = self.make_token(TokenType.OP, c)
+                    state = State.S1
+                # other
+                else:
+                    token, state = self.get_token_other(c)
+            
+            elif state == State.NUM_INT:
+                if self.is_digits(c):
+                    token.string_val += c
+
+                elif c == '.':
+                    token.string_val += c
+                    token.type = TokenType.NUM_FLOAT
+                    state = State.NUM_FLOAT
+                else:
+                    self.unget_next_char()
+                    token.int_val = int(token.string_val)
+                    state = State.DONE
+
+            elif state == State.NUM_FLOAT:
+                if '0' <= c <= '9':
+                    token.string_val += c
+                elif c in 'fF':
+                    token.float_val = float(token.string_val)
+                    state = State.DONE
+                else:
+                    self.unget_next_char()
+                    token.float_val = float(token.string_val)
+                    state = State.DONE
+
+            elif state == State.ID:
+                if self.is_letter(c) or self.is_digits(c):
+                    token.string_val += c
+                else:
+                    self.determine_id_type(token)
+
+                    self.unget_next_char()
+                    state = State.DONE
+            
+            elif state == State.S1:
+                if   c == '/':
+                    state = State.CMNT1
+                elif c == '*':
+                    state = State.CMNT2
+                else:
+                    self.unget_next_char()
+                    state = State.DONE
+                
+        return token
+        
     
     def get_next_char(self):
-        if self.idx_char < len(self.line) - 1:
-            self.idx_char += 1
+        # if no line data or the column number exceeds the length of the line.
+        if self.line == '' or ((self.idx_char+1) >= len(self.line)):
+            line = self.f.readline()
+            self.idx_char = -1
+            self.line = line
+            self.idx_line += 1
 
-            
+        if self.line != '':
+            self.idx_char += 1
+            c = self.line[self.idx_char]
+            return c
+        else:
+            return -1
 
     def unget_next_char(self):
         if self.idx_char > 0:
