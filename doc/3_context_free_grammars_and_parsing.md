@@ -309,3 +309,56 @@ op2 --> num3
 
 Subtraction is considered to be left associative; that is, a series of subtraction operations is performed from left to right.
 
+Addition, subtraction, and multiplication operations are left associative.
+
+### 3.4.2 Precedence and Associativity
+To handle precedence of operations in the grammar, we must group the operators into groups of equal precedence, and for each precedence we must write a different rule.
+
+$$ exp \rightarrow exp \ addop \ term \mid term $$
+
+$$ addop \rightarrow + \mid - $$
+
+$$ term \rightarrow term \ mulop \ term \mid factor $$
+
+$$ mulop \rightarrow * $$
+
+$$ factor \rightarrow (\ exp \ ) \mid number $$
+
+
+We call such a grouping a precedence cascade.
+
+### 3.4.3 The Dangling Else Problem
+
+$$ statement \rightarrow if\text-stmt \mid other $$
+
+$$ if\text-stmt \rightarrow if \ ( \ exp \ ) \ statement \mid if \ ( \ exp \ ) \ statement \ else \ statement $$
+
+$$ exp \rightarrow 0 \mid 1 $$
+
+This grammar is ambiguous as a result of the optional else.
+
+if (0) if (1) other else other
+
+```C++
+if(0)
+    if(1)
+        other
+else
+    other
+```
+
+```C++
+if(0)
+    if(1)
+        other
+    else
+        other
+```
+This ambiguity is called the dangling else problem.
+
+The most closely nested rule: else-part should always be associated with the nearest if-statement that does not yet have an associated else-part.
+
+### 3.4.4 Inessential Ambiguity
+
+## 3.5 Extended Notations: EBNF and Syntax Diagrams
+### 3.5.1 EBNF Notation
