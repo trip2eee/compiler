@@ -42,7 +42,7 @@ Note that derivation steps use a different arrow from the arrow metasymbol in th
 
 The set of all strings of token symbols obtained by derivations from the $exp$ symbol is the language defined by the grammar of expressions. This can be written symbolically as 
 
-$$ L(G) = \{ s | exp \Rightarrow *s \} $$
+$$ L(G) = \left\{ s | exp \Rightarrow *s \right\} $$
 
 where $G$ represents the expression grammar, $s$ represents an arbitrary string of token symbols (sometimes called a sentence), and the symbols $\Rightarrow *$ stand for a derivation consisting of a sequence of replacements.
 
@@ -56,7 +56,7 @@ $$ E \rightarrow ( \; E \; ) \; | \; a $$
 - Nonterminal: $E$
 - Terminals: $(, ), a$
 
-This grammar generates the language $L(G) = \{ a, (a), ((a)), (((a))), \dots\} = \{ (^n a)^n \mid n \ge 0 \}$
+This grammar generates the language $L(G) = \left\{ a, (a), ((a)), (((a))), \dots \right\} = \left\{ (^n a)^n \mid n \ge 0 \right\}$
 
 
 
