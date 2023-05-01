@@ -11,7 +11,7 @@ S(Sequence of Tokens) -- Parser --> T(Syntax Tree)
 A context-free grammar: A specification for the syntactic structure of a programming language.
 Such a specification is very similar to the specification of the lexical structure of a language using regular expressions, except that a context-free grammar involves recursive rules.
 
-$$ exp \rightarrow exp \; op \; exp \;| \; ( exp ) \; | \; number $$
+$$ exp \rightarrow exp \  op \  exp \ | \  ( exp ) \  | \  number $$
 $$ op \rightarrow + | - | * $$
 
 The notation was developed by John Backus and adapted by Peter Naur for the Algol60 report. Thus, grammar rules in this form are usually said to be in Backus-Naur form, or BNF.
@@ -23,14 +23,14 @@ A derivation for the arithmetic expression (34-3)*42
 
 $$
 \begin{split}
-exp & \Rightarrow exp \; op \; exp \\
-    & \Rightarrow exp \; op \; number \\
-    & \Rightarrow exp \; * \; number \\
-    & \Rightarrow (exp) \; * \; number \\
-    & \Rightarrow (exp \; op \; exp) \; * \; number \\
-    & \Rightarrow (exp \; op \; number) \; * \; number \\
-    & \Rightarrow (exp \; - \; number) \; * \; number \\
-    & \Rightarrow (number \; - \; number) \; * \; number \\
+exp & \Rightarrow exp \  op \  exp \\
+    & \Rightarrow exp \  op \  number \\
+    & \Rightarrow exp \  * \  number \\
+    & \Rightarrow (exp) \  * \  number \\
+    & \Rightarrow (exp \  op \  exp) \  * \  number \\
+    & \Rightarrow (exp \  op \  number) \  * \  number \\
+    & \Rightarrow (exp \  - \  number) \  * \  number \\
+    & \Rightarrow (number \  - \  number) \  * \  number \\
 
 \end{split}
 $$
@@ -51,7 +51,7 @@ where $G$ represents the expression grammar, $s$ represents an arbitrary string 
 - terminals: Symbols in the alphabet since they terminate a derivation.
 
 ### Example
-$$ E \rightarrow ( \; E \; ) \; | \; a $$
+$$ E \rightarrow ( \ E \ ) \ | \ a $$
 
 - Nonterminal: $E$
 - Terminals: $(, ), a$
@@ -60,8 +60,8 @@ This grammar generates the language $L(G) = \lbrace a, (a), ((a)), (((a))), \dot
 
 
 
-- left recursive: $A \rightarrow A\;a \mid a$
-- right recursive: $A \rightarrow a\;A \mid a$
+- left recursive: $A \rightarrow A\ a \mid a$
+- right recursive: $A \rightarrow a\ A \mid a$
 
 $\epsilon$-production: Notation for a grammar rule that generates the empty string: 
 
@@ -73,10 +73,10 @@ A parse tree: A labeled tree in which the interior nodes are labeled by nontermi
 
 $$
 \begin{split}
-exp & \Rightarrow exp \; op \; exp  \\
-    & \Rightarrow number \; op \; exp \\
-    & \Rightarrow number \; + \; exp  \\
-    & \Rightarrow number \; + \; number  \\
+exp & \Rightarrow exp \ op \ exp  \\
+    & \Rightarrow number \ op \ exp \\
+    & \Rightarrow number \ + \ exp  \\
+    & \Rightarrow number \ + \ number  \\
 \end{split}
 $$
 
