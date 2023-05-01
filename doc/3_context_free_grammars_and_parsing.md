@@ -362,3 +362,88 @@ The most closely nested rule: else-part should always be associated with the nea
 
 ## 3.5 Extended Notations: EBNF and Syntax Diagrams
 ### 3.5.1 EBNF Notation
+Extended BNF (EBNF)
+#### Repetition
+Generic rules
+
+$ A \rightarrow A \ \alpha \ \mid \  \beta$ (Left Recursive)
+
+$ A \rightarrow \alpha \ A \ \mid \  \beta$ (Right Recursive)
+
+where
+- $\alpha$ and $\beta$ are arbitrary strings of terminals and nonterminals 
+- In Left Recursive $\beta$ does not begin with $A$
+- In Right Recursive $\beta$ does not end with $A$.
+
+It would be possible to use the same notation for repetition that regular expressions use, namely, the asterisk *.
+
+$ A \rightarrow \beta \ \alpha *$
+
+$ A \rightarrow \alpha* \ \beta $
+
+Instead, EBNF opt to use curly brackets {...} to express repetition.
+
+$ A \rightarrow \beta \ \lbrace \alpha \rbrace $
+
+$ A \rightarrow \lbrace \alpha \rbrace \ \beta $
+
+##### Example of problem with any repetition notation
+
+$$ stmt\text-sequence \rightarrow stmt \ ; \ stmt\text-sequence \ \mid \ stmt $$
+
+$$ stmt \rightarrow s $$
+
+This rule has the form $A \rightarrow \alpha \ A \ \mid \ \beta$, with $A = stmt\text-sequence, \ \alpha = stmt \ ;, \ and \ \beta = stmt$. 
+
+Problem: $\beta$ can end with $A$!
+
+In EBNF this would appear as
+
+$ stmt\text-sequence \rightarrow \lbrace stmt \ ; \ \rbrace \ stmt $    (right recursive form)
+
+$ stmt\text-sequence \rightarrow stmt \ \lbrace  \ ; \ stmt \rbrace $    (left recursive form)
+
+
+A more significant problem occurs when the associativity matters, as it does for binary operations such as subtraction and division.
+
+$$ exp \rightarrow exp \ addop \ term \mid \ term $$
+
+$$ term \rightarrow term \ mulop \ term \mid factor $$
+
+$$ factor \rightarrow (\ exp \ ) \mid number $$
+
+This has the form $A \rightarrow A \ \alpha \ \mid \ \beta$, with $A = exp, \ \alpha=addop\ term, \ and \ \beta=term$.
+
+We write this rule in EBNF as
+
+$ exp \rightarrow term \ \lbrace \ addop \ term \ \rbrace $ (Left Associativity)
+
+$ exp \rightarrow \lbrace \ term \ addop  \ \rbrace \ term $ (Right Associativity)
+
+#### Optional
+A right recursive rule such as
+
+$$ stmt\text-sequence \rightarrow stmt \ ; \ stmt\text-sequence \ \mid \ stmt $$
+
+is viewed as being a $stmt$ followed by an optional semicolon and $stmt\text-sequence$.
+
+Optional constructs in EBNF are indicated by surrounding them with square brackets [...].
+
+For example, the grammar rules for if-statements with optional else-parts would be written as follows in EBNF:
+
+
+$ statement \rightarrow if\text-stmt \ \mid \ other $
+
+$ if\text-stmt \rightarrow if \ ( \ exp \ ) \ statement \ [ \ else \ statement \ ] $
+
+$ exp \rightarrow 0 \mid 1 $
+
+
+Also, a right recursive rule such as
+
+$ stmt\text-sequence \rightarrow stmt \ ; \ stmt\text-sequence \ \mid \ stmt$
+
+is written as 
+
+$ stmt\text-sequence \rightarrow stmt \ [\ ; \ stmt\text-sequence ]$
+
