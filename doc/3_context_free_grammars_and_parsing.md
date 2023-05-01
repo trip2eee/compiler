@@ -12,6 +12,7 @@ A context-free grammar: A specification for the syntactic structure of a program
 Such a specification is very similar to the specification of the lexical structure of a language using regular expressions, except that a context-free grammar involves recursive rules.
 
 $$ exp \rightarrow exp \  op \  exp \ | \  ( exp ) \  | \  number $$
+
 $$ op \rightarrow + | - | * $$
 
 The notation was developed by John Backus and adapted by Peter Naur for the Algol60 report. Thus, grammar rules in this form are usually said to be in Backus-Naur form, or BNF.
@@ -21,7 +22,6 @@ A derivation: A sequence of replacements of structure names by choices on the ri
 ### Example
 A derivation for the arithmetic expression (34-3)*42
 
-$$
 \begin{split}
 exp & \Rightarrow exp \  op \  exp \\
     & \Rightarrow exp \  op \  number \\
@@ -33,7 +33,6 @@ exp & \Rightarrow exp \  op \  exp \\
     & \Rightarrow (number \  - \  number) \  * \  number \\
 
 \end{split}
-$$
 
 Note that derivation steps use a different arrow from the arrow metasymbol in the grammar rules.
 
@@ -71,14 +70,12 @@ $$empty \rightarrow \epsilon$$
 ### 3.3.1 Parse Trees
 A parse tree: A labeled tree in which the interior nodes are labeled by nonterminals, the leaf nodes are labeled by terminals, and the children of each internal node represent the replacement of the associated nonterminal in one step of the derivation.
 
-$$
 \begin{split}
 exp & \Rightarrow exp \ op \ exp  \\
     & \Rightarrow number \ op \ exp \\
     & \Rightarrow number \ + \ exp  \\
     & \Rightarrow number \ + \ number  \\
 \end{split}
-$$
 
 corresponds to the parse tree
 
