@@ -70,12 +70,14 @@ $$empty \rightarrow \epsilon$$
 ### 3.3.1 Parse Trees
 A parse tree: A labeled tree in which the interior nodes are labeled by nonterminals, the leaf nodes are labeled by terminals, and the children of each internal node represent the replacement of the associated nonterminal in one step of the derivation.
 
+\[
 \begin{split}
 exp & \Rightarrow exp \ op \ exp  \\
     & \Rightarrow number \ op \ exp \\
     & \Rightarrow number \ + \ exp  \\
     & \Rightarrow number \ + \ number  \\
 \end{split}
+\]
 
 corresponds to the parse tree
 
