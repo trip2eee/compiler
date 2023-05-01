@@ -209,17 +209,22 @@ C-- (minus minus) a C-like language scanner
 - Type : void, char, short, int, long, float, double
 
 ### Special Symbols  
-- Operators : +, -, *, /, !, =, <, >, ==, <=, >=, !=, <<=, >>=
-- Operators : &&, ||
+- Operators : +, -, *, /, !, ^, ~
+- Operators (Bit): <<, >>, ^, ~
+- Operators (Comparison): ==, <, >, <=, >=, !=
+- Operators (Op & Assign): =, +=, -=, *=, /=, ^=, ~=, <<=, >>=
+- Operators (Logic): &&, ||
 - Parentheses (OTHER) : (, ), [, ], {, }
-- Other (OTHER) : ;
+- Other (OTHER) : ., ;
 
 ### Other
 - Number (NUM) : 1 or more letters
-
 - Identifier (ID) : 1 or more letters
-
 - Comments (CMNT) : //, /* */
+
+### TODO
+- Hexadecimal numbers
+- % (modulus operator)
 
 
 
@@ -242,7 +247,7 @@ graph LR
   C2-1(( CMNT2-1 ))
 
   STR(( STR ))
-  CHAR(( CHAR ))
+  CHR(( CHR ))
 
   START -- digit --> NUM_INT
   START -- white space --> START
@@ -260,9 +265,11 @@ graph LR
   ID -- letter --> ID
   ID -- other --> DONE
 
-  START -- +,-,*,=,! --> OP1
+  START -- +,-,*,=,!,^ --> OP1
   OP1 -- = --> DONE
   OP1 -- other --> DONE
+  OP1 -- + --> DONE
+  OP1 -- - --> DONE
 
   START -- <,> --> OP2
   OP2 -- = --> DONE
@@ -281,6 +288,7 @@ graph LR
 
   START -- / --> S1
   S1 -- other --> DONE
+  S1 -- = --> DONE
 
   S1 -- / --> C1
   C1 -- other --> C1
@@ -296,8 +304,8 @@ graph LR
   STR -- double quotation mark --> DONE
   STR -- other --> STR
 
-  START -- single quotation mark --> CHAR
-  CHAR -- single quotation mark --> DONE
-  CHAR -- other --> CHAR
+  START -- single quotation mark --> CHR
+  CHR -- single quotation mark --> DONE
+  CHR -- other --> CHR
 
 ```

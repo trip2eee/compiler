@@ -34,8 +34,8 @@ class TokenType(enum.IntEnum):
     NUM_FLOAT = 2
     ID = 3
     STRING = 4
-    TYPE = 5
-
+    CHAR = 5
+    TYPE = 6
 
     SEMI = 10             # ;
     DOT  = 11             # .
@@ -44,34 +44,49 @@ class TokenType(enum.IntEnum):
     ELSE  = 101
     FOR   = 102
     WHILE = 103
-
-    OP     = 200          # operator
-    PLUS   = 201          # +
-    MINUS  = 202          # -
-    MUL    = 203          # *
-    DIV    = 204          # /
-
-    SHL        = 205        # Shift Left <<
-    SHR        = 206        # Shift Right >>
     
-    OP_ASSIGN = 210         # =
-    SHL_ASSIGN = 211        # <<=
-    SHR_ASSIGN = 212        # >>=
+    OP_PLUS      = 201         # +
+    OP_MINUS     = 202         # -
+    OP_TIMES     = 203         # *
+    OP_DIV       = 204         # /
+    OP_BIT_NOT   = 205         # ~
+    OP_BIT_OR    = 206         # |
+    OP_BIT_AND   = 207         # &
+    OP_BIT_XOR   = 208         # ^
+    OP_INC       = 209         # ++
+    OP_DEC       = 210         # --
+    OP_SHL       = 211         # Shift Left <<
+    OP_SHR       = 212         # Shift Right >>
+    OP_LOGIC_OR  = 213         # ||
+    OP_LOGIC_AND = 214         # &&
+    OP_LOGIC_NOT = 215         # !
 
-    OP_COMP = 220
-    EQ      = 221          # ==
-    LT      = 222          # <
-    GT      = 223          # >
-    LTE     = 224          # <=
-    GTE     = 225          # >=
-    NEQ     = 226          # !=
+    OP_ASSIGN          = 300   # =
+    OP_ADD_ASSIGN      = 301   # +=
+    OP_SUB_ASSIGN      = 302   # -=
+    OP_MUL_ASSIGN      = 303   # *=
+    OP_DIV_ASSIGN      = 304   # /=
+    OP_SHL_ASSIGN      = 305   # <<=
+    OP_SHR_ASSIGN      = 306   # >>=
+    OP_BIT_OR_ASSIGN   = 307   # |=
+    OP_BIT_AND_ASSIGN  = 308   # &=
+    OP_BIT_NOT_ASSIGN  = 309   # ~=
+    OP_BIT_XOR_ASSIGN  = 300   # ^=
+
+
+    EQ      = 401          # ==
+    LT      = 402          # <
+    GT      = 403          # >
+    LTE     = 404          # <=
+    GTE     = 405          # >=
+    NEQ     = 406          # !=
     
-    LPAREN   = 300        # (
-    RPAREN   = 301        # )
-    LBRACKET = 302        # [
-    RBRACKET = 303        # ]
-    LBRACE   = 304        # {
-    RBRACE   = 305        # }
+    LPAREN   = 500        # (
+    RPAREN   = 501        # )
+    LBRACKET = 502        # [
+    RBRACKET = 503        # ]
+    LBRACE   = 504        # {
+    RBRACE   = 505        # }
 
 
 class Token:
@@ -90,7 +105,11 @@ class Scanner:
         self.line = ''
         self.f = None           # file handle
         self.list_tokens = []
-        
+    
+    def __del__(self):
+        if self.f is not None:
+            self.f.close()
+
     def scan(self, file_path):
         self.f = open(file_path, 'r')
         self.list_tokens = []
@@ -154,14 +173,18 @@ class Scanner:
         elif val == 'while':
             token.type = TokenType.WHILE
 
-    def make_token(self, type: TokenType, c):
+    def make_token(self, type: TokenType, c=None):
         token = Token(type, self.idx_line, self.idx_char)
-        token.string_val = c
+
+        if c is not None:
+            token.string_val = c
+        else:
+            token.string_val = ''
+
         return token
 
     def get_token(self):
-        # TODO: To implement string, character
-        
+
         state = State.START
         token = None
 
@@ -189,22 +212,52 @@ class Scanner:
                     state = State.ID
 
                 elif c == '/':
-                    token = self.make_token(TokenType.OP, c)
+                    token = self.make_token(TokenType.OP_DIV, c)
                     state = State.S1
 
-                elif c in '+-*!=':
+                elif c in '+-*!=~^':
                     if c == '=':
                         token = self.make_token(TokenType.OP_ASSIGN, c)
-                        state = State.OP1
-                    else:
-                        token = self.make_token(TokenType.OP, c)
-                        state = State.OP1
-                elif c in '<>':
-                    token = self.make_token(TokenType.OP, c)
+                    elif c == '+':
+                        token = self.make_token(TokenType.OP_PLUS, c)
+                    elif c == '-':
+                        token = self.make_token(TokenType.OP_MINUS, c)
+                    elif c == '*':
+                        token = self.make_token(TokenType.OP_TIMES, c)
+                    elif c == '/':
+                        token = self.make_token(TokenType.OP_DIV, c)
+                    elif c == '!':
+                        token = self.make_token(TokenType.OP_LOGIC_NOT, c)
+                    elif c == '~':
+                        token = self.make_token(TokenType.OP_BIT_NOT, c)
+                    elif c == '^':
+                        token = self.make_token(TokenType.OP_BIT_XOR, c)
+
+                    state = State.OP1
+
+                elif c == '<' or c == '>':
+                    if c == '<':
+                        token = self.make_token(TokenType.LT, c)
+                    elif c == '>':
+                        token = self.make_token(TokenType.GT, c)
                     state = State.OP2
-                elif c in '|&':
-                    token = self.make_token(TokenType.OP, c)
+
+                elif c == '|' or c == '&':
+                    if c == '|':
+                        token = self.make_token(TokenType.OP_BIT_OR, c)
+                    elif c == '&':
+                        token = self.make_token(TokenType.OP_BIT_AND, c)
                     state = State.OP3
+                
+                # if double quotation mark
+                elif c == '"':
+                    token = self.make_token(TokenType.STRING)
+                    state = State.STR
+                
+                # if single quotation mark
+                elif c == "'":
+                    token = self.make_token(TokenType.CHAR)
+                    state = State.CHR
                     
                 # other
                 else:
@@ -213,7 +266,9 @@ class Scanner:
             elif state == State.NUM_INT:
                 if self.is_digits(c):
                     token.string_val += c
-
+                elif c == 'u' or c == 'U':
+                    token.int_val = int(token.string_val)
+                    state = State.DONE
                 elif c == '.':
                     token.string_val += c
                     token.type = TokenType.NUM_FLOAT
@@ -226,7 +281,7 @@ class Scanner:
             elif state == State.NUM_FLOAT:
                 if '0' <= c <= '9':
                     token.string_val += c
-                elif c in 'fF':
+                elif c == 'f' or c == 'F':
                     token.float_val = float(token.string_val)
                     state = State.DONE
                 else:
@@ -252,6 +307,10 @@ class Scanner:
                     token.string_val += c
                     state = State.CMNT2
                     token.type = TokenType.COMMENT
+                elif c == '=':
+                    token.string_val += c
+                    token.type = TokenType.OP_DIV_ASSIGN
+                    state = State.DONE
                 else:
                     self.unget_next_char()
                     state = State.DONE
@@ -276,29 +335,51 @@ class Scanner:
                     state = State.CMNT2
 
             elif state == State.OP1:
-                if c == '=':
+                if c == '=' or c == '+' or c == '-':
                     token.string_val += c
-                    token.type = TokenType.OP_ASSIGN
+                    if token.string_val == '++':
+                        token.type = TokenType.OP_INC
+                    elif token.string_val == '--':
+                        token.type = TokenType.OP_DEC
+                    elif token.string_val == '+=':
+                        token.type = TokenType.OP_ADD_ASSIGN
+                    elif token.string_val == '-=':
+                        token.type = TokenType.OP_SUB_ASSIGN
+                    elif token.string_val == '==':
+                        token.type = TokenType.EQ
+                    elif token.string_val == '!=':
+                        token.type = TokenType.NEQ
+                    elif token.string_val == '~=':
+                        token.type = TokenType.OP_BIT_NOT_ASSIGN
+                    elif token.string_val == '^=':
+                        token.type = TokenType.OP_BIT_XOR_ASSIGN
+                    else:
+                        token.type == TokenType.UNDEF
+
                 state = State.DONE
             
-            elif state == State.OP2:
-                token.string_val += c
+            elif state == State.OP2:                
                 if c == '=':
+                    token.string_val += c
                     if token.string_val == '<=':
                         token.type = TokenType.LTE
                     elif token.string_val == '>=':
                         token.type = TokenType.GTE
                     state = State.DONE
                 elif c in '<>':
+                    token.string_val += c
                     state = State.OP2_1
+                else:
+                    self.unget_next_char()
+                    state = State.DONE
             
             elif state == State.OP2_1:
                 if c == '=':
                     token.string_val += c
                     if token.string_val == '<<=':
-                        token.type = TokenType.OP_ASSIGN
+                        token.type = TokenType.OP_SHL_ASSIGN
                     elif token.string_val == '>>=':
-                        token.type = TokenType.OP_ASSIGN
+                        token.type = TokenType.OP_SHR_ASSIGN
                 else:
                     self.unget_next_char()
                 state = State.DONE
@@ -307,23 +388,37 @@ class Scanner:
                 if c == '=':
                     token.string_val += c
                     if token.string_val == '|=':
-                        token.type = TokenType.OP_ASSIGN
+                        token.type = TokenType.OP_BIT_OR_ASSIGN
                     elif token.string_val == '&=':
-                        token.type = TokenType.OP_ASSIGN
+                        token.type = TokenType.OP_BIT_AND_ASSIGN
                     else:
                         token.type = TokenType.UNDEF
                 elif c in '|&':
                     token.string_val += c
                     if token.string_val == '||':
-                        token.type = TokenType.OP
+                        token.type = TokenType.OP_LOGIC_OR
                     elif token.string_val == '&&':
-                        token.type = TokenType.OP
+                        token.type = TokenType.OP_LOGIC_AND
                     else:
                         token.type = TokenType.UNDEF
                 else:
                     self.unget_next_char()
                 
                 state = State.DONE
+
+            # if string between " and "
+            elif state == State.STR:
+                if c == '"':
+                    state = State.DONE
+                else:
+                    token.string_val += c
+
+            # if a character between ' and '
+            elif state == State.CHR:
+                if c == "'":
+                    state = State.DONE
+                else:
+                    token.string_val += c
 
         return token
         
