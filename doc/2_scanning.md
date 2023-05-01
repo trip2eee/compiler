@@ -79,7 +79,7 @@ graph LR;
   2. They can explicitly describe a match of the empty string
 
 
-An NFA $M$ consists of an alphabet $\Sigma$, a set of state $S$, a transition function $T: S \times (\Sigma \cup \{\epsilon\})\rightarrow \wp(S)$, a start state $s_0$ from $S$, and a set of accepting state $A$ from $S$. The language accepted by $M$, written $L(M)$, is defined to be the set of strings of characters $c_1c_2\dots c_n$ with each $c_i$ from $\Sigma \cup \{\epsilon\}$ such that there exist states $s_1$ in $T(s_0, c_1)$, $s_2$ in $T(s_1,c_2) \dots, s_n$ in $T(s_{n-1},c_n)$ with $s_n$ an element of $A$.
+An NFA $M$ consists of an alphabet $\Sigma$, a set of state $S$, a transition function $T: S \times (\Sigma \cup \lbrace\epsilon\rbrace)\rightarrow \wp(S)$, a start state $s_0$ from $S$, and a set of accepting state $A$ from $S$. The language accepted by $M$, written $L(M)$, is defined to be the set of strings of characters $c_1c_2\dots c_n$ with each $c_i$ from $\Sigma \cup \lbrace\epsilon\rbrace$ such that there exist states $s_1$ in $T(s_0, c_1)$, $s_2$ in $T(s_1,c_2) \dots, s_n$ in $T(s_{n-1},c_n)$ with $s_n$ an element of $A$.
 
 
 ## 2.4 From Regular expressions to DFAs
@@ -139,13 +139,13 @@ graph LR
   1 -- ε --> 4
   3  -- ε -->  2
 ```
-In this NFA, we have $\bar{1}=\{1, 2, 4\}, \bar{2}=\{2\}, \bar{3}=\{2, 3, 4\}, \bar{4}=\{4\}$.
+In this NFA, we have $\bar{1}=\lbrace1, 2, 4\rbrace, \bar{2}=\lbrace2\rbrace, \bar{3}=\lbrace2, 3, 4\rbrace, \bar{4}=\lbrace4\rbrace$.
 
 We now define the $\epsilon$-closure of a set of states to be the union of the $\epsilon$-closures of each individual state. In symbols, if $S$ is a set of states, then we have 
 $$ \bar{S} = \bigcup_{s \in S} \bar{s} $$
 
 #### The Subset Construction
-Now we can construct DFA from a given NFA $M$, which we will call $\bar{M}$. We first compute the $\epsilon$-closure of the start state of $M$; this becomes the start state of $\bar{M}$. For this set, and for each subsequent set, we compute transition on charactor $a$ as follows. Given a set $S$ of states and a charactor $a$ in the alphabet, compute the set $S'_a=\{t | \text{for some } s \text{ in } S \text{ there is a transition from } s \text{ to } t \text{ on } a\}$. Then, compute $\bar{S'_a}$, the $\epsilon$-closure of $S'_a$. This defines a new state in the subset constructio, together with a new transition $S \xrightarrow{a}{} \bar{S'_a}$ Continue with this process until no new states or transitions are created. Mark as accepting those states constructed in this manner that conatin an accepting state of $M$. This is the DFA $\bar{M}$.
+Now we can construct DFA from a given NFA $M$, which we will call $\overline{M}$. We first compute the $\epsilon$-closure of the start state of $M$; this becomes the start state of $\overline{M}$. For this set, and for each subsequent set, we compute transition on charactor $a$ as follows. Given a set $S$ of states and a charactor $a$ in the alphabet, compute the set $S'_a=\lbrace t | \text{for some } s \text{ in } S \text{ there is a transition from } s \text{ to } t \text{ on } a\rbrace$. Then, compute $\overline{S'_a}$, the $\epsilon$-closure of $S'_a$. This defines a new state in the subset constructio, together with a new transition $S \xrightarrow{a}{} \overline{S'_a}$ Continue with this process until no new states or transitions are created. Mark as accepting those states constructed in this manner that conatin an accepting state of $M$. This is the DFA $\overline{M}$.
 
 ##### Example
 letter(letter|digit)*
@@ -158,11 +158,11 @@ graph LR
   9 -- ε --> 4
   3 -- ε --> 10
 ```
-Start state: $\overline{\{ 1 \}} = \{1\}$ 
+Start state: $\overline{\lbrace 1 \rbrace} = \lbrace1\rbrace$ 
 
-Transition on letter to $\overline{\{ 2 \}} = \{2, 3, 4, 5, 7, 10\}$ 
+Transition on letter to $\overline{\lbrace 2 \rbrace} = \lbrace2, 3, 4, 5, 7, 10\rbrace$ 
 
-Transition on digit to $\overline{\{ 8 \}} = \{ 4, 5, 7, 9, 10\}$
+Transition on digit to $\overline{\lbrace 8 \rbrace} = \lbrace 4, 5, 7, 9, 10\rbrace$
 
 ```mermaid
 graph LR
