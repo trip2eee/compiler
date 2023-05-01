@@ -22,6 +22,7 @@ A derivation: A sequence of replacements of structure names by choices on the ri
 ### Example
 A derivation for the arithmetic expression (34-3)*42
 
+$$
 \begin{split}
 exp & \Rightarrow exp \  op \  exp \\
     & \Rightarrow exp \  op \  number \\
@@ -31,8 +32,8 @@ exp & \Rightarrow exp \  op \  exp \\
     & \Rightarrow (exp \  op \  number) \  * \  number \\
     & \Rightarrow (exp \  - \  number) \  * \  number \\
     & \Rightarrow (number \  - \  number) \  * \  number \\
-
 \end{split}
+$$
 
 Note that derivation steps use a different arrow from the arrow metasymbol in the grammar rules.
 
@@ -70,14 +71,14 @@ $$empty \rightarrow \epsilon$$
 ### 3.3.1 Parse Trees
 A parse tree: A labeled tree in which the interior nodes are labeled by nonterminals, the leaf nodes are labeled by terminals, and the children of each internal node represent the replacement of the associated nonterminal in one step of the derivation.
 
-\[
+$$
 \begin{split}
 exp & \Rightarrow exp \ op \ exp  \\
     & \Rightarrow number \ op \ exp \\
     & \Rightarrow number \ + \ exp  \\
     & \Rightarrow number \ + \ number  \\
 \end{split}
-\]
+$$
 
 corresponds to the parse tree
 
@@ -119,6 +120,192 @@ exp3 --> number2
 op --> plus
 ```
 
+Parse tree for (34-3)*42 and derivations
 
+This derivation a rightmost derivation, and the corresponding numbering of the parse tree is a reverse postorder numbering.
+```mermaid
+graph TD
+exp1[1 exp]
+exp2[4 exp]
+op[3 op]
+exp3[2 exp]
+exp4["(  5 exp )"]
+exp5[8 exp]
+exp6[6 exp]
+op2[7 op]
 
+mul[*]
+minus[-]
+
+number1[number]
+number2[number]
+number3[number]
+
+exp1 --> exp2
+exp1 --> op
+exp1 --> exp3 --> number1
+
+exp2 --> exp4
+exp4 --> exp5 --> number2
+exp4 --> op2 --> minus
+exp4 --> exp6 --> number3
+op --> mul
+```
+
+### 3.3.2 Abstract Syntax Trees
+A parse tree is a useful representation of the structure of a string of tokens. However, a parse tree contains much more information than is absolutely necessary for a compiler to produce executable code.
+
+Abstract Syntax Trees (Syntax Trees): Trees representing abstractions of the actual source code token sequences. However token sequences cannot be recovered from them unlike parse trees. Nevertheless they contain all the information needed for translation, in a more efficient form than parse tree.
+
+Root node is simply labeled by the operation it represents, and the leaf nodes are labeled by their values.
+```mermaid
+graph TD
+op[+]
+number1[3]
+number2[4]
+op --> number1
+op --> number2
+```
+
+```mermaid
+graph TD
+op1[*]
+op2[-]
+number1[34]
+number2[3]
+number3[42]
+op1 --> op2
+op1 --> number3
+op2 --> number1
+op2 --> number2
+```
+
+Abstract syntax tree can be thought of as a tree representation of a shorthand notation called abstract syntax. For example, the abstract syntax for the expression 3+4 might be written as $OpExp(Plus, ConstExp(3), ConstExp(4))$, and the abstract syntax for the epxression (34-3)*42 might be written as 
+$$ OpExp(Times, OpExp(Minus, ConstExp(34), ConstExp(3)), ConstExp(42))$$
+
+Indeed, abstract syntax can be given a formal definition using a BNF-like notation, just like concrete syntax.
+
+$$ exp \rightarrow OpExp(op, exp, exp) \mid ConstExp(integer) $$
+
+$$ op \rightarrow Plus \mid Minus \mid Times $$
+
+The abstract syntax trees for our simple arithmetic expressions can be given by the C++ data type declaration.
+```C++
+enum OpType_e
+{
+    PLUS,
+    MINUS,
+    TIMES
+};
+
+enum ExpType_e
+{
+    OP,
+    CONST
+};
+
+struct STreeNode_t
+{
+    ExpType_e eType;
+    OpType_e eOp;
+    STreeNode_t* pstLChild;
+    STreeNode_t* pstRChild;
+    int val;
+};
+```
+
+## 3.4 Ambiguity
+It is possible for a grammar to permit a string to have more than one parse tree.
+
+### Example
+34-3*42
+
+```mermaid
+graph TD
+exp1(exp)
+op1(op)
+exp2(exp)
+exp3(exp)
+exp4(exp)
+number1(number)
+op2(op)
+exp5(exp)
+number2(number)
+number3(number)
+
+exp1 --> exp2
+
+exp2 --> exp4 --> number2
+exp2 --> op2 --> -
+exp2 --> exp5 --> number3
+
+exp1 --> op1 --> *
+exp1 --> exp3 --> number1
+```
+
+```mermaid
+graph TD
+exp1(exp)
+op1(op)
+exp2(exp)
+
+exp3(exp)
+number1(number)
+
+exp1 --> op1 --> -
+exp1 --> exp2 --> number1
+exp1 --> exp3
+
+exp4(exp)
+op2(op)
+exp5(exp)
+number2(number)
+number3(number)
+
+exp3 --> exp4 --> number2
+exp3 --> op2 --> *
+exp3 --> exp5 --> number3
+```
+
+A grammar that generates a string with two distinct parse trees is called an ambiguous grammar.
+
+Tow basic methods to deal with ambiguities.
+1. Disambiguating rule : To state a rule that specifies in each ambiguous case which of the parse trees is the correct one. Disadvantage is that the syntactic structure of the language is no longer given by the grammar alone.
+
+2. To change the grammar into a form that forces the construction of the correct parse tree, thus removing the ambiguity. The standard solution is to give addition and subtraction the same precedence, and to give multiplication a higher precedence.
+
+Unfortunately, method 2 does not completely remove the ambiguity of the grammar. Consider the string 34-3-42. This string also has two possible syntax trees.
+```mermaid
+graph TD
+
+op1[-]
+op2[-]
+num1[34]
+num2[3]
+num3[42]
+
+op1 --> op2
+op1 --> num3
+op2 --> num1
+op2 --> num2
+```
+(34 - 3) - 42 = -11 (correct)
+
+```mermaid
+graph TD
+
+op1[-]
+num1[34]
+op1 --> num1
+op2[-]
+op1 --> op2
+
+num2[3]
+num3[42]
+op2 --> num2
+op2 --> num3
+```
+34 - (3 - 42) = 73 (wrong)
+
+Subtraction is considered to be left associative; that is, a series of subtraction operations is performed from left to right.
 
