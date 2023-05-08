@@ -156,7 +156,7 @@ class ScannerTest(unittest.TestCase):
         tokens = scanner.scan('unittest/control_statements.cmm')
 
         target = [
-            TokenType.IF, TokenType.LPAREN, TokenType.ID, TokenType.NEQ, TokenType.NUM, TokenType.RPAREN, 
+            TokenType.IF, TokenType.LPAREN, TokenType.ID, TokenType.OP_NEQ, TokenType.NUM, TokenType.RPAREN, 
             TokenType.LBRACE, 
             TokenType.ID, TokenType.OP_ASSIGN, TokenType.NUM, TokenType.SEMI,
             TokenType.RBRACE
@@ -164,7 +164,7 @@ class ScannerTest(unittest.TestCase):
         self._test_sequence(tokens, target)
 
         target = [
-            TokenType.FOR, TokenType.LPAREN, TokenType.ID, TokenType.OP_ASSIGN, TokenType.NUM, TokenType.SEMI, TokenType.ID, TokenType.LT, TokenType.NUM, TokenType.SEMI, TokenType.ID, TokenType.OP_INC, TokenType.RPAREN, 
+            TokenType.FOR, TokenType.LPAREN, TokenType.ID, TokenType.OP_ASSIGN, TokenType.NUM, TokenType.SEMI, TokenType.ID, TokenType.OP_LT, TokenType.NUM, TokenType.SEMI, TokenType.ID, TokenType.OP_INC, TokenType.RPAREN, 
             TokenType.LBRACE, 
             TokenType.RBRACE
         ]
@@ -173,7 +173,7 @@ class ScannerTest(unittest.TestCase):
 
         target = [
             TokenType.TYPE, TokenType.ID, TokenType.OP_ASSIGN, TokenType.NUM, TokenType.SEMI,
-            TokenType.WHILE, TokenType.LPAREN, TokenType.ID, TokenType.LT, TokenType.NUM, TokenType.RPAREN, TokenType.LBRACE, 
+            TokenType.WHILE, TokenType.LPAREN, TokenType.ID, TokenType.OP_LT, TokenType.NUM, TokenType.RPAREN, TokenType.LBRACE, 
             TokenType.ID, TokenType.OP_ADD_ASSIGN, TokenType.NUM, TokenType.SEMI,
             TokenType.ID, TokenType.OP_BIT_XOR_ASSIGN, TokenType.NUM, TokenType.SEMI,
             TokenType.ID, TokenType.OP_BIT_NOT_ASSIGN, TokenType.NUM, TokenType.SEMI,

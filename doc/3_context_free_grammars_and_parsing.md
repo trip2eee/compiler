@@ -379,7 +379,7 @@ It would be possible to use the same notation for repetition that regular expres
 
 $ A \rightarrow \beta \ \alpha *$
 
-$ A \rightarrow \alpha* \ \beta $
+$ A \rightarrow \alpha * \ \beta $
 
 Instead, EBNF opt to use curly brackets {...} to express repetition.
 
@@ -446,4 +446,25 @@ $ stmt\text-sequence \rightarrow stmt \ ; \ stmt\text-sequence \ \mid \ stmt$
 is written as 
 
 $ stmt\text-sequence \rightarrow stmt \ [\ ; \ stmt\text-sequence ]$
+
+### 3.5.2 Syntax Diagrams
+Syntax Diagrams : Graphical representations for visually representing EBNF rules.
+
+
+## 3.6 Formal Properties of Context-Free Languages
+### 3.6.1 A Formal Definition of Context-Free Languages
+
+#### Definition
+A context-free grammar consists of the following:
+1. A set $T$ of terminals.
+2. A set $N$ of nonterminals (disjoint from $T$).
+3. A set $P$ of productions, or grammar rules, of the form $A \rightarrow \alpha$, where $A$ is an element of $N$ and $\alpha$ is an element of $(T \cup N)*$ (a possibly empty sequence of terminals and nonterminals).
+4. A start symbol $S$ from the set $N$.
+
+### 3.6.3 The Chomsky Hierarchy and the Limits of Syntax as Context-Free Rules
+Chomsky Hierarchy : The four kinds of grammars
+1. Unrestricted - type 0 grammar
+2. Context sensitive - type 1 grammar
+3. Context free - type 2 grammar
+4. Regular - type 3 grammar
 

@@ -71,15 +71,15 @@ class TokenType(enum.IntEnum):
     OP_BIT_OR_ASSIGN   = 307   # |=
     OP_BIT_AND_ASSIGN  = 308   # &=
     OP_BIT_NOT_ASSIGN  = 309   # ~=
-    OP_BIT_XOR_ASSIGN  = 300   # ^=
+    OP_BIT_XOR_ASSIGN  = 310   # ^=
 
 
-    EQ      = 401          # ==
-    LT      = 402          # <
-    GT      = 403          # >
-    LTE     = 404          # <=
-    GTE     = 405          # >=
-    NEQ     = 406          # !=
+    OP_EQ      = 401          # ==
+    OP_LT      = 402          # <
+    OP_GT      = 403          # >
+    OP_LTE     = 404          # <=
+    OP_GTE     = 405          # >=
+    OP_NEQ     = 406          # !=
     
     LPAREN   = 500        # (
     RPAREN   = 501        # )
@@ -237,9 +237,9 @@ class Scanner:
 
                 elif c == '<' or c == '>':
                     if c == '<':
-                        token = self.make_token(TokenType.LT, c)
+                        token = self.make_token(TokenType.OP_LT, c)
                     elif c == '>':
-                        token = self.make_token(TokenType.GT, c)
+                        token = self.make_token(TokenType.OP_GT, c)
                     state = State.OP2
 
                 elif c == '|' or c == '&':
@@ -346,9 +346,9 @@ class Scanner:
                     elif token.string_val == '-=':
                         token.type = TokenType.OP_SUB_ASSIGN
                     elif token.string_val == '==':
-                        token.type = TokenType.EQ
+                        token.type = TokenType.OP_EQ
                     elif token.string_val == '!=':
-                        token.type = TokenType.NEQ
+                        token.type = TokenType.OP_NEQ
                     elif token.string_val == '~=':
                         token.type = TokenType.OP_BIT_NOT_ASSIGN
                     elif token.string_val == '^=':
@@ -362,9 +362,9 @@ class Scanner:
                 if c == '=':
                     token.string_val += c
                     if token.string_val == '<=':
-                        token.type = TokenType.LTE
+                        token.type = TokenType.OP_LTE
                     elif token.string_val == '>=':
-                        token.type = TokenType.GTE
+                        token.type = TokenType.OP_GTE
                     state = State.DONE
                 elif c in '<>':
                     token.string_val += c
