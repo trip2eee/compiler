@@ -468,3 +468,31 @@ Chomsky Hierarchy : The four kinds of grammars
 3. Context free - type 2 grammar
 4. Regular - type 3 grammar
 
+## 3.7 Syntax of C--
+
+$program \rightarrow stmt\text-sequence$
+
+$stmt\text-sequence \rightarrow stmt\text-sequence \ stmt \  \mid \ stmt   \ \mid \ \lbrace \ stmt\text-sequence \ \rbrace $
+
+$stmt \rightarrow if\text-stmt \ \mid \ for\text-stmt \ \mid \ assign\text-stmt$
+
+$assign\text-stmt \rightarrow identifier \  = \ exp \  ;$
+
+$if\text-stmt \rightarrow if \ ( \ exp \ ) \ \ stmt\text-sequence \ \mid if \ ( \ exp \ ) \ stmt\text-sequence \ else \ \ stmt\text-sequence $
+
+$for\text-stmt \rightarrow for \ ( \ exp \  ; \  exp \ ; \ exp \ ) \ \lbrace \  stmt\text-sequence \ \rbrace$
+
+$exp \rightarrow simple\text-exp \ comparison\text-op \ simple\text-exp \mid simple\text-exp $
+
+$comparison\text-op \rightarrow < \ \mid \ == \ \mid \  <= \ \mid >= \ \mid \ != \ $
+
+$simple\text-exp \rightarrow simple\text-exp \  addop \  term \ \mid \ term$
+
+$addop \rightarrow + \ \mid \ - $
+
+$term \rightarrow term \ mulop \ term \mid factor $
+
+$mulop \rightarrow * \ \mid \ / $
+
+$factor \rightarrow (\  exp \ ) \ \mid \  number \ \mid \ identifier$
+

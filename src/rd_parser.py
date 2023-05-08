@@ -14,7 +14,8 @@ class RDParser:
         self.list_tokens = []
         self.idx_token = -1
         self.token = None
-        
+        self.last_node = None
+
     def __del__(self):
         pass
 
@@ -27,43 +28,118 @@ class RDParser:
         self.idx_token += 1
         self.token = self.list_tokens[self.idx_token]
 
-        last_node = None
-
-        while self.idx_token < len(self.list_tokens) - 1:
-            node = self.exp()
-
-            if self.program is None:
-                self.program = node
-            
-            if last_node is not None:
-                last_node.sibling = node
-            
-            last_node = node
-
-            if self.match(TokenType.SEMI) == False:
-                break
+        self.program = self.stmt_sequence()
 
         return self.program
 
+    def stmt_sequence(self):
+        stmt_seq = None
+
+        if self.token.type == TokenType.LBRACE:
+            self.match(TokenType.LBRACE)
+            stmt_seq = self.stmt_sequence()
+            self.match(TokenType.RBRACE)
+        else:
+            last_stmt = None
+            
+            stmt = self.stmt()
+            while stmt is not None:
+                if last_stmt is None:
+                    stmt_seq = stmt
+                    last_stmt = stmt
+                else:
+                    last_stmt.sibling = stmt
+                    last_stmt = stmt
+                
+                stmt = self.stmt()
+
+        return stmt_seq
+
+    def stmt(self):
+        self.token: Token
+        node = None
+
+        if self.token.type == TokenType.ID:
+            # assigment
+            node = TreeNode()
+            node.stmt_kind = StmtKind.ASSIGN
+
+            node.child[0] = TreeNode()
+            node.child[0].exp_kind = ExpKind.ID
+            node.child[0].string = self.token.string_val
+
+            self.get_next_token()
+            node.op = self.token.type
+            
+            # TODO: To implement all assignment operators
+            self.match(TokenType.OP_ASSIGN)
+            
+            node.child[1] = self.exp()
+            self.match(TokenType.SEMI)
+        
+        elif self.token.type == TokenType.IF:
+            # if statement
+            node = TreeNode()
+            node.stmt_kind = StmtKind.IF
+
+            self.get_next_token()
+
+            # condition
+            self.match(TokenType.LPAREN)
+            node.child[0] = self.exp()
+            self.match(TokenType.RPAREN)
+            
+            # statement
+            node.child[1] = self.stmt_sequence()
+
+            if self.token.type == TokenType.ELSE:
+                self.get_next_token()
+
+                node.child[2] = self.stmt_sequence()
+            else:
+                node.child[2] = None
+
+        elif self.token.type == TokenType.FOR:
+            pass
+
+        return node
+
     def exp(self):
+        self.token: Token
+        node = self.simple_exp()
+
+        # while comparison operator
+        while 400 <= self.token.type <= 410:
+            op = self.token.type
+            new_node = TreeNode()
+            new_node.exp_kind = ExpKind.OP
+            new_node.op = op
+            new_node.child[0] = node
+            self.get_next_token()
+            new_node.child[1] = self.simple_exp()
+            node = new_node
+        
+        return node
+
+    def simple_exp(self):
         self.token : Token
         node = self.term()
 
         while self.token.type == TokenType.OP_PLUS or self.token.type == TokenType.OP_MINUS:
-            if self.token.type == TokenType.OP_PLUS:
-                self.match(TokenType.OP_PLUS)
+            if self.token.type == TokenType.OP_PLUS:                
                 new_node = TreeNode()
                 new_node.exp_kind = ExpKind.OP
                 new_node.op = TokenType.OP_PLUS
                 new_node.child[0] = node
+                self.get_next_token()
                 new_node.child[1] = self.term()                
                 node = new_node
-            elif self.token.type == TokenType.OP_MINUS:
-                self.match(TokenType.OP_MINUS)
+            elif self.token.type == TokenType.OP_MINUS:                
                 new_node = TreeNode()
                 new_node.exp_kind = ExpKind.OP
                 new_node.op = TokenType.OP_MINUS
                 new_node.child[0] = node
+                self.get_next_token()
                 new_node.child[1] = self.term()                
                 node = new_node
             else:
@@ -73,27 +149,25 @@ class RDParser:
     
     def term(self):
         self.token : Token
-
         node = self.factor()
 
         while True:
-            
-            if self.token.type == TokenType.OP_TIMES:
-                self.match(TokenType.OP_TIMES)
+            if self.token.type == TokenType.OP_TIMES:                
                 new_node = TreeNode()
                 new_node.exp_kind = ExpKind.OP
                 new_node.op = TokenType.OP_TIMES
                 new_node.child[0] = node
+                self.get_next_token()
                 new_node.child[1] = self.factor()                
                 node = new_node
 
-            elif self.token.type == TokenType.OP_DIV:
-                self.match(TokenType.OP_DIV)
+            elif self.token.type == TokenType.OP_DIV:                
                 new_node = TreeNode()
                 new_node.exp_kind = ExpKind.OP
                 new_node.op = TokenType.OP_DIV
                 new_node.child[0] = node
-                new_node.child[1] = self.factor()                
+                self.get_next_token()
+                new_node.child[1] = self.factor()            
                 node = new_node
             else:
                 break
@@ -118,18 +192,31 @@ class RDParser:
             if self.token.type == TokenType.NUM:                
                 node.exp_type = ExpType.INTEGER
                 node.integer = self.token.int_val
-                self.match(TokenType.NUM)
+                self.get_next_token()
             elif self.token.type == TokenType.NUM_FLOAT:                
                 node.exp_type = ExpType.FLOAT
                 node.float = self.token.float_val
-                self.match(TokenType.NUM_FLOAT)
-            else:
-                self.error()
+                self.get_next_token()
+        # identifier
+        elif self.token.type == TokenType.ID:
+            node = TreeNode()
+            node.exp_kind = ExpKind.ID
+            node.string = self.token.string_val
+            self.get_next_token()
 
         else:
-            self.error()
+            self.error('No factor')
 
         return node
+    
+    def get_next_token(self):
+        self.idx_token += 1
+
+        if self.idx_token < len(self.list_tokens):
+            self.token = self.list_tokens[self.idx_token]            
+            return True
+        else:
+            return False
     
     def match(self, exp_type: TokenType):
 
@@ -141,10 +228,11 @@ class RDParser:
                 self.token = self.list_tokens[self.idx_token]            
                 return True
             else:
+                # end of token
                 return False
         else:
             self.error()
             return False
     
-    def error(self):
-        print('Error in line {}'.format(self.token.line_number))
+    def error(self, message=''):
+        print('Error, line {}, {}'.format(self.token.line_number, message))
