@@ -476,7 +476,6 @@ $stmt\text-sequence \rightarrow stmt\text-sequence \ stmt \  \mid \ stmt   \ \mi
 
 $stmt \rightarrow if\text-stmt \ \mid \ for\text-stmt \ \mid \ assign\text-stmt$
 
-$assign\text-stmt \rightarrow identifier \  = \ exp \  ;$
 
 $if\text-stmt \rightarrow if \ ( \ exp \ ) \ \ stmt\text-sequence \ \mid if \ ( \ exp \ ) \ stmt\text-sequence \ else \ \ stmt\text-sequence $
 
@@ -502,5 +501,10 @@ $ lunaryop \rightarrow + \ \mid \ - \mid ++ \ \mid --$
 
 $ runaryop \rightarrow  ++ \ \mid --$
 
+TODO:
 
+$stmt \rightarrow if\text-stmt \ \mid \ for\text-stmt \ \mid \ exp \ ;$
 
+$assign\text-exp \rightarrow identifier \  = \ exp$
+
+$exp \rightarrow simple\text-exp \ comparison\text-op \ simple\text-exp \mid simple\text-exp \ \mid \ assign\text-exp$
