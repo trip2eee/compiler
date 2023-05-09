@@ -83,7 +83,6 @@ class RDParser:
             node.stmt_kind = StmtKind.IF
 
             self.get_next_token()
-
             # condition
             self.match(TokenType.LPAREN)
             node.child[0] = self.exp()
@@ -100,7 +99,17 @@ class RDParser:
                 node.child[2] = None
 
         elif self.token.type == TokenType.FOR:
-            pass
+            node = TreeNode()
+            node.stmt_kind = TokenType.FOR
+
+            self.get_next_token()
+            self.match(TokenType.LPAREN)
+            # initialization
+            node.child[0] = self.stmt()
+            self.match(TokenType.SEMI)
+
+            self.match(TokenType.RPAREN)
+
 
         return node
 
@@ -177,15 +186,15 @@ class RDParser:
     def factor(self):
         self.token : Token
         node = None
-
-        # if (
+        
         if self.token.type == TokenType.LPAREN:
+            # if (
             self.match(TokenType.LPAREN)
             node = self.exp()
             self.match(TokenType.RPAREN)
-
-        # if number
+        
         elif self.token.type == TokenType.NUM or self.token.type == TokenType.NUM_FLOAT:
+            # if number
             node = TreeNode()
             node.exp_kind = ExpKind.CONST
 
@@ -197,13 +206,53 @@ class RDParser:
                 node.exp_type = ExpType.FLOAT
                 node.float = self.token.float_val
                 self.get_next_token()
-        # identifier
+        
         elif self.token.type == TokenType.ID:
+            # identifier
             node = TreeNode()
             node.exp_kind = ExpKind.ID
             node.string = self.token.string_val
             self.get_next_token()
 
+            # right unary id++, id--
+            if self.token.type == TokenType.OP_INC or self.token.type == TokenType.OP_DEC:
+                new_node = TreeNode()
+                new_node.exp_kind = ExpKind.OP
+                new_node.op = self.token.type
+                new_node.child[0] = node
+                node = new_node
+                self.get_next_token()
+        
+        elif self.token.type == TokenType.OP_MINUS:
+            # signop -
+            node = TreeNode()
+            node.exp_kind = ExpKind.OP
+            node.op = TokenType.OP_MINUS
+            node.exp_type = ExpType.INTEGER
+
+            node.child[0] = TreeNode()
+            node.child[0].exp_type = ExpType.INTEGER
+            node.child[0].integer = -1
+            node.child[0].float = -1.0
+
+            self.get_next_token()
+
+            node.child[1] = self.factor()
+        
+        elif self.token.type == TokenType.OP_PLUS:
+            # signop +
+            self.get_next_token()
+            node = self.factor()
+
+        elif self.token.type == TokenType.OP_INC or self.token.type == TokenType.OP_DEC:
+            # left unary ++id, --id
+            node = TreeNode()
+            node.exp_kind = ExpKind.OP
+            node.op = self.token.type
+            
+            self.get_next_token()
+            node.child[1] = self.factor()
+        
         else:
             self.error('No factor')
 

@@ -355,7 +355,10 @@ class Scanner:
                         token.type = TokenType.OP_BIT_XOR_ASSIGN
                     else:
                         token.type == TokenType.UNDEF
-
+                else:
+                    # if other
+                    self.unget_next_char()
+                    
                 state = State.DONE
             
             elif state == State.OP2:                

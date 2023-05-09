@@ -494,5 +494,13 @@ $term \rightarrow term \ mulop \ term \mid factor $
 
 $mulop \rightarrow * \ \mid \ / $
 
-$factor \rightarrow (\  exp \ ) \ \mid \  number \ \mid \ identifier$
+$factor \rightarrow (\  exp \ ) \ \mid \  number \ \mid \ identifier \ \mid signop \ factor \ \mid \ \ lunaryop \ identifier \ \mid \ identifier \ runaryop $
+
+$ signop \rightarrow + \ \mid \ -$ 
+
+$ lunaryop \rightarrow + \ \mid \ - \mid ++ \ \mid --$
+
+$ runaryop \rightarrow  ++ \ \mid --$
+
+
 
