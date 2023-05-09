@@ -21,15 +21,15 @@ Top-down parsers comes in two forms.
   
 Example: Consider the expression grammar
 
-$ exp \ \rightarrow \ exp \ addop \ term \mid \ term $
+$exp \ \rightarrow \ exp \ addop \ term \mid \ term$
 
-$ addop \ \rightarrow \ + \ \mid \ - $
+$addop \ \rightarrow \ + \ \mid \ -$
 
-$ term \ \rightarrow \ term \ mulop \ term \mid factor $
+$term \ \rightarrow \ term \ mulop \ term \mid factor$
 
-$ mulop \ \rightarrow \ * $
+$mulop \ \rightarrow \ *$
 
-$ factor \ \rightarrow \ (\ exp \ ) \mid number $
+$factor \ \rightarrow \ (\ exp \ ) \mid number$
 
 and consider the grammar rule for a factor. A recursive-descent proceduer that recognizes a factor can be written in pseudocode as follows:
 
@@ -86,15 +86,15 @@ $if\text-stmt \rightarrow if \ ( \ exp \ ) \ statement \ [\  else \ statement \ 
 
 Solution to the first example is to use EBNF rule. The curly brackets {} expresses repetition.
 
-$ exp \ \rightarrow \ term \ \lbrace \ addop \ term \rbrace $
+$exp \ \rightarrow \ term \ \lbrace \ addop \ term \rbrace$
 
-$ term \ \rightarrow \ factor \ \lbrace \ mulop \ factor \ \rbrace$
+$term \ \rightarrow \ factor \ \lbrace \ mulop \ factor \ \rbrace$
 
-$ addop \ \rightarrow \ + \ \mid \ - $
+$addop \ \rightarrow \ + \ \mid \ -$
 
-$ mulop \ \rightarrow \ * $
+$mulop \ \rightarrow \ *$
 
-$ factor \ \rightarrow \ (\ exp \ ) \mid number $
+$factor \ \rightarrow \ (\ exp \ ) \mid number$
 
 ```python
 def exp():
