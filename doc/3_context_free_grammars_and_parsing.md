@@ -474,18 +474,20 @@ $program \rightarrow stmt\text-sequence$
 
 $stmt\text-sequence \rightarrow stmt\text-sequence \ stmt \  \mid \ stmt   \ \mid \ \lbrace \ stmt\text-sequence \ \rbrace$
 
-$stmt \rightarrow if\text-stmt \ \mid \ for\text-stmt \ \mid \ assign\text-stmt$
+$stmt \rightarrow if\text-stmt \ \mid \ for\text-stmt \ \mid \ exp \ ;$
 
 
 $if\text-stmt \rightarrow if \ ( \ exp \ ) \ \ stmt\text-sequence \ \mid if \ ( \ exp \ ) \ stmt\text-sequence \ else \ \ stmt\text-sequence$
 
 $for\text-stmt \rightarrow for \ ( \ exp \  ; \  exp \ ; \ exp \ ) \ \lbrace \  stmt\text-sequence \ \rbrace$
 
-$exp \rightarrow simple\text-exp \ comparison\text-op \ simple\text-exp \mid simple\text-exp$
+$exp \rightarrow simple\text-exp \ comparison\text-op \ simple\text-exp \mid simple\text-exp \ \mid \ assign\text-exp$
 
 $comparison\text-op \rightarrow < \ \mid \ == \ \mid \  <= \ \mid >= \ \mid \ != \ $
 
 $simple\text-exp \rightarrow simple\text-exp \  addop \  term \ \mid \ term$
+
+$assign\text-exp \rightarrow identifier \  = \ exp$
 
 $addop \rightarrow + \ \mid \ - $
 
@@ -500,11 +502,3 @@ $signop \rightarrow + \ \mid \ -$
 $lunaryop \rightarrow + \ \mid \ - \mid ++ \ \mid --$
 
 $runaryop \rightarrow  ++ \ \mid --$
-
-TODO:
-
-$stmt \rightarrow if\text-stmt \ \mid \ for\text-stmt \ \mid \ exp \ ;$
-
-$assign\text-exp \rightarrow identifier \  = \ exp$
-
-$exp \rightarrow simple\text-exp \ comparison\text-op \ simple\text-exp \mid simple\text-exp \ \mid \ assign\text-exp$

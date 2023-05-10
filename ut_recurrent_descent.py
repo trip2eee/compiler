@@ -7,20 +7,19 @@ from typing import List
 class ReccurentDescentParserTest(unittest.TestCase):
 
     def setUp(self):
-        pass
+        self.parser = RDParser()
 
     def tearDown(self):
         pass
 
     def test_stmt_exp(self):
-        parser = RDParser()
-        program = parser.parse('unittest/stmt_exp.cmm')
+        program = self.parser.parse('unittest/stmt_exp.cmm')
 
         stmt : TreeNode
         stmt = program
 
         # a = 10;
-        self.assertEqual(stmt.stmt_kind, StmtKind.ASSIGN)
+        self.assertEqual(stmt.stmt_kind, StmtKind.EXP)
         exp = stmt.child[1]
         self.assertEqual(exp.exp_kind, ExpKind.CONST)
         self.assertEqual(exp.exp_type, ExpType.INTEGER)
@@ -79,8 +78,7 @@ class ReccurentDescentParserTest(unittest.TestCase):
         self.assertEqual(exp.child[0].child[1].op, TokenType.OP_TIMES)
 
     def test_stmt_if(self):
-        parser = RDParser()
-        program = parser.parse('unittest/stmt_if.cmm')
+        program = self.parser.parse('unittest/stmt_if.cmm')
 
         stmt : TreeNode
         stmt = program
@@ -96,11 +94,11 @@ class ReccurentDescentParserTest(unittest.TestCase):
         # b2 = 2;
         # b3 = 3;
         sub_stmt = stmt.child[1]
-        self.assertEqual(sub_stmt.stmt_kind, StmtKind.ASSIGN)
+        self.assertEqual(sub_stmt.stmt_kind, StmtKind.EXP)
         sub_stmt = sub_stmt.sibling
-        self.assertEqual(sub_stmt.stmt_kind, StmtKind.ASSIGN)
+        self.assertEqual(sub_stmt.stmt_kind, StmtKind.EXP)
         sub_stmt = sub_stmt.sibling
-        self.assertEqual(sub_stmt.stmt_kind, StmtKind.ASSIGN)
+        self.assertEqual(sub_stmt.stmt_kind, StmtKind.EXP)
         
         # else-part
         sub_stmt = stmt.child[2]
@@ -117,16 +115,30 @@ class ReccurentDescentParserTest(unittest.TestCase):
 
         # d = 4;
         sub_stmt = stmt.child[1]
-        self.assertEqual(sub_stmt.stmt_kind, StmtKind.ASSIGN)
+        self.assertEqual(sub_stmt.stmt_kind, StmtKind.EXP)
         sub_stmt = sub_stmt.sibling
         self.assertEqual(sub_stmt, None)
 
         # else-part
         sub_stmt = stmt.child[2]
         # e = 5;
-        self.assertEqual(sub_stmt.stmt_kind, StmtKind.ASSIGN)
+        self.assertEqual(sub_stmt.stmt_kind, StmtKind.EXP)
         sub_stmt = sub_stmt.sibling
         self.assertEqual(sub_stmt, None)
+
+    def test_stmt_for(self):        
+        program = self.parser.parse('unittest/stmt_for.cmm')
+
+        stmt : TreeNode
+        stmt = program
+
+        self.assertEqual(stmt.stmt_kind, StmtKind.FOR)
+        self.assertEqual(stmt.child[0].op, TokenType.OP_ASSIGN)
+        self.assertEqual(stmt.child[1].op, TokenType.OP_LT)
+        self.assertEqual(stmt.child[2].op, TokenType.OP_INC)
+        
+        self.assertEqual(stmt.child[3].stmt_kind, StmtKind.EXP)
+
 
 if __name__ == '__main__':
     unittest.main()

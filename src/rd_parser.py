@@ -65,63 +65,59 @@ class RDParser:
     def stmt(self):
         self.token: Token
         node = None
-
-        if self.token.type == TokenType.ID:
-            # assigment
-            node = TreeNode()
-            node.stmt_kind = StmtKind.ASSIGN
-
-            node.child[0] = TreeNode()
-            node.child[0].exp_kind = ExpKind.ID
-            node.child[0].string = self.token.string_val
-
-            self.get_next_token()
-            node.op = self.token.type
-            
-            # TODO: To implement all assignment operators
-            self.match(TokenType.OP_ASSIGN)
-            
-            node.child[1] = self.exp()
-            self.match(TokenType.SEMI)
         
-        elif self.token.type == TokenType.IF:
-            # if statement
-            node = TreeNode()
-            node.stmt_kind = StmtKind.IF
+        if self.token is not None: # and self.token.type != TokenType.RBRACE:
+            if self.token.type == TokenType.IF:
+                # if statement
+                node = TreeNode()
+                node.stmt_kind = StmtKind.IF
 
-            self.get_next_token()
-            # condition
-            self.match(TokenType.LPAREN)
-            node.child[0] = self.exp()
-            self.match(TokenType.RPAREN)
-            
-            # statement
-            node.child[1] = self.stmt_sequence()
-
-            if self.token.type == TokenType.ELSE:
                 self.get_next_token()
+                # condition
+                self.match(TokenType.LPAREN)
+                node.child[0] = self.exp()
+                self.match(TokenType.RPAREN)
+                
+                # statement
+                node.child[1] = self.stmt_sequence()
 
-                node.child[2] = self.stmt_sequence()
+                if self.token.type == TokenType.ELSE:
+                    self.get_next_token()
+
+                    node.child[2] = self.stmt_sequence()
+                else:
+                    node.child[2] = None
+
+            elif self.token.type == TokenType.FOR:
+                node = TreeNode()
+                node.stmt_kind = StmtKind.FOR
+
+                self.get_next_token()
+                self.match(TokenType.LPAREN)
+                # initialization
+                node.child[0] = self.exp()
+                self.match(TokenType.SEMI)
+
+                # comparison
+                node.child[1] = self.exp()
+                self.match(TokenType.SEMI)
+
+                # expression
+                node.child[2] = self.exp()                
+                self.match(TokenType.RPAREN)
+
+                node.child[3] = self.stmt_sequence()
+
             else:
-                node.child[2] = None
-
-        elif self.token.type == TokenType.FOR:
-            node = TreeNode()
-            node.stmt_kind = TokenType.FOR
-
-            self.get_next_token()
-            self.match(TokenType.LPAREN)
-            # initialization
-            node.child[0] = self.stmt()
-            self.match(TokenType.SEMI)
-
-            self.match(TokenType.RPAREN)
-
+                node = self.exp()
+                if node is not None:
+                    self.match(TokenType.SEMI)
 
         return node
 
     def exp(self):
         self.token: Token
+
         node = self.simple_exp()
 
         # while comparison operator
@@ -132,27 +128,38 @@ class RDParser:
             new_node.child[1] = self.simple_exp()
             node = new_node
         
+        if node is not None:
+            node.stmt_kind = StmtKind.EXP
+
         return node
 
     def simple_exp(self):
         self.token : Token
         node = self.term()
 
-        while self.token.type == TokenType.OP_PLUS or self.token.type == TokenType.OP_MINUS:
-            if self.token.type == TokenType.OP_PLUS:
-                new_node = self.make_op_node(self.token.type)
-                new_node.child[0] = node
-                self.get_next_token()
-                new_node.child[1] = self.term()                
-                node = new_node
-            elif self.token.type == TokenType.OP_MINUS:                
-                new_node = self.make_op_node(self.token.type)
-                new_node.child[0] = node
-                self.get_next_token()
-                new_node.child[1] = self.term()                
-                node = new_node
-            else:
-                break
+        if 300 <= self.token.type <= 310:
+            new_node = self.make_op_node(self.token.type)
+            new_node.child[0] = node
+            self.get_next_token()
+            new_node.child[1] = self.exp()
+            node = new_node
+
+        else:
+            while self.token.type == TokenType.OP_PLUS or self.token.type == TokenType.OP_MINUS:
+                if self.token.type == TokenType.OP_PLUS:
+                    new_node = self.make_op_node(self.token.type)
+                    new_node.child[0] = node
+                    self.get_next_token()
+                    new_node.child[1] = self.term()                
+                    node = new_node
+                elif self.token.type == TokenType.OP_MINUS:                
+                    new_node = self.make_op_node(self.token.type)
+                    new_node.child[0] = node
+                    self.get_next_token()
+                    new_node.child[1] = self.term()                
+                    node = new_node
+                else:
+                    break
         
         return node
     
@@ -241,9 +248,6 @@ class RDParser:
             
             self.get_next_token()
             node.child[1] = self.factor()
-        
-        else:
-            self.error('No factor')
 
         return node
     
@@ -254,20 +258,15 @@ class RDParser:
             self.token = self.list_tokens[self.idx_token]            
             return True
         else:
+            self.token = None
+            # end of token
             return False
     
     def match(self, exp_type: TokenType):
 
         self.token : Token
         if self.token.type == exp_type:
-            self.idx_token += 1
-
-            if self.idx_token < len(self.list_tokens):
-                self.token = self.list_tokens[self.idx_token]            
-                return True
-            else:
-                # end of token
-                return False
+            self.get_next_token()
         else:
             self.error()
             return False

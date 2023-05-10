@@ -17,7 +17,7 @@ class StmtKind(enum.IntEnum):
     IF = 1
     FOR = 2
     WHILE = 3
-    ASSIGN = 4
+    EXP = 4     # Expression
     READ = 5
     WRITE = 6
 
@@ -36,7 +36,7 @@ class ExpType(enum.IntEnum):
     DOUBLE = 5
 
 class TreeNode:
-    MAX_CHILDREN = 3
+    MAX_CHILDREN = 4
     def __init__(self):
         self.child = [None] * TreeNode.MAX_CHILDREN
         self.sibling = None
