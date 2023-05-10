@@ -32,6 +32,13 @@ class RDParser:
 
         return self.program
 
+    def make_op_node(self, op):
+        node = TreeNode()
+        node.exp_kind = ExpKind.OP
+        node.op = op
+
+        return node
+
     def stmt_sequence(self):
         stmt_seq = None
 
@@ -118,11 +125,8 @@ class RDParser:
         node = self.simple_exp()
 
         # while comparison operator
-        while 400 <= self.token.type <= 410:
-            op = self.token.type
-            new_node = TreeNode()
-            new_node.exp_kind = ExpKind.OP
-            new_node.op = op
+        while 400 <= self.token.type <= 410:            
+            new_node = self.make_op_node(self.token.type)
             new_node.child[0] = node
             self.get_next_token()
             new_node.child[1] = self.simple_exp()
@@ -135,18 +139,14 @@ class RDParser:
         node = self.term()
 
         while self.token.type == TokenType.OP_PLUS or self.token.type == TokenType.OP_MINUS:
-            if self.token.type == TokenType.OP_PLUS:                
-                new_node = TreeNode()
-                new_node.exp_kind = ExpKind.OP
-                new_node.op = TokenType.OP_PLUS
+            if self.token.type == TokenType.OP_PLUS:
+                new_node = self.make_op_node(self.token.type)
                 new_node.child[0] = node
                 self.get_next_token()
                 new_node.child[1] = self.term()                
                 node = new_node
             elif self.token.type == TokenType.OP_MINUS:                
-                new_node = TreeNode()
-                new_node.exp_kind = ExpKind.OP
-                new_node.op = TokenType.OP_MINUS
+                new_node = self.make_op_node(self.token.type)
                 new_node.child[0] = node
                 self.get_next_token()
                 new_node.child[1] = self.term()                
@@ -162,18 +162,14 @@ class RDParser:
 
         while True:
             if self.token.type == TokenType.OP_TIMES:                
-                new_node = TreeNode()
-                new_node.exp_kind = ExpKind.OP
-                new_node.op = TokenType.OP_TIMES
+                new_node = self.make_op_node(self.token.type)
                 new_node.child[0] = node
                 self.get_next_token()
                 new_node.child[1] = self.factor()                
                 node = new_node
 
             elif self.token.type == TokenType.OP_DIV:                
-                new_node = TreeNode()
-                new_node.exp_kind = ExpKind.OP
-                new_node.op = TokenType.OP_DIV
+                new_node = self.make_op_node(self.token.type)
                 new_node.child[0] = node
                 self.get_next_token()
                 new_node.child[1] = self.factor()            
@@ -216,26 +212,21 @@ class RDParser:
 
             # right unary id++, id--
             if self.token.type == TokenType.OP_INC or self.token.type == TokenType.OP_DEC:
-                new_node = TreeNode()
-                new_node.exp_kind = ExpKind.OP
-                new_node.op = self.token.type
+                new_node = self.make_op_node(self.token.type)
                 new_node.child[0] = node
                 node = new_node
                 self.get_next_token()
         
         elif self.token.type == TokenType.OP_MINUS:
             # signop -
-            node = TreeNode()
-            node.exp_kind = ExpKind.OP
-            node.op = TokenType.OP_MINUS
+            self.get_next_token()
+            node = self.make_op_node(TokenType.OP_TIMES)
             node.exp_type = ExpType.INTEGER
 
             node.child[0] = TreeNode()
             node.child[0].exp_type = ExpType.INTEGER
             node.child[0].integer = -1
-            node.child[0].float = -1.0
-
-            self.get_next_token()
+            node.child[0].float = -1.0            
 
             node.child[1] = self.factor()
         
@@ -246,9 +237,7 @@ class RDParser:
 
         elif self.token.type == TokenType.OP_INC or self.token.type == TokenType.OP_DEC:
             # left unary ++id, --id
-            node = TreeNode()
-            node.exp_kind = ExpKind.OP
-            node.op = self.token.type
+            node = self.make_op_node(self.token.type)
             
             self.get_next_token()
             node.child[1] = self.factor()

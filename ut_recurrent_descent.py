@@ -1,6 +1,7 @@
 import unittest
 from src.scanner import *
 from src.rd_parser import *
+from typing import List
 
 
 class ReccurentDescentParserTest(unittest.TestCase):
@@ -56,6 +57,26 @@ class ReccurentDescentParserTest(unittest.TestCase):
         self.assertEqual(exp.child[1].op, TokenType.OP_TIMES)
         self.assertEqual(exp.child[1].child[0].integer, 20)
         self.assertEqual(exp.child[1].child[1].integer, 30)
+
+        # e = -a + -b + +(c * d);
+        #       / \
+        #     *     *
+        #    / \   / \
+        #  -1   a -1  b
+        stmt = stmt.sibling        
+        stmt : TreeNode
+        
+        exp = stmt.child[1]
+        exp : TreeNode
+
+        self.assertEqual(exp.exp_kind, ExpKind.OP)
+        self.assertEqual(exp.op, TokenType.OP_PLUS)
+        self.assertEqual(exp.child[0].exp_kind, ExpKind.OP)
+        self.assertEqual(exp.child[0].child[0].exp_kind, ExpKind.OP)
+        self.assertEqual(exp.child[0].child[0].op, TokenType.OP_TIMES)
+
+        self.assertEqual(exp.child[0].child[1].exp_kind, ExpKind.OP)
+        self.assertEqual(exp.child[0].child[1].op, TokenType.OP_TIMES)
 
     def test_stmt_if(self):
         parser = RDParser()
