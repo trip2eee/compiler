@@ -110,6 +110,130 @@ def term():
         factor()
 ```
 
+Python implementation of RD parser: src/rd_parser.py
+
+### 4.1.3 Further Decision Problems
+1. It may be difficult to convert a grammar originally written in BNF into EBNF form.
+2. When formulating a test to distinguish two or more grammar rule options $A \rightarrow \alpha \ \mid \ \beta \ \mid \ \cdots$, it may be difficult to decide when to use the choice $A \rightarrow \alpha$ and when to use the choice $A \rightarrow \beta$, if both $\alpha$ and $\beta$ begin with nonterminals.
+  
+   - First sets of $\alpha$ and $\beta$: The set of tokens that can legally begin each string
+
+3. In writing code for an $\epsilon$-production $A \rightarrow \epsilon$ it may be necessary to know what tokens can legally come after the nonterminal $A$.
+   - Follow set of $A$: Set of tokens that can legally come after the nonterminal $A$.
+
+## 4.2 LL(1) Parsing
+### 4.2.1 The Basic Method of LL(1) Parsing
+
+LL(1) parsing uses an explicit stack rather than recursive calls.
+
+The following table shows the actions of a top-down parser given grammar $S \rightarrow ( \ S \ ) \ S \ \mid \ \epsilon$
+
+
+#### Table 4.1 Parsing actions of a top-down parser
+- Parsing Stack
+  - Left:Bottom of Stack($)
+  - Right:Top of Stack
+
+- Input
+  - Input symbols are listed from left to right. $ represents end of the input.
+
+- Action
+  - Shorthand description of the action taken by the parser
+
+| Step | Parsing Stack | Input | Action |
+|-|-|-|-|
+| 1 | $ S      | ( ) $ | $S \rightarrow ( \ S \ ) \ S$|
+| 2 | $ S ) S (| ( ) $ | match |
+| 3 | $ S ) S  |   ) $ | $S \rightarrow \epsilon$ |
+| 4 | $ S )    |   ) $ | match|
+| 5 | $ S      |     $ | $S \rightarrow \epsilon$|
+| 6 | $        |     $ | accept|
+
+A top-down parser begins by pushing the start symbol onto the stack. It accepts an input string if, after a series of actions, the stack and the input become empty.
+
+Basic actions in a top-down parser
+
+ 1. Replace a nonterminal $A$ at the top of the stack by a string $\alpha$ using the grammar rule choice $A \rightarrow \alpha$. This action could be called generate; left-hand side must be the nonterminal currently at the top of the stack.
+ 2. Match a token on top of the stack with the next input token.
+
+### 4.2.2 The LL(1) Parsing Table and Algorithm
+
+- When a nonterminal $A$ is at the top of the parsing stack: A decision must be makde, based on the current input token (the lookahead).
+
+- When a token is at the top of the stack: No decision is neccessary since it is either the same as the current input token (a match occurs), or it isn't (an error occurs).
+
+LL(1) Parsing Table: We can express the choices that are possible by constructing an LL(1) parsing table, which is a two-dimensional array indexed by nonterminals and terminals $M[N, T]$ containing production choices to use at the appropriate parsing step.
+
+$\$$ : End of input
+
+$M[N, T]$ : LL(1) Parsing Table
+
+$N$: The set of nonterminals
+
+$T$: The set of terminals or tokens.
+
+
+We assume that the table $M[N, T]$ starts out with all its entries empty. Any entries that remain empty after the construction represent potential errors that may occur during a parse.
+
+1. If $A \rightarrow \alpha$ is a production choice, and there is a derivation $\alpha \Rightarrow * \ a \ \beta$, where $a$ is a token, then add $A \rightarrow \alpha$ to the table entry $M[A, a]$.
+
+2. If $A \rightarrow \alpha$ is a production choice, and there are derivations $\alpha \Rightarrow * \ \epsilon$ and $S \ \$ \Rightarrow \beta \ A \ a \ \gamma$, where $S$ is the start symbol and $a$ is a token (or $, which is end of input), then add $A \rightarrow \alpha$ to the table entry $M[A, a]$.
+
+
+The symbols $\Rightarrow *$ stand for a derivation consisting of a sequence of replacements
+
+$empty \rightarrow \epsilon$
+
+#### Example
+There is one nonterminal ($S$), three tokens (, ), and $, and two production choices.
+
+- Rule 1
+
+Nonempty production: $S \rightarrow ( \ S \ ) \ S$, every string derived from $S$ must be either empty or begin with (, and this production choice is added to the entry $M[S, (]$.
+
+$S \Rightarrow ( \ S \ ) \ S$
+
+- Rule 2
+
+$\alpha = \epsilon$, $\beta = ($, $A = S$, $a = )$, and $\gamma = S \ \$$, so $S \rightarrow \epsilon$ is added to $M[S, )]$.
+
+| $M[N,T]$ | ( | ) | $ |
+|-|-|-|-|
+| $S$ | $S \rightarrow ( \ S \ ) \ S$| $S \rightarrow \epsilon$| $S \rightarrow \epsilon$ |
+
+#### Definition
+A grammar is an LL(1) grammar if the associated LL(1) parsing table has at most one production in each table entry.
+
+#### Example
+
+$stmt \rightarrow if\text-stmt \ \mid \ other$
+
+$if\text-stmt \rightarrow if \ ( \ exp \ ) \ stmt \ else\text-part$
+
+$else\text-part \rightarrow else \ stmt \ \mid \ \epsilon$
+
+$exp \rightarrow 0 \ \mid \ 1$
+
+#### Table 4.2 LL(1) parsing table for (ambiguous) if-statements
+| $M[N,T]$ | if | other | else | 0 | 1 | $ |
+|-|-|-|-|-|-|-|
+|$stmt$| $stmt \rightarrow if\text-stmt$| $stmt \rightarrow other$ | | | | |
+|$if\text-stmt$| $if\text-stmt \rightarrow if \ ( \ exp \ ) \ stmt \ else\text-part$ | | | | | |
+|$else\text-part$| | | $else\text-part \rightarrow else \ stmt$ <br> $else\text-part \rightarrow \epsilon$| | | $else\text-part \rightarrow \epsilon$|
+|$exp$| | | | $exp \rightarrow 0$ | $exp \rightarrow 1$ | |
+
+
+In the table, the entry $M[else\text-part, else]$ contains two entries, corresponding to the dangling else ambiguity.
+
+$else\text-part \rightarrow else \ stmt$ is preferred over $else\text-part \rightarrow \epsilon$.
+
+
+
+
+ 
+
+
+
 
 
 
