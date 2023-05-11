@@ -227,6 +227,102 @@ In the table, the entry $M[else\text-part, else]$ contains two entries, correspo
 
 $else\text-part \rightarrow else \ stmt$ is preferred over $else\text-part \rightarrow \epsilon$.
 
+### 4.2.3 Left Recursion Removal and Left Factoring
+
+#### Left Recursion Removal
+Left recursion is commonly used to make operations left associative, as in the simple expression grammar, where
+
+$ exp \rightarrow exp \ addop \ term \ \mid \ term$
+
+The above case involve immediate left recursion.
+
+A more difficult case is indirect left recursion, such as in the rules
+
+$A \rightarrow B \ b \ \mid \ \dots$
+
+$B \rightarrow A \ a \ \mid \ \dots$
+
+Case 1: Simple immediate left recursion
+
+In this case the left recursion is present only in grammar rule of the form
+
+$A \rightarrow A \ \alpha \ \mid \ \beta$
+
+where $\alpha$ and $\beta$ are strings of terminals and nonterminals and $\beta$ does not begin with $A$.
+
+To remove the left recursion, we rewrite this grammar rule into two rules:
+
+$A \rightarrow \beta \ A'$
+
+$A' \rightarrow \alpha \ A' \ \mid \epsilon$
+
+Consider again the left recursive rule from the simple expression grammar:
+
+$exp \rightarrow exp \ addop \ term \ \mid \ term$
+
+This is the form $A \rightarrow A \ \alpha \ \mid \ \beta$, with $A \ = \ exp$, $\alpha \ = \ addop \ term$, and $\beta \ = \ term$.
+
+Rewriting this rule to remove left recursion, we obtain
+
+$exp \rightarrow term \ exp'$
+
+$exp' \rightarrow addop \ term \ exp' \ \mid \ \epsilon$
+
+## 4.3 First and Follow Sets
+
+### 4.3.1 First Sets
+
+Let $X$ be a grammar symbol (a terminal or nonterminal) or $\epsilon$. Then the set $First(X)$ consisting of terminals, and possibly $\epsilon$, is defined as follows.
+
+1. If $X$ is a terminal or $\epsilon$, then $First(X) = \lbrace X \rbrace$.
+
+2. If $X$ is a nonterminal, then for each production choice $X \rightarrow X_1 X_2 \dots X_n$, $First(X)$ contains $First(X_1) - \lbrace \epsilon \rbrace$. If also for some $i < n$, all the sets $First(X_1), \dots, First(X_i)$ contain $\epsilon$, then $First(X)$ contains $First(X_{i+1}) - \lbrace \epsilon \rbrace$. If all the sets $First(X_1), \dots, First(X_n)$ contain $\epsilon$, then $First(X)$ also contains $\epsilon$.
+
+Now define $First(\alpha)$ for any string $\alpha=X_1 X_2 \dots X_n$ (a string of terminals and non-terminals), as follows. $First(\alpha)$ contains $First(X_1) - \lbrace \epsilon \rbrace$. For each $i = 2,\dots,n$, if $First(X_k)$ contains $\epsilon$ for all $k=1,\dots,i-1$, then $First(\alpha)$ contains $First(X_i)-\lbrace \epsilon \rbrace$. Finally, if for all $i=1,\dots,n$, $First(X_i)$ contains $\epsilon$, then $First(\alpha)$ contains $\epsilon$.
+
+#### Figure 4.6 Algorithm for computing $First(A)$ for all nonterminals $A$
+
+
+- for all nonterminals A do $First(A) := \lbrace \rbrace$
+  - while there are changes to any $First(A)$ do
+    - for each production choice $A \rightarrow X_1 X_2 \dots X_n$ do
+      - $k := 1$;
+      - $Continue := true$;
+      - while $Continue = true$ and $k \le n$ do
+        - $add \ First(X_k) - \lbrace \epsilon \rbrace \  to \ First(A)$;
+        - if $\epsilon$ is nont in $First(X_k)$ then
+          - $Continue := false$;
+        - $k := k + 1$;
+      - if $Continue = true$ then
+        - $add \ \epsilon \ to \ First(A)$;
+
+#### Definition
+A nonterminal $A$ is *nullable* if there exists a derivation $A \Rightarrow * \  \epsilon$.
+
+#### Theorem
+A nonterminal $A$ is nullable if and only if $First(A)$ contains $\epsilon$.
+
+#### Example 4.9
+Consider our simple integer expression grammar:
+
+$exp \rightarrow exp \ addop \ term \ \mid \ term$
+
+$addop \rightarrow + \ \mid \ -$
+
+$term \rightarrow term \ mulop \ factor \ \mid \ factor$
+
+$mulop \rightarrow *$
+
+$factor \rightarrow ( \ exp \ ) \ \mid \ number$
+
+We write out each choice separately so that we may consider them in order.
+
+
+
+
+
+
+
 
 
 

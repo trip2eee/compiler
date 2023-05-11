@@ -108,6 +108,10 @@ class RDParser:
 
                 node.child[3] = self.stmt_sequence()
 
+            elif self.token.type == TokenType.SEMI:
+                node = TreeNode()
+                node.stmt_kind = StmtKind.NONE
+                self.get_next_token()
             else:
                 node = self.exp()
                 if node is not None:

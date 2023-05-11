@@ -474,7 +474,7 @@ $program \rightarrow stmt\text-sequence$
 
 $stmt\text-sequence \rightarrow stmt\text-sequence \ stmt \  \mid \ stmt   \ \mid \ \lbrace \ stmt\text-sequence \ \rbrace$
 
-$stmt \rightarrow if\text-stmt \ \mid \ for\text-stmt \ \mid \ exp \ ;$
+$stmt \rightarrow if\text-stmt \ \mid \ for\text-stmt \ \mid \ exp \ ; \ \mid \ ;$
 
 
 $if\text-stmt \rightarrow if \ ( \ exp \ ) \ \ stmt\text-sequence \ \mid if \ ( \ exp \ ) \ stmt\text-sequence \ else \ \ stmt\text-sequence$
