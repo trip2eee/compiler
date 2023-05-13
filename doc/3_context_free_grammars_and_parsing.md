@@ -314,26 +314,20 @@ Addition, subtraction, and multiplication operations are left associative.
 ### 3.4.2 Precedence and Associativity
 To handle precedence of operations in the grammar, we must group the operators into groups of equal precedence, and for each precedence we must write a different rule.
 
-$$exp \rightarrow exp \ addop \ term \mid term $$
-
-$$addop \rightarrow + \mid - $$
-
-$$term \rightarrow term \ mulop \ term \mid factor $$
-
-$$mulop \rightarrow * $$
-
-$$factor \rightarrow (\ exp \ ) \mid number $$
+  - $exp \rightarrow exp \ addop \ term \mid term $
+  - $addop \rightarrow + \mid - $
+  - $term \rightarrow term \ mulop \ term \mid factor $
+  - $mulop \rightarrow * $
+  - $factor \rightarrow (\ exp \ ) \mid number $
 
 
 We call such a grouping a precedence cascade.
 
 ### 3.4.3 The Dangling Else Problem
 
-$$statement \rightarrow if\text-stmt \mid other $$
-
-$$if\text-stmt \rightarrow if \ ( \ exp \ ) \ statement \mid if \ ( \ exp \ ) \ statement \ else \ statement $$
-
-$$exp \rightarrow 0 \mid 1 $$
+  - $statement \rightarrow if\text-stmt \mid other $
+  - $if\text-stmt \rightarrow if \ ( \ exp \ ) \ statement \mid if \ ( \ exp \ ) \ statement \ else \ statement $
+  - $exp \rightarrow 0 \mid 1 $
 
 This grammar is ambiguous as a result of the optional else.
 
@@ -406,11 +400,9 @@ $stmt\text-sequence \rightarrow stmt \ \lbrace  \ ; \ stmt \rbrace$    (left rec
 
 A more significant problem occurs when the associativity matters, as it does for binary operations such as subtraction and division.
 
-$$exp \rightarrow exp \ addop \ term \mid \ term $$
-
-$$term \rightarrow term \ mulop \ term \mid factor $$
-
-$$factor \rightarrow (\ exp \ ) \mid number $$
+  - $exp \rightarrow exp \ addop \ term \mid \ term $
+  - $term \rightarrow term \ mulop \ term \mid factor $
+  - $factor \rightarrow (\ exp \ ) \mid number $
 
 This has the form $A \rightarrow A \ \alpha \ \mid \ \beta$, with $A = exp, \ \alpha=addop\ term, \ and \ \beta=term$.
 
@@ -432,11 +424,9 @@ Optional constructs in EBNF are indicated by surrounding them with square bracke
 For example, the grammar rules for if-statements with optional else-parts would be written as follows in EBNF:
 
 
-$statement \rightarrow if\text-stmt \ \mid \ other$
-
-$if\text-stmt \rightarrow if \ ( \ exp \ ) \ statement \ [ \ else \ statement \ ]$
-
-$exp \rightarrow 0 \mid 1$
+  - $statement \rightarrow if\text-stmt \ \mid \ other$
+  - $if\text-stmt \rightarrow if \ ( \ exp \ ) \ statement \ [ \ else \ statement \ ]$
+  - $exp \rightarrow 0 \mid 1$
 
 
 Also, a right recursive rule such as
@@ -470,35 +460,19 @@ Chomsky Hierarchy : The four kinds of grammars
 
 ## 3.7 Syntax of C--
 
-$program \rightarrow stmt\text-sequence$
-
-$stmt\text-sequence \rightarrow stmt\text-sequence \ stmt \  \mid \ stmt   \ \mid \ \lbrace \ stmt\text-sequence \ \rbrace$
-
-$stmt \rightarrow if\text-stmt \ \mid \ for\text-stmt \ \mid \ exp \ ; \ \mid \ ;$
-
-
-$if\text-stmt \rightarrow if \ ( \ exp \ ) \ \ stmt\text-sequence \ \mid if \ ( \ exp \ ) \ stmt\text-sequence \ else \ \ stmt\text-sequence$
-
-$for\text-stmt \rightarrow for \ ( \ exp \  ; \  exp \ ; \ exp \ ) \ \lbrace \  stmt\text-sequence \ \rbrace$
-
-$exp \rightarrow simple\text-exp \ comparison\text-op \ simple\text-exp \mid simple\text-exp \ \mid \ assign\text-exp$
-
-$comparison\text-op \rightarrow < \ \mid \ == \ \mid \  <= \ \mid >= \ \mid \ != \ $
-
-$simple\text-exp \rightarrow simple\text-exp \  addop \  term \ \mid \ term$
-
-$assign\text-exp \rightarrow identifier \  = \ exp$
-
-$addop \rightarrow + \ \mid \ - $
-
-$term \rightarrow term \ mulop \ term \mid factor $
-
-$mulop \rightarrow * \ \mid \ / $
-
-$factor \rightarrow (\  exp \ ) \ \mid \  number \ \mid \ identifier \ \mid signop \ factor \ \mid \ \ lunaryop \ identifier \ \mid \ identifier \ runaryop $
-
-$signop \rightarrow + \ \mid \ -$ 
-
-$lunaryop \rightarrow + \ \mid \ - \mid ++ \ \mid --$
-
-$runaryop \rightarrow  ++ \ \mid --$
+  - $program \rightarrow stmt\text-sequence$
+  - $stmt\text-sequence \rightarrow stmt\text-sequence \ stmt \  \mid \ stmt   \ \mid \ \lbrace \ stmt\text-sequence \ \rbrace$
+  - $stmt \rightarrow if\text-stmt \ \mid \ for\text-stmt \ \mid \ exp \ ; \ \mid \ ;$
+  - $if\text-stmt \rightarrow if \ ( \ exp \ ) \ \ stmt\text-sequence \ \mid if \ ( \ exp \ ) \ stmt\text-sequence \ else \ \ stmt\text-sequence$
+  - $for\text-stmt \rightarrow for \ ( \ exp \  ; \  exp \ ; \ exp \ ) \ \lbrace \  stmt\text-sequence \ \rbrace$
+  - $exp \rightarrow simple\text-exp \ comparison\text-op \ simple\text-exp \mid simple\text-exp \ \mid \ assign\text-exp$
+  - $comparison\text-op \rightarrow < \ \mid \ == \ \mid \  <= \ \mid >= \ \mid \ != \ $
+  - $simple\text-exp \rightarrow simple\text-exp \  addop \  term \ \mid \ term$
+  - $assign\text-exp \rightarrow identifier \  = \ exp$
+  - $addop \rightarrow + \ \mid \ - $
+  - $term \rightarrow term \ mulop \ term \mid factor $
+  - $mulop \rightarrow * \ \mid \ / $
+  - $factor \rightarrow (\  exp \ ) \ \mid \  number \ \mid \ identifier \ \mid signop \ factor \ \mid \ \ lunaryop \ identifier \ \mid \ identifier \ runaryop $
+  - $signop \rightarrow + \ \mid \ -$ 
+  - $lunaryop \rightarrow + \ \mid \ - \mid ++ \ \mid --$
+  - $runaryop \rightarrow  ++ \ \mid --$

@@ -21,15 +21,11 @@ Top-down parsers comes in two forms.
   
 Example: Consider the expression grammar
 
-$exp \ \rightarrow \ exp \ addop \ term \mid \ term$
-
-$addop \ \rightarrow \ + \ \mid \ -$
-
-$term \ \rightarrow \ term \ mulop \ term \mid factor$
-
-$mulop \ \rightarrow \ *$
-
-$factor \ \rightarrow \ (\ exp \ ) \mid number$
+ - $exp \ \rightarrow \ exp \ addop \ term \mid \ term$
+ - $addop \ \rightarrow \ + \ \mid \ -$
+ - $term \ \rightarrow \ term \ mulop \ term \mid factor$
+ - $mulop \ \rightarrow \ *$
+ - $factor \ \rightarrow \ (\ exp \ ) \mid number$
 
 and consider the grammar rule for a factor. A recursive-descent proceduer that recognizes a factor can be written in pseudocode as follows:
 
@@ -86,15 +82,11 @@ $if\text-stmt \rightarrow if \ ( \ exp \ ) \ statement \ [\  else \ statement \ 
 
 Solution to the first example is to use EBNF rule. The curly brackets {} expresses repetition.
 
-$exp \ \rightarrow \ term \ \lbrace \ addop \ term \rbrace$
-
-$term \ \rightarrow \ factor \ \lbrace \ mulop \ factor \ \rbrace$
-
-$addop \ \rightarrow \ + \ \mid \ -$
-
-$mulop \ \rightarrow \ *$
-
-$factor \ \rightarrow \ (\ exp \ ) \mid number$
+  - $exp \ \rightarrow \ term \ \lbrace \ addop \ term \rbrace$
+  - $term \ \rightarrow \ factor \ \lbrace \ mulop \ factor \ \rbrace$
+  - $addop \ \rightarrow \ + \ \mid \ -$
+  - $mulop \ \rightarrow \ *$
+  - $factor \ \rightarrow \ (\ exp \ ) \mid number$
 
 ```python
 def exp():
@@ -312,15 +304,11 @@ A nonterminal $A$ is nullable if and only if $First(A)$ contains $\epsilon$.
 #### Example 4.9
 Consider our simple integer expression grammar:
 
-$exp \rightarrow exp \ addop \ term \ \mid \ term$
-
-$addop \rightarrow + \ \mid \ -$
-
-$term \rightarrow term \ mulop \ factor \ \mid \ factor$
-
-$mulop \rightarrow *$
-
-$factor \rightarrow ( \ exp \ ) \ \mid \ number$
+  - $exp \rightarrow exp \ addop \ term \ \mid \ term$
+  - $addop \rightarrow + \ \mid \ -$
+  - $term \rightarrow term \ mulop \ factor \ \mid \ factor$
+  - $mulop \rightarrow *$
+  - $factor \rightarrow ( \ exp \ ) \ \mid \ number$
 
 We write out each choice separately so that we may consider them in order.
 
@@ -383,13 +371,9 @@ Now we apply the algorithm of Figure 4.7
 We have computed the following First sets:
 
 - $First(exp) = \lbrace \ (, \ number \ \rbrace$
-
 - $First(term) = \lbrace \ (, \ number \ \rbrace$
-
 - $First(factor) = \lbrace \ (, \ number \ \rbrace$
-
 - $First(addop) = \lbrace \ +, \ - \ \rbrace$
-
 - $First(mulop) = \lbrace \ * \ \rbrace$
 
 #### Table 4.6 Computation of First sets for the grammar of Example 4.9
@@ -406,13 +390,145 @@ We have computed the following First sets:
 |8. $factor \rightarrow ( \ exp \ )$ | $First(factor) = \lbrace \ ( \ \rbrace$ | | |
 |9. $factor \rightarrow number$ | $First(factor) = \lbrace \ (, \ number \ \rbrace$ | | |
 
+#### Example 4.10
+Consider the (left-factored) grammar of if-statements:
+
+  - $stmt \rightarrow if \text-stmt \ \mid \ other$
+  - $if\text-stmt \rightarrow if \ ( \ exp \ ) \ stmt \ else\text-part$
+  - $else\text-part \rightarrow else \ stmt \ \mid \ \epsilon$
+  - $exp \rightarrow 0 \ \mid \ 1$
+
+We write out he grammar rule choices separately and number them:
+
+  1. $stmt \rightarrow if \text-stmt$
+
+  2. $stmt \rightarrow other$
+
+  3. $if\text-stmt \rightarrow if \ ( \ exp \ ) \ stmt \ else\text-part$
+
+  4. $else\text-part \rightarrow else \ stmt$
+
+  5. $else\text-part \rightarrow \epsilon$
+
+  6. $exp \rightarrow 0$
+
+  7. $exp \rightarrow 1$
+
+- Pass 1
+  - Rule 1
+    - No change since $if\text-stmt$ is nonterminal
+  
+  - Rule 2
+    - Add the terminal $other$ to $First(stmt)$
+    - $First(stmt) = \lbrace \ other \ \rbrace$
+  
+  - Rule 3
+    - Add if to $First(if\text-stmt)$
+    - $First(if\text-stmt) = \lbrace \ if \ \rbrace$
+  
+  - Rule 4
+    - Add else to $First(else\text-part)$
+    - $First(else\text-part) = \lbrace \ else \ \rbrace$
+  
+  - Rule 5
+    - Add $\epsilon$ to $First(else\text-part)$
+    - $First(else\text-part) = \lbrace \ else, \ \epsilon \ \rbrace$
+
+  - Rule 6 and 7
+    - Add 0 and 1 to $First(exp)$
+    - $First(exp) = \lbrace \ 0, \ 1 \ \rbrace$
+  
+- Pass 2
+  - Rule 1
+    - Add $if$ and $other$, which are first of $if\text-stmt$ to $First(stmt)$
+    - $First(stmt) = \lbrace \ if, \ other \ \rbrace$
+
+
+We have computed the following First sets:
+
+  - $First(stmt) = \lbrace \ if, \ other \ \rbrace$
+  - $First(if\text-stmt) = \lbrace \ if \ \rbrace$
+  - $First(else\text-part) = \lbrace \ else, \ \epsilon \ \rbrace$
+  - $First(exp) = \lbrace \ 0, \ 1 \ \rbrace$
+
+
+| Grammar rule | Pass 1 | Pass 2 |
+| - | - | - |
+| 1. $stmt \rightarrow if \text-stmt$ | |$First(stmt) = \lbrace \ if, \ other \ \rbrace$ |
+| 2. $stmt \rightarrow other$ | $First(stmt) = \lbrace \ other \ \rbrace$| |
+| 3. $if\text-stmt \rightarrow if \ ( \ exp \ ) \ stmt \ else\text-part$ | $First(if\text-stmt) = \lbrace \ if \ \rbrace$ | |
+| 4. $else\text-part \rightarrow else \ stmt$ | $First(else\text-part) = \lbrace \ else \ \rbrace$| |
+| 5. $else\text-part \rightarrow \epsilon$ |$First(else\text-part) = \lbrace \ else, \ \epsilon \ \rbrace$ | |
+| 6. $exp \rightarrow 0$ | $First(exp) = \lbrace \ 0 \ \rbrace$| |
+| 7. $exp \rightarrow 1$ | $First(exp) = \lbrace \ 0, \ 1 \ \rbrace$| |
 
 
 
+### 4.3.2 Follow Sets
+
+#### Definition
+Given a nonterminal $A$, the set $Follow(A)$, consisting of terminals, and possibly $, is defined as follows.
+
+1. If $A$ is the start symbol, then $ is in $Follow(A)$
+2. If there is a production $B \rightarrow \alpha \  A \  \gamma$, then $First(\gamma) - \lbrace \ \epsilon \ \rbrace$ is in $Follow(A)$.
+3. If there is a production $B \rightarrow \alpha \ A \ \gamma$ such that $\epsilon$ is in $First(\gamma)$, then $Follow(A)$ contains $Follow(B)$.
+
+The first thing to notice that $, used to mark the end of the input, behaves as if it were a token in the computation of the Follow set.
+
+The second thing to notice is "pseudotoken" $\epsilon$ is never an element of Follow set.
+
+We also note that Follow sets are defined only for nonterminals, while Fist sets are also defined for terminals and for strings of terminals and nonterminals.
+
+Finally, we note that the definition of Follow sets works "on the right" in productions, while the definition of the First sets works "on the left." By this mean that a production $A \rightarrow \alpha$ has no information about the Follow set of $A$ if $\alpha$ does not contain $A$.
+
+FUrthermore, given a grammar rule $A \rightarrow \alpha B$, $Follow(B)$ will include $Follow(A)$ by case (3) of definition. This is because, in any string that contains $A$, $A$ could be replaced by $\alpha \ B$.
+
+In Figure 4.8 we give the algorithm for the computation of the Follow sets that results from the definition of Follow sets.
+
+#### Figure 4.8 Algorithm for the computation of Follow sets
+
+- $Follow(start\text-symbol) := \lbrace \ \$ \ \rbrace ;$
+- for all nonterminals $A \neq start\text-symbol$ do $Follow(A) := \lbrace \ \rbrace$
+- while there are changes to any Follow sets do
+  - for each production $A \rightarrow X_1 X_2 \dots X_n$ do
+    - for each $X_i$ that is nonterminal do
+      - add $First(X_{i+1} X_{i+2} \dots X_n) \ -\  \lbrace \ \epsilon \ \rbrace$ to $Follow(X_i)$
+      - (* Note: $if \ i=n, \ then \ X_{i+1} X_{i+2} \dots X_n \ = \ \epsilon$ *)
+      - if $\epsilon$ is in $First(X_{i+1} X_{i+2} \dots X_n)$ then
+        - add $Follow(A)$ to $Follow(X_i)$
 
 
 
+#### Example 4.12
+Consider the simple expression grammar whose First sets we computed in Example 4.9.
 
+Grammar Rules
+
+- $exp \rightarrow exp \ addop \ term \ \mid \ term$
+- $addop \rightarrow + \ \mid \ -$
+- $term \rightarrow term \ mulop \ factor \ \mid \ factor$
+- $mulop \rightarrow *$
+- $factor \rightarrow ( \ exp \ ) \ \mid \ number$
+
+First sets
+
+- $First(exp) = \lbrace \ (, \ number \ \rbrace$
+- $First(term) = \lbrace \ (, \ number \ \rbrace$
+- $First(factor) = \lbrace \ (, \ number \ \rbrace$
+- $First(addop) = \lbrace \ +, \ - \ \rbrace$
+- $First(mulop) = \lbrace \ * \ \rbrace$
+
+We write out each choice separately so that we may consider them in order.
+
+  1. $exp \rightarrow exp \ addop \ term$
+  2. $exp \rightarrow term$
+  3. $addop \rightarrow +$
+  4. $addop \rightarrow -$
+  5. $term \rightarrow term \ mulop \ factor$
+  6. $term \rightarrow factor$
+  7. $mulop \rightarrow *$
+  8. $factor \rightarrow ( \ exp \ )$
+  9. $factor \rightarrow number$
 
 
 
