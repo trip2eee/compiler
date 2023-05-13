@@ -284,17 +284,24 @@ Now define $First(\alpha)$ for any string $\alpha=X_1 X_2 \dots X_n$ (a string o
 
 
 - for all nonterminals A do $First(A) := \lbrace \rbrace$
-  - while there are changes to any $First(A)$ do
-    - for each production choice $A \rightarrow X_1 X_2 \dots X_n$ do
-      - $k := 1$;
-      - $Continue := true$;
-      - while $Continue = true$ and $k \le n$ do
-        - $add \ First(X_k) - \lbrace \epsilon \rbrace \  to \ First(A)$;
-        - if $\epsilon$ is nont in $First(X_k)$ then
-          - $Continue := false$;
-        - $k := k + 1$;
-      - if $Continue = true$ then
-        - $add \ \epsilon \ to \ First(A)$;
+- while there are changes to any $First(A)$ do
+  - for each production choice $A \rightarrow X_1 X_2 \dots X_n$ do
+    - $k := 1$;
+    - $Continue := true$;
+    - while $Continue = true$ and $k \le n$ do
+      - $add \ First(X_k) - \lbrace \epsilon \rbrace \  to \ First(A)$;
+      - if $\epsilon$ is nont in $First(X_k)$ then
+        - $Continue := false$;
+      - $k := k + 1$;
+    - if $Continue = true$ then
+      - $add \ \epsilon \ to \ First(A)$;
+
+
+#### Figure 4.7 Simplied algorithm of Figure 4.6 in the abscence of $\epsilon$-productions
+ - for all nonterminals $A$ do $First(A) := \lbrace \rbrace$
+ - while there are changes to any $First(A)$ do
+   - for each production choice $A \rightarrow X_1 X_2 \dots X_n$ do
+     - add $First(X_1) \ to \ First(A)$
 
 #### Definition
 A nonterminal $A$ is *nullable* if there exists a derivation $A \Rightarrow * \  \epsilon$.
@@ -316,6 +323,97 @@ $mulop \rightarrow *$
 $factor \rightarrow ( \ exp \ ) \ \mid \ number$
 
 We write out each choice separately so that we may consider them in order.
+
+
+  1. $exp \rightarrow exp \ addop \ term$
+  2. $exp \rightarrow term$
+  3. $addop \rightarrow +$
+  4. $addop \rightarrow -$
+  5. $term \rightarrow term \ mulop \ factor$
+  6. $term \rightarrow factor$
+  7. $mulop \rightarrow *$
+  8. $factor \rightarrow ( \ exp \ )$
+  9. $factor \rightarrow number$
+
+This grammar contains no $\epsilon$-productions, so we may use the algorithm of Figure 4.7.
+
+Note that the left recursive rules 1 and 5 will add nothing to the First sets. For example, grammar rule 1 states only that $First(exp)$ should be added to $First(exp)$.
+
+Now we apply the algorithm of Figure 4.7
+
+- Pass 1
+  - Rule 1
+    - No change
+  - Rule 2
+    - Add the contents of $First(term)$ to $First(exp)$.
+    - But $First(term)$ is currently empty, so this also changes nothing.
+  - Rule 3, 4
+    - Add + and - to $First(addop)$, respectively.
+    - $First(addop) = \lbrace \ +, \ - \ \rbrace$
+  - Rule 5
+    - No change
+  - Rule 6
+    - Add $First(factor)$ to $First(term)$
+    - But $First(factor)$ is currently still empty, so no change occurs.
+    - $First(factor) = \lbrace \ \rbrace$
+  - Rule 7
+    - Add * to $First(mulop)$
+    - $First(mulop) = \lbrace \ * \ \rbrace$
+  - Rule 8
+    - Add ( to $First(factor)$
+    - $First(factor) = \lbrace \ ( \ \rbrace$
+  - Rule 9
+    - Add $number$ to $First(factor)$
+    - $First(factor) = \lbrace \ (, \ number \ \rbrace$
+
+- Pass 2
+  - Rule 6
+    - Add $First(factor)$ to $First(term)$
+    - $First(term) = \lbrace \ (, \ number \ \rbrace$
+
+- Pass 3
+  - Rule 2
+    - Add $First(term)$ to $First(exp)$
+    - $First(exp) = \lbrace \ (, \ number \ \rbrace$
+
+- Pass 4
+  - No change.
+
+
+We have computed the following First sets:
+
+- $First(exp) = \lbrace \ (, \ number \ \rbrace$
+
+- $First(term) = \lbrace \ (, \ number \ \rbrace$
+
+- $First(factor) = \lbrace \ (, \ number \ \rbrace$
+
+- $First(addop) = \lbrace \ +, \ - \ \rbrace$
+
+- $First(mulop) = \lbrace \ * \ \rbrace$
+
+#### Table 4.6 Computation of First sets for the grammar of Example 4.9
+
+|Grammar rule | Pass 1 | Pass 2 | Pass 3 |
+|-|-|-|-
+|1. $exp \rightarrow exp \ add \ term$ | | |
+|2. $exp \rightarrow term$ | | | $First(exp) = \lbrace \ (, \ number \ \rbrace$ |
+|3. $addop \rightarrow +$ | $First(addop) = \lbrace \ + \ \rbrace$ | | |
+|4. $addop \rightarrow -$ | $First(addop) = \lbrace \ +, \ - \ \rbrace$ | | |
+|5. $term \rightarrow term \ mulop \ factor$ | | | |
+|6. $term \rightarrow factor$| | $First(term) = \lbrace \ (, \ number \ \rbrace$ | |
+|7. $mulop \rightarrow *$ | $First(mulop) = \lbrace \ * \ \rbrace$ | | |
+|8. $factor \rightarrow ( \ exp \ )$ | $First(factor) = \lbrace \ ( \ \rbrace$ | | |
+|9. $factor \rightarrow number$ | $First(factor) = \lbrace \ (, \ number \ \rbrace$ | | |
+
+
+
+
+
+
+
+
+
 
 
 
