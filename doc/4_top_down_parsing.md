@@ -224,7 +224,7 @@ $else\text-part \rightarrow else \ stmt$ is preferred over $else\text-part \righ
 #### Left Recursion Removal
 Left recursion is commonly used to make operations left associative, as in the simple expression grammar, where
 
-$ exp \rightarrow exp \ addop \ term \ \mid \ term$
+$exp \rightarrow exp \ addop \ term \ \mid \ term$
 
 The above case involve immediate left recursion.
 
@@ -530,21 +530,83 @@ We write out each choice separately so that we may consider them in order.
   8. $factor \rightarrow ( \ exp \ )$
   9. $factor \rightarrow number$
 
+- Pass 1
+  - Rules 3, 4, 7, and 9
+    - No nonterminals on thr right-hand sides
+    - Nothing to add to the computation of Follow sets.
+
+  - Rule 1
+    - Affect the Follow sets of three nonterminals: $exp$, $addop$, and $term$.
+    - Add $First(addop)$ to $Follow(exp)$
+    - $Follow(exp) = \lbrace \ \$, \ +, \ - \ \rbrace$
+    - Add $First(term)$ to $Follow(addop)$
+    - $Follow(addop) = \lbrace \ (, \ number \ \rbrace$
+    - $Follow(exp)$ is added to $Follow(term)$
+    - $Follow(term) = \lbrace \ \$, \ +, \ - \rbrace$
+  - Rule 2
+    - $Follow(exp)$ is added to $Follow(term)$, which is done in Rule 1.
+    - No change
+  - Rule 5
+    - $First(mulop)$ is added to $Follow(term)$
+    - $Follow(term) = \lbrace \ \$, \ +, \ -, \ * \ \rbrace$
+    - $First(factor)$ is added to $Follow(mulop)$
+    - $Follow(mulop) = \lbrace \ (, \ number, \ \rbrace$
+    - $Follow(term)$ is added to $Follow(factor)$
+    - $Follow(factor) = \lbrace \  \$, \ +, \ -, \ * \ \rbrace$
+  - Rule 6
+    - Same effact as the step for rule 5.
+    - No change
+
+  - Rule 8
+    - Adds $First()) = \lbrace \ ) \ \rbrace$ to $Follow(exp)$
+    - $Follow(exp) = \lbrace \ \$, \ +, \ -, \ ) \ \rbrace$
+
+- Pass 2
+  - Rule 1
+    - Adds ) to $Follow(term)$ since $Follow(exp)$ is updated by Rule 8 in Pass 1.
+    - $Follow(term) = \lbrace \  \$, \ +, \ -, \ *, \ ) \ \rbrace$
+  - Rule 5
+    - Add ) to $Follow(factor)$
+    - $Follow(factor) = \lbrace \  \$, \ +, \ -, \ *, \  ) \ \rbrace$
+- Pass 3
+  - No change
+
+We have computed the following Follow sets.
+- $Follow(exp) = \lbrace \ \$, \ +, \ -, \ ) \ \rbrace$
+- $Follow(addop) = \lbrace \ (, \ number \ \rbrace$
+- $Follow(term) = \lbrace \  \$, \ +, \ -, \ *, \ ) \ \rbrace$
+- $Follow(mulop) = \lbrace \ (, \ number, \ \rbrace$
+- $Follow(factor) = \lbrace \  \$, \ +, \ -, \ *, \  ) \ \rbrace$
+
+#### Table 4.8 Computation of Follow sets for the grammar of Example 4.12
+|Grammar rule | Pass 1 | Pass 2 |
+| - | - | - |
+| 1. $exp \rightarrow exp \ addop \ term$ | $Follow(exp) = \lbrace \ \$, \ +, \ - \ \rbrace$ <br> $Follow(addop) = \lbrace \ (, \ number \ \rbrace$ <br> $Follow(term) = \lbrace \ \$, \ +, \ - \rbrace$ | $Follow(term) = \lbrace \  \$, \ +, \ -, \ *, \ ) \ \rbrace$ |
+| 2. $exp \rightarrow term$ | | |
+| 5. $term \rightarrow term \ mulop \ factor$ | $Follow(term) = \lbrace \ \$, \ +, \ -, \ * \ \rbrace$ <br> $Follow(mulop) = \lbrace \ (, \ number, \ \rbrace$ <br> $Follow(factor) = \lbrace \  \$, \ +, \ -, \ * \ \rbrace$| $Follow(factor) = \lbrace \  \$, \ +, \ -, \ *, \  ) \ \rbrace$ |
+| 6. $term \rightarrow factor$ | | |
+| 8. $factor \rightarrow ( \ exp \ )$ | $Follow(exp) = \lbrace \ \$, \ +, \ -, \ ) \ \rbrace$ | |
 
 
+### 4.3.3 Constructing LL(1) Parsing Tables
+Consider now the original construction of the entries of the LL(1) parsing table, as given in Section 4.2.2:
 
+1. If $A \rightarrow \alpha$ is a production choice, and there is a derivation $\alpha \Rightarrow * \ a \ \beta$, where $a$ is a token, then add $A \rightarrow \alpha$ to the table entry $M[A, a]$.
 
+2. If $A \rightarrow \alpha$ is a production choice and there are derivation $\alpha \Rightarrow * \epsilon$ and $S \ \$ \Rightarrow * \ \beta\ A \ a \ \gamma$, where $S$ is the start symbol and $a$ is a token (or $), then add $A \rightarrow \alpha$ to the table entry $M[A, a]$.
 
+Clearly, the token $a$ in rule 1 is $First(\alpha)$, and the token $a$ of rule 2 is in $Follow(A)$. Thus, we have arrived at the following algorithmic construction of the LL(1) parseing table:
 
+Repeat the following two steps for each nonterminal $A$ and production choice $A \rightarrow \alpha$.
+1. For each token $a$ in $First(\alpha)$, add $A \rightarrow \alpha$ to the entry $M[A, a]$.
+2. If $\epsilon$ is in $First(\alpha)$, for each element $a$ of $Follow(A)$ (a token or $), add $A \rightarrow \alpha$ to $M[A, a]$.
 
+The following theorem is essentially a direct consequence of the definition of an LL(1) grammar and the parsing table construction just given.
 
+#### Theorem
 
-
- 
-
-
-
-
-
+A grammar in BNF is LL(1) if the following conditions are satisfied.
+1. For every production $A \rightarrow \alpha_1 \ \mid \ \alpha_2 \ \mid \ \dots \ \mid \ \alpha_n$, $First(\alpha_i) \ \cap \ First(\alpha_j)$ is empty for all $i$ and $j$, $1 \ \le \  i, \ j \ \le n, \  i \neq j$
+2. For every nonterminal $A$ such that $First(A)$ contains $\epsilon$, $First(A) \ \cap \ Follow(A)$ is empty.
 
 
