@@ -552,7 +552,7 @@ We write out each choice separately so that we may consider them in order.
     - $First(factor)$ is added to $Follow(mulop)$
     - $Follow(mulop) = \lbrace \ (, \ number, \ \rbrace$
     - $Follow(term)$ is added to $Follow(factor)$
-    - $Follow(factor) = \lbrace \  \$, \ +, \ -, \ * \ \rbrace$
+    - $Follow(factor) = \lbrace \ \$, \ +, \ -, \ * \ \rbrace$
   - Rule 6
     - Same effact as the step for rule 5.
     - No change
@@ -564,26 +564,26 @@ We write out each choice separately so that we may consider them in order.
 - Pass 2
   - Rule 1
     - Adds ) to $Follow(term)$ since $Follow(exp)$ is updated by Rule 8 in Pass 1.
-    - $Follow(term) = \lbrace \  \$, \ +, \ -, \ *, \ ) \ \rbrace$
+    - $Follow(term) = \lbrace \ \$, \ +, \ -, \ *, \ ) \ \rbrace$
   - Rule 5
     - Add ) to $Follow(factor)$
-    - $Follow(factor) = \lbrace \  \$, \ +, \ -, \ *, \  ) \ \rbrace$
+    - $Follow(factor) = \lbrace \ \$, \ +, \ -, \ *, \  ) \ \rbrace$
 - Pass 3
   - No change
 
 We have computed the following Follow sets.
 - $Follow(exp) = \lbrace \ \$, \ +, \ -, \ ) \ \rbrace$
 - $Follow(addop) = \lbrace \ (, \ number \ \rbrace$
-- $Follow(term) = \lbrace \  \$, \ +, \ -, \ *, \ ) \ \rbrace$
+- $Follow(term) = \lbrace \ \$, \ +, \ -, \ *, \ ) \ \rbrace$
 - $Follow(mulop) = \lbrace \ (, \ number, \ \rbrace$
-- $Follow(factor) = \lbrace \  \$, \ +, \ -, \ *, \  ) \ \rbrace$
+- $Follow(factor) = \lbrace \ \$, \ +, \ -, \ *, \  ) \ \rbrace$
 
 #### Table 4.8 Computation of Follow sets for the grammar of Example 4.12
 |Grammar rule | Pass 1 | Pass 2 |
 | - | - | - |
-| 1. $exp \rightarrow exp \ addop \ term$ | $Follow(exp) = \lbrace \ \$, \ +, \ - \ \rbrace$ <br> $Follow(addop) = \lbrace \ (, \ number \ \rbrace$ <br> $Follow(term) = \lbrace \ \$, \ +, \ - \rbrace$ | $Follow(term) = \lbrace \  \$, \ +, \ -, \ *, \ ) \ \rbrace$ |
+| 1. $exp \rightarrow exp \ addop \ term$ | $Follow(exp) = \lbrace \ \$, \ +, \ - \ \rbrace$ <br> $Follow(addop) = \lbrace \ (, \ number \ \rbrace$ <br> $Follow(term) = \lbrace \ \$, \ +, \ - \rbrace$ | $Follow(term) = \lbrace \ \$, \ +, \ -, \ *, \ ) \ \rbrace$ |
 | 2. $exp \rightarrow term$ | | |
-| 5. $term \rightarrow term \ mulop \ factor$ | $Follow(term) = \lbrace \ \$, \ +, \ -, \ * \ \rbrace$ <br> $Follow(mulop) = \lbrace \ (, \ number, \ \rbrace$ <br> $Follow(factor) = \lbrace \  \$, \ +, \ -, \ * \ \rbrace$| $Follow(factor) = \lbrace \  \$, \ +, \ -, \ *, \  ) \ \rbrace$ |
+| 5. $term \rightarrow term \ mulop \ factor$ | $Follow(term) = \lbrace \ \$, \ +, \ -, \ * \ \rbrace$ <br> $Follow(mulop) = \lbrace \ (, \ number, \ \rbrace$ <br> $Follow(factor) = \lbrace \  \$, \ +, \ -, \ * \ \rbrace$| $Follow(factor) = \lbrace \ \$, \ +, \ -, \ *, \  ) \ \rbrace$ |
 | 6. $term \rightarrow factor$ | | |
 | 8. $factor \rightarrow ( \ exp \ )$ | $Follow(exp) = \lbrace \ \$, \ +, \ -, \ ) \ \rbrace$ | |
 
@@ -610,3 +610,71 @@ A grammar in BNF is LL(1) if the following conditions are satisfied.
 2. For every nonterminal $A$ such that $First(A)$ contains $\epsilon$, $First(A) \ \cap \ Follow(A)$ is empty.
 
 
+#### Example 4.15
+Consider the simple expression grammar we have been using as a starndard example.
+
+- $exp \rightarrow term \ exp'$
+- $exp' \rightarrow addop \ term \ exp' \ \mid \ \epsilon$
+- $addop \rightarrow + \ \mid \ -$
+- $term \rightarrow factor \ term'$
+- $term' \rightarrow mulop \ factor \ term' \ \mid \ \epsilon$
+- $mulop \rightarrow *$
+- $factor \rightarrow ( \ exp \ ) \ \mid \ number$
+
+We must compute First and Follow sets for the nonterminals for this grammar.
+
+First(nonterminal): Set of the first terminal string of rule.
+
+| Grammar rule | Pass 1 | Pass 2 | Pass 3 |
+| - | - | - | - |
+| 1. $exp \rightarrow term \ exp'$ | | | $First(exp) = \lbrace \ (, \ number \ \rbrace$ |
+| 2. $exp' \rightarrow addop \ term \ exp'$ | | $First(exp') = \lbrace \ \epsilon, \ +, \ - \ \rbrace$ | |
+| 3. $exp' \rightarrow \epsilon$ | $First(exp') = \lbrace \ \epsilon \ \rbrace$| | |
+| 4. $addop \rightarrow +$ | $First(addop) = \lbrace \ + \ \rbrace$ | | |
+| 5. $addop \rightarrow -$ | $First(addop) = \lbrace \ +, \ - \ \rbrace$ | | |
+| 6. $term \rightarrow factor \ term'$ | | $First(term) = \lbrace \ (, \ number \ \rbrace$ | |
+| 7. $term' \rightarrow mulop \ factor \ term'$ | | $First(term') = \lbrace \ \epsilon, \ * \ \rbrace$  | |
+| 8. $term' \rightarrow \epsilon$ | $First(term') = \lbrace \ \epsilon \ \rbrace$ | | |
+| 9. $mulop \rightarrow *$ | $First(mulop) = \lbrace \ * \ \rbrace$  | | |
+| 10. $factor \rightarrow ( \ exp \ )$ | $First(factor) = \lbrace \ ( \ \rbrace$ | | |
+| 11. $factor \rightarrow number$ | $First(factor) = \lbrace \ (, \ number \ \rbrace$ | | |
+
+
+- $First(exp) = \lbrace \ (, \ number \ \rbrace$
+- $First(exp') = \lbrace \ \epsilon, \ +, \ - \ \rbrace$
+- $First(addop) = \lbrace \ +, \ - \ \rbrace$
+- $First(term) = \lbrace \ (, \ number \ \rbrace$
+- $First(term') = \lbrace \ \epsilon, \ * \ \rbrace$
+- $First(mulop) = \lbrace \ * \ \rbrace$
+- $First(factor) = \lbrace \ (, \ number \ \rbrace$
+
+Now let's compute Follow set
+
+- $Follow(exp) = \lbrace \ \$ \ \rbrace$
+- $Follow(exp') = \lbrace \ \$ \ \rbrace$
+- $Follow(term) = \lbrace \ \$ \ \rbrace$
+- $Follow(term') = \lbrace \ \$ \ \rbrace$
+- $Follow(factor) = \lbrace \ \$ \ \rbrace$
+
+
+| Grammar rule | Pass 1 | Pass 2 |
+| - | - | - |
+| 1. $exp \rightarrow term \ exp'$ | Add $First(exp')$ to $Follow(term)$ <br>$Follow(term) = \lbrace \ \$, \ +, \ - \ \rbrace$| Add $Follow(exp)$ to $Follow(exp')$<br>$Follow(exp')=\lbrace \$, \ ) \ \rbrace$<br>Add $Follow(exp)$ to $Follow(term)$ since $\epsilon$ is in $First(exp')$<br>$Follow(term) = \lbrace \ \$, \ +, \, -, \ ) \ \rbrace$|
+| 2. $exp' \rightarrow addop \ term \ exp'$ | Add $First(term)$ to $Follow(addop)$<br>$Follow(addop)=\lbrace \ (, \ number \ \rbrace$ <br> Add $First(exp')$ to $Follow(term)$<br>$Follow(term) = \lbrace \ \$, \ +, \ - \ \rbrace$| |
+| 3. $exp' \rightarrow \epsilon$ | | |
+| 4. $addop \rightarrow +$ | | |
+| 5. $addop \rightarrow -$ | | |
+| 6. $term \rightarrow factor \ term'$ | Add $First(term')$ to $Follow(factor)$<br>$Follow(factor) = \lbrace \ \$, \ * \ \rbrace$| Add $Follow(term)$ to $Follow(term')$<br>$Follow(term') = \lbrace \ \$, \ +, \ -, \ ) \ \rbrace$<br>Add $Follow(term)$ to $Follow(factor)$ since $\epsilon$ is in $First(term')$<br>$Follow(factor)=\lbrace \ \$, *, \ +, \ -, \ ) \ \rbrace$|
+| 7. $term' \rightarrow mulop \ factor \ term'$ | Add $First(factor)$ to $Follow(mulop)$<br>$Follow(mulop) = \lbrace \ (, \ number \ \rbrace$<br> Add $First(term')$ to $Follow(factor)$<br>$Follow(factor) = \lbrace \ * \ \rbrace$| |
+| 8. $term' \rightarrow \epsilon$ | | |
+| 9. $mulop \rightarrow *$ | | |
+| 10. $factor \rightarrow ( \ exp \ )$ | $Follow(exp) = \lbrace \ \$, \ ) \ \rbrace$ | |
+| 11. $factor \rightarrow number$ | | |
+
+- $Follow(exp) = \lbrace \ \$, \ ) \ \rbrace$
+- $Follow(exp')=\lbrace \$, \ ) \ \rbrace$
+- $Follow(addop)=\lbrace \ (, \ number \ \rbrace$
+- $Follow(term) = \lbrace \ \$, \ +, \, -, \ ) \ \rbrace$
+- $Follow(term') = \lbrace \ \$, \ +, \ -, \ ) \ \rbrace$
+- $Follow(mulop) = \lbrace \ (, \ number \ \rbrace$
+- $Follow(factor)=\lbrace \ \$, *, \ +, \ -, \ ) \ \rbrace$
