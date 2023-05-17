@@ -463,14 +463,14 @@ Chomsky Hierarchy : The four kinds of grammars
   - $program \rightarrow stmt\text-sequence$
   - $stmt\text-sequence \rightarrow stmt\text-sequence \ stmt \  \mid \ stmt   \ \mid \ \lbrace \ stmt\text-sequence \ \rbrace$
   - $stmt \rightarrow if\text-stmt \ \mid \ for\text-stmt \ \mid \ exp \ ; \ \mid \ ;$
-  - $if\text-stmt \rightarrow if \ ( \ exp \ ) \ \ stmt\text-sequence \ \mid if \ ( \ exp \ ) \ stmt\text-sequence \ else \ \ stmt\text-sequence$
+  - $if\text-stmt \rightarrow if \ ( \ exp \ ) \ \ stmt\text-sequence \ [ \ else \ \ stmt\text-sequence \ ]$
   - $for\text-stmt \rightarrow for \ ( \ exp \  ; \  exp \ ; \ exp \ ) \ \lbrace \  stmt\text-sequence \ \rbrace$
-  - $exp \rightarrow simple\text-exp \ comparison\text-op \ simple\text-exp \mid simple\text-exp \ \mid \ assign\text-exp$
+  - $exp \rightarrow simple\text-exp \ [ \ comparison\text-op \ simple\text-exp \ ]$
   - $comparison\text-op \rightarrow < \ \mid \ == \ \mid \  <= \ \mid >= \ \mid \ != \ $
-  - $simple\text-exp \rightarrow simple\text-exp \  addop \  term \ \mid \ term$
+  - $simple\text-exp \rightarrow term \ [ \ addop \  term \ ] \mid \ assign\text-exp$
   - $assign\text-exp \rightarrow identifier \  = \ exp$
   - $addop \rightarrow + \ \mid \ - $
-  - $term \rightarrow term \ mulop \ term \mid factor $
+  - $term \rightarrow factor \ [\ mulop \ factor \ ]$
   - $mulop \rightarrow * \ \mid \ / $
   - $factor \rightarrow (\  exp \ ) \ \mid \  number \ \mid \ identifier \ \mid signop \ factor \ \mid \ \ lunaryop \ identifier \ \mid \ identifier \ runaryop $
   - $signop \rightarrow + \ \mid \ -$ 

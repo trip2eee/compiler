@@ -140,31 +140,32 @@ class RDParser:
     def simple_exp(self):
         self.token : Token
         node = self.term()
-
-        if 300 <= self.token.type <= 310:
-            new_node = self.make_op_node(self.token.type)
-            new_node.child[0] = node
-            self.get_next_token()
-            new_node.child[1] = self.exp()
-            node = new_node
-
-        else:
-            while self.token.type == TokenType.OP_PLUS or self.token.type == TokenType.OP_MINUS:
-                if self.token.type == TokenType.OP_PLUS:
-                    new_node = self.make_op_node(self.token.type)
-                    new_node.child[0] = node
-                    self.get_next_token()
-                    new_node.child[1] = self.term()                
-                    node = new_node
-                elif self.token.type == TokenType.OP_MINUS:                
-                    new_node = self.make_op_node(self.token.type)
-                    new_node.child[0] = node
-                    self.get_next_token()
-                    new_node.child[1] = self.term()                
-                    node = new_node
-                else:
-                    break
         
+        if node is not None:
+            # if assignment operator
+            if node.exp_kind == ExpKind.ID and 300 <= self.token.type <= 310:
+                new_node = self.make_op_node(self.token.type)
+                new_node.child[0] = node
+                self.get_next_token()
+                new_node.child[1] = self.exp()
+                node = new_node
+
+            else:
+                while self.token.type == TokenType.OP_PLUS or self.token.type == TokenType.OP_MINUS:
+                    if self.token.type == TokenType.OP_PLUS:
+                        new_node = self.make_op_node(self.token.type)
+                        new_node.child[0] = node
+                        self.get_next_token()
+                        new_node.child[1] = self.term()                
+                        node = new_node
+                    elif self.token.type == TokenType.OP_MINUS:                
+                        new_node = self.make_op_node(self.token.type)
+                        new_node.child[0] = node
+                        self.get_next_token()
+                        new_node.child[1] = self.term()                
+                        node = new_node
+                    else:
+                        break        
         return node
     
     def term(self):

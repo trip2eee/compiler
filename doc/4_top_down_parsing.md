@@ -678,3 +678,49 @@ Now let's compute Follow set
 - $Follow(term') = \lbrace \ \$, \ +, \ -, \ ) \ \rbrace$
 - $Follow(mulop) = \lbrace \ (, \ number \ \rbrace$
 - $Follow(factor)=\lbrace \ \$, *, \ +, \ -, \ ) \ \rbrace$
+
+## 4.5 Error Recovery in Top-Down Parsers
+A parser must determine whether a program is synthactically correct or not. A parser that performs this task alone is called a recognizer.
+
+Some parsers may go so far to attempt some from of error correction (or, perhaps more appropreately, error repair), where the parser attempts to infer a correct program from the incorrect one given.
+
+Compiler writers find it difficult enough to generate meaningful error messages without trying to do error correction.
+
+Some important considerations that apply are the following.
+1. A parser should try to determine that an error has occurred as soon as possible. Waiting too long before declaring error means the location of the actual error may have been lost.
+
+2. After an error has occurred, the parser must pick a likely place to resume the parse. A parser should always try to parse as much of the code as possible, in order to find as many real errors as possible during a single translation.
+
+3. A parser should try to avoid the error cascade problem, in which one error generates a lengthy sequence of spurious error messages.
+
+4. A parser must avoid infinite loops on errors, in which a unending cascade of error messages is generated without consuming any input.
+
+Some of these goals conflict with each other, so that a compiler writer is forced to make trade-offs during the construction of an error handler. For example avoiding the rror cascade and infinite loop problems can cause the parser to skip some of the input, compromising the goal of processing as much of the input as possible.
+
+### 4.5.1 Error Recovery in Recursive-Descent Parsers
+A standard form of error recovery in recursive-descent parser is called *panic mode*.
+
+The basic mechanism of panic mode is to provide each recursive procedure with an extra parameter consisting of a set of *synchronizing tokens*. As parsing proceeds, tokens that may function as synchronizing tokens are added to this set as each call occurs. If an error encountered, the parser *scans ahead*, throwing away tokens until one of the synchronizing set of tokens is seen in the input, whence parsing is resumed. Error cascades are avoided (to a certain extent) by not generating new error messages while this forward scan takes place.
+
+
+What tokens to add to the synchronizing set at each point in the parse.
+  - Generally, Follow sets are important candidates.
+  - First sets may also be used to prevent the error handler from skipping important tokens that begin major new constructs. First stes are also importatnt, in that they allow a recursive descent parser to detect errors early in the parse, which is always helpful in any error recovery.
+  - It is important to realize that panic mode works best when the compiler knows when not to panic. For example, missing punctuation symbols such as semicolons or commas, and even msssing right parentheses, should not always cause an error handler to consume tokens.
+
+Panic mode error recoverty
+- scanto : panic mode token consumer proper
+
+```python
+def scanto(synchset):
+  while not (token in synchset or token is EOF):
+    get_next_token()
+```
+
+- checkinput : performs the early lookahead checking
+```python
+def checkinput(firstset, followset):
+  if not (token in firstset):
+    error()
+    scanto(firstset + followset)
+```
