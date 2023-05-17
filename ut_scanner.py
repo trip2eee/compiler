@@ -136,6 +136,11 @@ class ScannerTest(unittest.TestCase):
         self._test_sequence(tokens, target)
         self.assertEqual(tokens[42].string_val, '/')
 
+        target = [
+            TokenType.ID, TokenType.OP_PLUS, TokenType.OP_MINUS, TokenType.ID, TokenType.SEMI,
+        ]
+        self._test_sequence(tokens, target)
+
     def test_string(self):
         scanner = Scanner()
         tokens = scanner.scan('unittest/string.cmm')

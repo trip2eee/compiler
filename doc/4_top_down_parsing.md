@@ -724,3 +724,6 @@ def checkinput(firstset, followset):
     error()
     scanto(firstset + followset)
 ```
+
+### 4.5.2 Error Recovery in LL(1) Parsers
+Panic mode error recovery can be implemented in LL(1) parsers in a similar manner to the way it is implemented in recursive-descent parsing.

@@ -73,7 +73,6 @@ class TokenType(enum.IntEnum):
     OP_BIT_NOT_ASSIGN  = 309   # ~=
     OP_BIT_XOR_ASSIGN  = 310   # ^=
 
-
     OP_EQ      = 401          # ==
     OP_LT      = 402          # <
     OP_GT      = 403          # >
@@ -354,7 +353,8 @@ class Scanner:
                     elif token.string_val == '^=':
                         token.type = TokenType.OP_BIT_XOR_ASSIGN
                     else:
-                        token.type == TokenType.UNDEF
+                        # if +-, -=, etc
+                        self.unget_next_char()
                 else:
                     # if other
                     self.unget_next_char()

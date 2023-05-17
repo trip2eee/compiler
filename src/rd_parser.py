@@ -278,3 +278,14 @@ class RDParser:
     
     def error(self, message=''):
         print('Error, line {}, {}'.format(self.token.line_number, message))
+    
+    def scanto(self, synchset):
+        self.token : Token
+        while not (self.token.type in synchset or self.token == None):
+            self.get_next_token()
+
+    def checkinput(self, firstset, followset):
+        self.token : Token
+        if not (self.token.type in firstset):
+            self.error()
+            self.scanto(firstset + followset)
