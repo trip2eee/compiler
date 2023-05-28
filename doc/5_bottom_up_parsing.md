@@ -274,7 +274,24 @@ S4 -- S --> S5
 ```
 
 #### Example 5.8
-Consider 
+Consider NFA of Figure 5.2. The DFA of the NFA is given in Figure 5.4
+
+Figure 5.4 The DFA of sets of items corresponding to the NFA of Figure 5.2
+```mermaid
+graph LR
+
+S0["⓪<br>E' -> .E<br>E -> .E+n<br>E -> .n"]
+S1["①<br>E' -> E.<br>E -> E.+n"]
+S2["②E -> n."]
+S3["③<br>E -> E+.n"]
+S4["④<br>E -> E+n."]
+
+S0 -- E --> S1
+S0 -- n --> S2
+S1 -- + --> S3
+S3 -- n --> S4
+```
+
 
 In the construction of DFA of sets of LR(0) items, a distinction is sometimes made between those items that are added to a state during the $\epsilon$-closure step and those that originate the state as targets of non-$\epsilon$-transitions.
 
@@ -308,11 +325,75 @@ Let $s$ be the current state (at the top of the parsing stack). Then actions are
 
 A grammar is said to be an LR(0) grammar if the above rules are unambiguous.
 
-*shift-reduce conflict* : $A \rightarrow \alpha$,  $A \rightarrow \alpha . X \beta$ ($X$ a terminal)
+#### Example 5.9
+Consider the grammar
 
-*reduce-reduce conflict* : for $B \rightarrow \beta.$ confliction on which production to use for the reduction ($A \rightarrow \alpha$  or $B \rightarrow \beta$)
+$A' \rightarrow A$
 
-*goto* : The next state to transition to on nonterminals.
+$A \rightarrow ( \ A \ ) \ \mid \ a$
+
+LR(0) items
+1. $A' \rightarrow .A$
+2. $A' \rightarrow A.$
+3. $A \rightarrow .( \ A \ )$
+4. $A \rightarrow ( \ .A \ )$
+5. $A \rightarrow ( \ A \ .)$
+6. $A \rightarrow ( \ A \ ).$
+7. $A \rightarrow .a$
+8. $A \rightarrow a.$
+
+```mermaid
+graph LR
+S0["(0)<br>A' -> .A<br>A -> .( A )<br>A -> .a"]
+S1["(1)<br>A' -> A."]
+S2["(2)<br>A -> a."]
+S3["(3)<br>A -> ( .A )<br>A -> .( A )<br> A -> .a"]
+S4["(4)<br>A -> ( A. )"]
+S5["(5)<br>A -> ( A )."]
+
+S0 -- A --> S1
+S0 -- "(" --> S3
+
+S0 -- a --> S2
+S3 -- a --> S2
+S3 -- "(" --> S3
+
+S3 -- A --> S4
+S4 -- ")" --> S5
+```
+
+Table 5.3 Parsing actions for Example 5.9
+|#|Parsing Stack (token, state) |Input |Action |
+|-|-|-|-|
+|1| $0 | ( ( a ) ) $| shift|
+|2| $0 (3| ( a ) ) $| shift|
+|3| $0 (3 (3 | a ) ) $| shift|
+|4| $0 (3 (3 a2| ) )| reduce $A \rightarrow a$|
+|5| $0 (3 (3 A4| ) )| shift|
+|6| $0 (3 (3 A4 )5| )| reduce $A \rightarrow (\ A \ )$|
+|7| $0 (3 A4| ) | shift|
+|8| $0 (3 A4 )5 | | reduce $A \rightarrow (\ A \ )$|
+|9| $0 A| | accept|
+
+In #4, symbol $a$ and state 2 are popped from the stack, backing up to state 3. $A$ is then pushed onto the stack and the $A$ transition from state 3 to state 4.
+
+In #6, reduction by the rule $A \rightarrow ( \ A \ )$ occurs, popping states 5, 4, 3, and symbols ), A, ( from the stack. Then we are now in state 3, and againpush A and state 4 onto the stack.
+
+
+Table 5.4 Parsing table for the grammar of Example 5.9
+
+|State |Action | Rule  | ( |  a | )  | Goto  |
+|------|-------|-------|--| -- |--|---|
+| 0 | shift |       | 3  |  2  |  |  1  |
+| 1 | reduce | $A' \rightarrow A$ |  |  |  |  |
+| 2 | reduce | $A \rightarrow a$ |  |  |  |  |
+| 3 | shift |       | 3 |  2  |  | 4  |
+| 4 | shift |       |  |  | 5 |  |
+| 5 | reduce | $A\rightarrow (\ A \ ).$ |  |  |  |  |
+
+- *goto* : The next state to transition to on nonterminals.
+- *shift-reduce conflict* : $A \rightarrow \alpha$,  $A \rightarrow \alpha . X \beta$ ($X$ a terminal)
+- *reduce-reduce conflict* : for $B \rightarrow \beta.$ confliction on which production to use for the reduction ($A \rightarrow \alpha$  or $B \rightarrow \beta$)
 
 ## 5.3 SLR(1) Parsing
 ### 5.3.1 The SLR(1) Parsing Algorithm
