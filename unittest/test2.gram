@@ -1,0 +1,13 @@
+E : T Ep
+
+Ep : + T Ep 
+   | ep
+
+T : F Tp
+
+Tp : * F Tp
+   | ep
+
+F : ( E )
+  | id
+
