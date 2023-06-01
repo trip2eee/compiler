@@ -107,10 +107,10 @@ class ParserGenerator:
             if s not in self.non_terminals:
                 self.terminals.append(s)
         
-        self.first()
-        self.follow()
+        self.compute_first()
+        self.compute_follow()
 
-    def first(self):
+    def compute_first(self):
         
         # while there are changes to any nonterminal
         num_changes = 1
@@ -118,34 +118,31 @@ class ParserGenerator:
             num_changes = 0
 
             for key in self.rules:
-                start_symbol = self.rules[key]
+                left_symbol = self.rules[key]
 
                 # for each production choice
-                for str in start_symbol.strings:
+                for str in left_symbol.strings:
                     k = 0
                     s = str[k]
                     if s in self.terminals:
-                        num_changes += start_symbol.add_first(s)
+                        num_changes += left_symbol.add_first(s)
 
                     elif s in self.non_terminals:     
                         r = self.rules[s]
                         for f in r.first:
-                            num_changes += start_symbol.add_first(f)
+                            num_changes += left_symbol.add_first(f)
 
-    def contain_epsilon(self, symbol):
-        """check if Xk contains epsilon (empty string)
+    def epsilon_in_first(self, symbol):
+        """check if Xk has epsilon (empty string) in its first
         """
         result = False
-        # check if Xk contains epsilon (empty string)
         if symbol in self.non_terminals:
-            for str in self.rules[symbol].strings:
-                if str[0] == EPSILON:
-                    result = True
-                    break
-            
+            if EPSILON in self.rules[symbol].first:
+                result = True
+
         return result
                 
-    def follow(self):
+    def compute_follow(self):
         # Follow(start-symbol) = { $ }
         for key in self.rules:
             left_symbol = self.rules[key]
@@ -178,22 +175,21 @@ class ParserGenerator:
 
                             # if B -> aAb, b != empty string (epsilon), add First(b) to Follow(A)
                             n = len(str)-1
-                            if i < n:
-                                k = i+1                                                            
-                                Xk = str[k] # Xk for k >= i+1
-                                xk_empty = self.contain_epsilon(Xk)
+                            if i < n:                                                       
+                                Xk = str[i+1] # Xk for k >= i+1
+                                xk_empty = self.epsilon_in_first(Xk)
 
                                 if Xk in self.terminals:
                                     num_changes += self.rules[Xi].add_follow(Xk)
                                 else:
                                     for f in self.rules[Xk].first:
                                         num_changes += self.rules[Xi].add_follow(f)
-                        
-                            # if B -> aAb, b = empty string (epsilon), which means B -> aA, add Follow(B) to Follow(A)
                             else:
                                 xk_empty = True
                             
                             if xk_empty:
+                                # if B -> aAb, b = empty string (epsilon), which means B -> aA, add Follow(B) to Follow(A)
+                                # because the follow set of B can be follow set of aA.
                                 Xn = str[n]
                                 if Xn in self.non_terminals:
                                     for f in left_symbol.follow:
