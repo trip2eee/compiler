@@ -225,7 +225,7 @@ class State:
         print('I{}'.format(self.id))
         self.closure.print()
 
-    def print_with_padding(self, s, len_padded=5):
+    def print_with_padding(self, s, len_padded=7):
         s_pad = s
         while len(s_pad) < len_padded:
             s_pad = ' ' + s_pad
@@ -749,6 +749,10 @@ class ParserGenerator:
         print('done')
 
     def compute_lookahead(self):
+        """ This method computes lookaheads
+            Lookaheads: Set of terminals that can be the next symbol.
+            Lookaheads of A: First(b) for S' -> aAb
+        """
         class SearchElem:
             def __init__(self):
                 self.item = None
@@ -794,25 +798,27 @@ class ParserGenerator:
 
                                 prev_item: LRItem
                                 for prev_item in prev_state.closure.items:
-                                    if prev_item.mark_symbol() is not None:
-                                        if prev_item.mark_symbol() == i.left_symbol:
-                                            
-                                            if idx_prev_state == 0:
-                                                idx_la = prev_item.mark+1
-                                                if idx_la < len(prev_item.string):
-                                                    la = prev_item.string[idx_la]
-                                                    if la in self.terminals:
-                                                        item.add_lookahead(la)
-                                                    else:                                            
-                                                        item.add_lookahead(self.rules[la].first)
+                                    if prev_item.mark_symbol() is not None and prev_item.mark_symbol() == i.left_symbol:
 
-                                            else:
+                                        if prev_state.id == 0:
+                                            # state 0, mark of all rules = 0
+                                            idx_la = prev_item.mark+1
+                                            if idx_la < len(prev_item.string):
+                                                la = prev_item.string[idx_la]
+                                                if la in self.terminals:
+                                                    item.add_lookahead(la)
+                                                else:                                            
+                                                    item.add_lookahead(self.rules[la].first)
+
+                                        else:
+                                            
+                                            if prev_item.mark > 0:
                                                 new_e = SearchElem()
                                                 new_e.item = prev_item
                                                 new_e.state = prev_state
                                                 stack_search.append(new_e)
-
-                                                # epsilon-transition
+                                            else:
+                                                # epsilon-transitions
                                                 for prev_item2 in prev_state.closure.items:
                                                     prev_item2: LRItem
                                                     if prev_item2.mark > 0 and prev_item != prev_item2 and prev_item2.mark_symbol() == prev_item.left_symbol:
@@ -845,31 +851,33 @@ class ParserGenerator:
                 mark_symbol = item.mark_symbol()
                 
                 if mark_symbol is not None:
+                    # if [A -> alpha .a beta]
                     if mark_symbol in self.terminals:
-                        # state.action[mark_symbol] = Action()
                         state.action[mark_symbol].next_state = state.next_state_table[mark_symbol]
                         state.action[mark_symbol].action = Action.SHIFT
                     else:
                         state.goto[mark_symbol] = state.next_state_table[mark_symbol]
                 
                 else:
+                    # if [A -> a.]
                     mark_symbol = '$'
                     if self.start_item_accept in state.closure.items:
                         # state.action[mark_symbol] = Action()
                         state.action[mark_symbol].action = Action.ACCEPT
 
                     else:
-                        for lk in item.lookahead:
-                            state.action[lk].action = Action.REDUCE
-                            state.action[lk].reduction_rule = item.rule_id
-                        # if item.is_lookahead_empty():
-                        #     state.action['$'].action = Action.REDUCE
-                        #     state.action['$'].reduction_rule = item.rule_id
+                        for la in item.lookahead:
+                            state.action[la].action = Action.REDUCE
+                            state.action[la].reduction_rule = item.rule_id
 
+                        # For Follow(A) of a non-terminal symbol A, reduce.
                         for f in self.rules[item.left_symbol].follow:
                             if state.action[f].action == Action.NONE:
                                 state.action[f].action = Action.REDUCE
                                 state.action[f].reduction_rule = item.rule_id
+                            else:
+                                if state.action[f].action == Action.SHIFT:
+                                    print('shift - reduce conflict')
 
         state: State
         state.print_table_header()

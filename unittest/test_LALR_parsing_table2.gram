@@ -1,0 +1,12 @@
+CMD : EXP
+
+EXP : EXP + TERM
+    | EXP - TERM
+    | TERM
+
+TERM : TERM * FACTOR
+     | FACTOR
+
+FACTOR : NUMBER
+       | ( EXP )
+

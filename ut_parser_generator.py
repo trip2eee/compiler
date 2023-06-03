@@ -223,6 +223,78 @@ class ParserGeneratorTest(unittest.TestCase):
         gen.parse_string('* id = id')
 
 
+    def test_lalr_parsing_table2(self):
+        print('test LALR parsing table 2')
+
+        gen = ParserGenerator()
+        gen.open('unittest/test_LALR_parsing_table2.gram')
+        gen.compute_LR0_items()
+        gen.construct_lalr_parsing_table()
+
+        action = {'+':'', '-':'', '*':'', 'NUMBER':'s5', '(':'s6', ')':'', '$':''}
+        goto = {'CMD':1, 'EXP':2, 'TERM':3, 'FACTOR':4}
+        self.check_parsing_table(action, goto, gen.states[0])
+        
+        action = {'+':'', '-':'', '*':'', 'NUMBER':'', '(':'', ')':'', '$':'a'}
+        goto = {'CMD':-1, 'EXP':-1, 'TERM':-1, 'FACTOR':-1}
+        self.check_parsing_table(action, goto, gen.states[1])
+
+        action = {'+':'s7', '-':'s8', '*':'', 'NUMBER':'', '(':'', ')':'', '$':'r1'}
+        goto = {'CMD':-1, 'EXP':-1, 'TERM':-1, 'FACTOR':-1}
+        self.check_parsing_table(action, goto, gen.states[2])
+
+        action = {'+':'r4', '-':'r4', '*':'s9', 'NUMBER':'', '(':'', ')':'r4', '$':'r4'}
+        goto = {'CMD':-1, 'EXP':-1, 'TERM':-1, 'FACTOR':-1}
+        self.check_parsing_table(action, goto, gen.states[3])
+
+        action = {'+':'r6', '-':'r6', '*':'r6', 'NUMBER':'', '(':'', ')':'r6', '$':'r6'}
+        goto = {'CMD':-1, 'EXP':-1, 'TERM':-1, 'FACTOR':-1}
+        self.check_parsing_table(action, goto, gen.states[4])
+
+        action = {'+':'r7', '-':'r7', '*':'r7', 'NUMBER':'', '(':'', ')':'r7', '$':'r7'}
+        goto = {'CMD':-1, 'EXP':-1, 'TERM':-1, 'FACTOR':-1}
+        self.check_parsing_table(action, goto, gen.states[5])
+
+        action = {'+':'', '-':'', '*':'', 'NUMBER':'s5', '(':'s6', ')':'', '$':''}
+        goto = {'CMD':-1, 'EXP':10, 'TERM':3, 'FACTOR':4}
+        self.check_parsing_table(action, goto, gen.states[6])
+
+        action = {'+':'', '-':'', '*':'', 'NUMBER':'s5', '(':'s6', ')':'', '$':''}
+        goto = {'CMD':-1, 'EXP':-1, 'TERM':11, 'FACTOR':4}
+        self.check_parsing_table(action, goto, gen.states[7])
+
+        action = {'+':'', '-':'', '*':'', 'NUMBER':'s5', '(':'s6', ')':'', '$':''}
+        goto = {'CMD':-1, 'EXP':-1, 'TERM':12, 'FACTOR':4}
+        self.check_parsing_table(action, goto, gen.states[8])
+
+        action = {'+':'', '-':'', '*':'', 'NUMBER':'s5', '(':'s6', ')':'', '$':''}
+        goto = {'CMD':-1, 'EXP':-1, 'TERM':-1, 'FACTOR':13}
+        self.check_parsing_table(action, goto, gen.states[9])
+
+        action = {'+':'s7', '-':'s8', '*':'', 'NUMBER':'', '(':'', ')':'s14', '$':''}
+        goto = {'CMD':-1, 'EXP':-1, 'TERM':-1, 'FACTOR':-1}
+        self.check_parsing_table(action, goto, gen.states[10])
+
+        action = {'+':'r2', '-':'r2', '*':'s9', 'NUMBER':'', '(':'', ')':'r2', '$':'r2'}
+        goto = {'CMD':-1, 'EXP':-1, 'TERM':-1, 'FACTOR':-1}
+        self.check_parsing_table(action, goto, gen.states[11])
+
+        action = {'+':'r3', '-':'r3', '*':'s9', 'NUMBER':'', '(':'', ')':'r3', '$':'r3'}
+        goto = {'CMD':-1, 'EXP':-1, 'TERM':-1, 'FACTOR':-1}
+        self.check_parsing_table(action, goto, gen.states[12])
+
+        action = {'+':'r5', '-':'r5', '*':'r5', 'NUMBER':'', '(':'', ')':'r5', '$':'r5'}
+        goto = {'CMD':-1, 'EXP':-1, 'TERM':-1, 'FACTOR':-1}
+        self.check_parsing_table(action, goto, gen.states[13])
+
+        action = {'+':'r8', '-':'r8', '*':'r8', 'NUMBER':'', '(':'', ')':'r8', '$':'r8'}
+        goto = {'CMD':-1, 'EXP':-1, 'TERM':-1, 'FACTOR':-1}
+        self.check_parsing_table(action, goto, gen.states[14])
+
+        gen.parse_string('NUMBER * ( NUMBER + NUMBER )')
+
+        print('done')
+
 if __name__ == '__main__':
     unittest.main()
 
