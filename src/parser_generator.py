@@ -12,8 +12,8 @@ class Rule:
         self.left_symbol = non_terminal
         self.strings = []   # two dimensional array of strings
         self.rule_ids = []  # IDs of rules
-        self.first = []
-        self.follow = []
+        self.first = []     # First set
+        self.follow = []    # Follow set
 
     def __str__(self):
         str = self.left_symbol
@@ -71,6 +71,12 @@ class LRItem:
         else:
             return None
 
+    def prev_mark_symbol(self):
+        if self.mark-1 >= 0:
+            return self.string[self.mark-1]
+        else:
+            return None
+        
     def is_lookahead_empty(self):
         return len(self.lookahead) == 0
     
@@ -197,21 +203,7 @@ class Action:
             s = self.action        
         else:
             s = ''
-        
-        while len(s) < 5:
-            s += ' '
-        return s
 
-class StackElem:
-    def __init__(self):
-        self.symbol = None
-        self.state = 0        
-
-    def __str__(self):
-        s = ''
-        if self.symbol is not None:
-            s += self.symbol
-        s += str(self.state)
         return s
 
 class State:
@@ -224,6 +216,7 @@ class State:
         self.action = {}
         self.goto = {}
         self.next_state_table = {}    # dictionary for next state. next_state = next_state_table[lookahead]
+        self.prev_state_table = {}
 
     def __eq__(self, value: 'State') -> bool:
         return self.closure == value.closure
@@ -232,19 +225,36 @@ class State:
         print('I{}'.format(self.id))
         self.closure.print()
 
+    def print_with_padding(self, s, len_padded=5):
+        s_pad = s
+        while len(s_pad) < len_padded:
+            s_pad = ' ' + s_pad
+        
+        print(s_pad, end='')
+
+    def print_table_header(self):
+        self.print_with_padding('|')
+        
+        for key in self.action:
+            self.print_with_padding(key)
+
+        for key in self.goto:
+            self.print_with_padding(key)
+
+        print('')
 
     def print_table_row(self):
-        print('{:5d} |'.format(self.id), end='')
+        self.print_with_padding('{}|'.format(self.id))
 
         # action
         for key in self.action:
-            print('{} '.format(str(self.action[key])), end='')
+            self.print_with_padding('{}'.format(str(self.action[key])))
         # goto
         for key in self.goto:
             if self.goto[key] >= 0:
-                print('{:5d} '.format(self.goto[key]), end='')
+                self.print_with_padding('{}'.format(self.goto[key]))
             else:
-                print('      ', end='')
+                self.print_with_padding('')
 
         print('')
 
@@ -265,10 +275,10 @@ class ParserGenerator:
 
         State.STATE_ID = 0
 
-    def is_string(self, token):
+    def is_valid_token(self, token):
         result = True
         for c in token:
-            if not ('a' <= c <= 'z' or 'A' <= c <= 'Z' or c in '_+-*/()$'):
+            if not ('a' <= c <= 'z' or 'A' <= c <= 'Z' or c in '=_+-*/()$'):
                 result = False
                 break
         return result
@@ -285,7 +295,7 @@ class ParserGenerator:
                 if len(tokens) < 2:
                     continue
                 
-                if self.is_string(tokens[0]) and tokens[1] == ':':
+                if self.is_valid_token(tokens[0]) and tokens[1] == ':':
                     non_terminal = tokens[0]
                     self.cur_non_terminal = non_terminal
 
@@ -315,7 +325,7 @@ class ParserGenerator:
                         else:
                             string.append(tokens[i])
 
-                            if self.is_string(tokens[i]) and tokens[i] not in self.symbols:
+                            if self.is_valid_token(tokens[i]) and tokens[i] not in self.symbols:
                                 self.symbols.append(tokens[i])
 
                 elif tokens[0] == '|':
@@ -332,7 +342,7 @@ class ParserGenerator:
                         else:
                             string.append(tokens[i])
 
-                            if self.is_string(tokens[i]) and tokens[i] not in self.symbols:
+                            if self.is_valid_token(tokens[i]) and tokens[i] not in self.symbols:
                                 self.symbols.append(tokens[i])                
         
         for s in self.symbols:
@@ -452,11 +462,12 @@ class ParserGenerator:
                         rule: Rule
                         rule = self.rules[mark_symbol]
 
-                        for str in rule.strings:
+                        for str, rule_id in zip(rule.strings, rule.rule_ids):
                             new_item = LRItem()
                             new_item.left_symbol = mark_symbol
                             new_item.string = str
-                                                        
+                            new_item.rule_id = rule_id
+
                             if new_item not in closure.items:
                                 closure.items.append(new_item)
                                 num_changes += 1
@@ -483,16 +494,19 @@ class ParserGenerator:
         """ This method computes LR(0) items
         """
         # augmented grammar        
-        aug_rule = Rule(self.start_symbol + "'")
-        aug_rule.left_symbol = self.start_symbol + "'"
-        aug_rule.strings = [[self.start_symbol]]
-
-        print(aug_rule)
-        
+        self.generate_augmented_rules()
+                
+        rule0 = self.aug_rules[0]
         item0 = LRItem()
-        item0.left_symbol = aug_rule.left_symbol
-        item0.string = aug_rule.strings[0]
+        item0.left_symbol = rule0.left_symbol
+        item0.string = rule0.strings[0]
         
+        self.start_item = item0
+
+        start_item_accept = item0.copy()
+        start_item_accept.mark += 1
+        self.start_item_accept = start_item_accept
+
         closure = self.compute_LR0_closures([item0])
         s0 = State(closure)
         self.states.append(s0)
@@ -509,17 +523,36 @@ class ParserGenerator:
                 if new_state not in self.states:
                     print('GOTO(I{}, {}) = '.format(state.id, m), end='')
 
-                    self.states.append(new_state)
+                    self.states.append(new_state)                    
                     new_state.print()
-                else:
 
-                    next_state_id = -1
+                    # mark the next state to be used in construction of parsing table.
+                    state.next_state_table[m] = new_state.id
+                    
+                    if m in new_state.prev_state_table:
+                        if state.id not in new_state.prev_state_table[m]:
+                            new_state.prev_state_table[m].append(state.id)
+                    else:
+                        new_state.prev_state_table[m] = [state.id]
+                else:
+                    
+                    new_state_id = -1
                     for idx_state in range(len(self.states)):
                         if self.states[idx_state] == new_state:
-                            next_state_id = self.states[idx_state].id
+                            new_state_id = self.states[idx_state].id                            
                             break
+                    
+                    new_state = self.states[new_state_id]
+                    # mark the next state to be used in construction of parsing table.
+                    state.next_state_table[m] = new_state_id
+                    
+                    if m in new_state.prev_state_table:
+                        if state.id not in new_state.prev_state_table[m]:
+                            new_state.prev_state_table[m].append(state.id)
+                    else:
+                        new_state.prev_state_table[m] = [state.id]
 
-                    print('GOTO(I{}, {}) = I{}'.format(state.id, m, next_state_id))
+                    print('GOTO(I{}, {}) = I{}'.format(state.id, m, new_state_id))
 
                     State.STATE_ID -= 1
 
@@ -594,9 +627,7 @@ class ParserGenerator:
         closure = self.compute_LR1_closures(items)
         return closure
     
-    def compute_LR1_items(self):
-        """ This method computes LR(1) items
-        """
+    def generate_augmented_rules(self):
         # augmented grammar with numbering
         self.aug_rules = []
         rule_id = 0
@@ -607,8 +638,6 @@ class ParserGenerator:
         aug_rule.rule_ids.append(0)
         self.aug_rules.append(aug_rule)
         rule_id += 1
-
-        print(aug_rule)
 
         # assign rule IDs
         for key in self.rules:
@@ -621,12 +650,17 @@ class ParserGenerator:
                 ar.strings = [s]
                 ar.rule_ids = [rule_id]
                 self.aug_rules.append(ar)
-
                 rule_id += 1
 
+    def compute_LR1_items(self):
+        """ This method computes LR(1) items
+        """
+        self.generate_augmented_rules()
+
+        rule0 = self.aug_rules[0]
         item0 = LRItem()
-        item0.left_symbol = aug_rule.left_symbol
-        item0.string = aug_rule.strings[0]
+        item0.left_symbol = rule0.left_symbol
+        item0.string = rule0.strings[0]
 
         self.start_item = item0
 
@@ -714,13 +748,150 @@ class ParserGenerator:
             state.print_table_row()        
         print('done')
 
+    def compute_lookahead(self):
+        class SearchElem:
+            def __init__(self):
+                self.item = None
+                self.state = None
+                self.mark_symbol = None
+
+        state: State
+        for state in self.states:
+            
+            print(state.id)
+
+            # lookahead_stack
+            # item
+            # state
+            # mark_symbol
+            
+
+            item: LRItem
+            for item in state.closure.items:
+                
+                stack_search = []
+
+                e = SearchElem()
+                e.item = item
+                e.state = state
+                stack_search.append(e)
+
+                while len(stack_search) > 0:
+                    e: SearchElem
+                    e = stack_search.pop()
+                    
+                    i: LRItem
+                    i = e.item
+                    prev_mark_symbol = i.prev_mark_symbol()
+                    if prev_mark_symbol is not None:
+                        s:State
+                        s = e.state
+
+                        if prev_mark_symbol in s.prev_state_table:
+                            for idx_prev_state in s.prev_state_table[prev_mark_symbol]:
+                                prev_state: State
+                                prev_state = self.states[idx_prev_state]
+
+                                prev_item: LRItem
+                                for prev_item in prev_state.closure.items:
+                                    if prev_item.mark_symbol() is not None:
+                                        if prev_item.mark_symbol() == i.left_symbol:
+                                            
+                                            if idx_prev_state == 0:
+                                                idx_la = prev_item.mark+1
+                                                if idx_la < len(prev_item.string):
+                                                    la = prev_item.string[idx_la]
+                                                    if la in self.terminals:
+                                                        item.add_lookahead(la)
+                                                    else:                                            
+                                                        item.add_lookahead(self.rules[la].first)
+
+                                            else:
+                                                new_e = SearchElem()
+                                                new_e.item = prev_item
+                                                new_e.state = prev_state
+                                                stack_search.append(new_e)
+
+                                                # epsilon-transition
+                                                for prev_item2 in prev_state.closure.items:
+                                                    prev_item2: LRItem
+                                                    if prev_item2.mark > 0 and prev_item != prev_item2 and prev_item2.mark_symbol() == prev_item.left_symbol:
+                                                        if s.id != prev_state.id:
+                                                            new_e = SearchElem()
+                                                            new_e.item = prev_item2
+                                                            new_e.state = prev_state
+                                                            stack_search.append(new_e)
+
+            state.print()
+
     def construct_lalr_parsing_table(self):
         """ This method constructs LALR parsing table
         """
-        pass
+        self.compute_lookahead()
+        print('')
+        
+        state: State
+        for state in self.states:
+            
+            for t in self.terminals:
+                state.action[t] = Action()
+            state.action['$'] = Action()
+            
+            for n in self.non_terminals:
+                state.goto[n] = -1
+                
+            item: LRItem
+            for item in state.closure.items:
+                mark_symbol = item.mark_symbol()
+                
+                if mark_symbol is not None:
+                    if mark_symbol in self.terminals:
+                        # state.action[mark_symbol] = Action()
+                        state.action[mark_symbol].next_state = state.next_state_table[mark_symbol]
+                        state.action[mark_symbol].action = Action.SHIFT
+                    else:
+                        state.goto[mark_symbol] = state.next_state_table[mark_symbol]
+                
+                else:
+                    mark_symbol = '$'
+                    if self.start_item_accept in state.closure.items:
+                        # state.action[mark_symbol] = Action()
+                        state.action[mark_symbol].action = Action.ACCEPT
+
+                    else:
+                        for lk in item.lookahead:
+                            state.action[lk].action = Action.REDUCE
+                            state.action[lk].reduction_rule = item.rule_id
+                        # if item.is_lookahead_empty():
+                        #     state.action['$'].action = Action.REDUCE
+                        #     state.action['$'].reduction_rule = item.rule_id
+
+                        for f in self.rules[item.left_symbol].follow:
+                            if state.action[f].action == Action.NONE:
+                                state.action[f].action = Action.REDUCE
+                                state.action[f].reduction_rule = item.rule_id
+
+        state: State
+        state.print_table_header()
+        for state in self.states:
+            state.print_table_row()
+
+        print('done')
 
     def parse_string(self, input):
         input = input.split()
+            
+        class StackElem:
+            def __init__(self):
+                self.symbol = None
+                self.state = 0        
+
+            def __str__(self):
+                s = ''
+                if self.symbol is not None:
+                    s += self.symbol
+                s += str(self.state)
+                return s
 
         e = StackElem()
         stack = [e]

@@ -172,6 +172,57 @@ class ParserGeneratorTest(unittest.TestCase):
 
         gen.parse_string('c c d d')
 
+    def test_lalr_parsing_table(self):
+        print('test LALR parsing table')
+
+        gen = ParserGenerator()
+        gen.open('unittest/test_LALR_parsing_table.gram')
+        gen.compute_LR0_items()
+        gen.construct_lalr_parsing_table()
+
+        action = {'=':'', '*':'s4', 'id':'s5', '$':''}
+        goto = {'S':1, 'R':3, 'L':2}
+        self.check_parsing_table(action, goto, gen.states[0])
+
+        action = {'=':'', '*':'', 'id':'', '$':'a'}
+        goto = {'S':-1, 'R':-1, 'L':-1}
+        self.check_parsing_table(action, goto, gen.states[1])
+
+        action = {'=':'s6', '*':'', 'id':'', '$':'r5'}
+        goto = {'S':-1, 'R':-1, 'L':-1}
+        self.check_parsing_table(action, goto, gen.states[2])
+
+        action = {'=':'', '*':'', 'id':'', '$':'r2'}
+        goto = {'S':-1, 'R':-1, 'L':-1}
+        self.check_parsing_table(action, goto, gen.states[3])
+
+        action = {'=':'', '*':'s4', 'id':'s5', '$':''}
+        goto = {'S':-1, 'R':7, 'L':8}
+        self.check_parsing_table(action, goto, gen.states[4])
+
+        action = {'=':'r4', '*':'', 'id':'', '$':'r4'}
+        goto = {'S':-1, 'R':-1, 'L':-1}
+        self.check_parsing_table(action, goto, gen.states[5])
+
+        action = {'=':'', '*':'s4', 'id':'s5', '$':''}
+        goto = {'S':-1, 'R':9, 'L':8}
+        self.check_parsing_table(action, goto, gen.states[6])
+
+        action = {'=':'r3', '*':'', 'id':'', '$':'r3'}
+        goto = {'S':-1, 'R':-1, 'L':-1}
+        self.check_parsing_table(action, goto, gen.states[7])
+
+        action = {'=':'r5', '*':'', 'id':'', '$':'r5'}
+        goto = {'S':-1, 'R':-1, 'L':-1}
+        self.check_parsing_table(action, goto, gen.states[8])
+
+        action = {'=':'', '*':'', 'id':'', '$':'r1'}
+        goto = {'S':-1, 'R':-1, 'L':-1}
+        self.check_parsing_table(action, goto, gen.states[9])
+
+        gen.parse_string('* id = id')
+
+
 if __name__ == '__main__':
     unittest.main()
 
