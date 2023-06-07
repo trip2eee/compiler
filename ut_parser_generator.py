@@ -178,7 +178,28 @@ class ParserGeneratorTest(unittest.TestCase):
         gen = ParserGenerator()
         gen.open('unittest/test_LALR_parsing_table.gram')
         gen.compute_LR0_items()
+        gen.print_first_follow()
         gen.construct_lalr_parsing_table()
+
+        self.assertEqual(len(gen.states[0].closure.items[0].lookahead), 0)
+
+        self.assertEqual(len(gen.states[1].closure.items[0].lookahead), 0)
+
+        self.assertEqual(len(gen.states[2].closure.items[0].lookahead), 0)
+        self.assertEqual(len(gen.states[2].closure.items[1].lookahead), 0)
+
+        self.assertEqual(len(gen.states[3].closure.items[0].lookahead), 0)
+
+        self.assertEqual(len(gen.states[5].closure.items[0].lookahead), 1)
+        self.assertEqual(gen.states[5].closure.items[0].lookahead[0], '=')
+
+        self.assertEqual(len(gen.states[7].closure.items[0].lookahead), 1)
+        self.assertEqual(gen.states[7].closure.items[0].lookahead[0], '=')
+
+        self.assertEqual(len(gen.states[8].closure.items[0].lookahead), 1)
+        self.assertEqual(gen.states[8].closure.items[0].lookahead[0], '=')
+
+        self.assertEqual(len(gen.states[9].closure.items[0].lookahead), 0)
 
         action = {'=':'', '*':'s4', 'id':'s5', '$':''}
         goto = {'S':1, 'R':3, 'L':2}
