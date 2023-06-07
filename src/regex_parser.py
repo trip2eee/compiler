@@ -21,39 +21,77 @@ class State(enum.IntEnum):
 class Condition:
     VALUE = 0
     RANGE = 1
-    def __init__(self, type=0, value=0, min=0, max=0):
+    def __init__(self, type=0, value=None, min=None, max=None):
         self.type = type
         self.value = value
         self.min = min
         self.max = max
 
-class Token:
+    def __str__(self):
+        if self.type == Condition.VALUE:
+            if self.value == '\n':
+                return '\\n'
+            else:
+                return str(self.value)
+        else:
+            return str(self.min) + "~" + str(self.max)
+        
+class Pattern:
     def __init__(self):
         self.conditions = []
         self.min_repeat = -1
         self.max_repeat = -1
 
+    def __str__(self):
+        s = ""
+
+        s += '['
+        for i in range(len(self.conditions)):
+            if i > 0:
+                s += '|'
+            s += str(self.conditions[i])
+        s += ']'
+        
+        if self.min_repeat >= 0:
+            s += '{'
+            if self.max_repeat == -1:
+                s += '{}, inf'.format(self.min_repeat)
+            else:
+                s += '{}, {}'.format(self.min_repeat, self.max_repeat)
+            s += '}'
+
+        return s
+    
 class RegExParser:
 
     def __init__(self):
         self.state = State.S0
-        self.cur_token = None
-        self.tokens = []
+        self.cur_pattern = None
+        self.patterns = []
 
+    def add_cond_value(self, val):
+        return Condition(Condition.VALUE, value=val)
+    
     def parse(self, regx):
+        self.state = State.S0
+        self.cur_pattern = None
+        self.patterns = []
 
         for c in regx:
             if State.S0 == self.state:
                 if c == '[':
                     self.state = State.S1
-                    self.cur_token = Token()
-
+                    self.cur_pattern = Pattern()
+                elif c == '\\':
+                    self.state = State.S7
                 else:
                     self.state = State.S0
                     
-                    token = Token()
-                    token.conditions.append(c)
-                    self.tokens.append(token)
+                    pattern = Pattern()
+                    cond = self.add_cond_value(c)
+                    pattern.conditions.append(cond)
+
+                    self.patterns.append(pattern)
 
             elif State.S1 == self.state:
                 if c == ']':
@@ -62,25 +100,27 @@ class RegExParser:
                     self.state = State.S3
                 elif c == '-':
                     self.state = State.S6
-                    self.cur_token.conditions.append(c)
+                    cond = self.add_cond_value(c)
+                    self.cur_pattern.conditions.append(cond)
                 else:
-                    self.cur_token.conditions.append(c)
+                    cond = self.add_cond_value(c)
+                    self.cur_pattern.conditions.append(cond)
 
             elif State.S2 == self.state:
                 if c == '+':
-                    self.cur_token.min_repeat = 1
-                    self.cur_token.max_repeat = -1
-                    self.tokens.append(self.cur_token)
+                    self.cur_pattern.min_repeat = 1
+                    self.cur_pattern.max_repeat = -1
+                    self.patterns.append(self.cur_pattern)
                 elif c =='*':
-                    self.cur_token.min_repeat = 0
-                    self.cur_token.max_repeat = -1
-                    self.tokens.append(self.cur_token)
+                    self.cur_pattern.min_repeat = 0
+                    self.cur_pattern.max_repeat = -1
+                    self.patterns.append(self.cur_pattern)
                 elif c =='?':
-                    self.cur_token.min_repeat = 0
-                    self.cur_token.max_repeat = 1
-                    self.tokens.append(self.cur_token)
+                    self.cur_pattern.min_repeat = 0
+                    self.cur_pattern.max_repeat = 1
+                    self.patterns.append(self.cur_pattern)
                 else:
-                    self.tokens.append(self.cur_token)
+                    self.patterns.append(self.cur_pattern)
 
                 self.state = State.S0
 
@@ -88,31 +128,33 @@ class RegExParser:
                 if c == ']':                    
                     self.state = State.S2
                 else:
-                    if self.cur_token.conditions[-1] == '-':
-                        self.cur_token.conditions.pop()
-                        c_first = ord(self.cur_token.conditions[-1])+1
+                    last_cond : Condition
+                    last_cond = self.cur_pattern.conditions[-1]
+                    if last_cond.value == '-':
+                        self.cur_pattern.conditions.pop()
 
-                        c_last = ord(c)
+                        last_cond = self.cur_pattern.conditions[-1]
 
-                        for i in range(c_first, c_last+1):
-                            self.cur_token.conditions.append(chr(i))
-                                                
+                        last_cond.type = Condition.RANGE
+                        last_cond.min = last_cond.value
+                        last_cond.max = c
+                        last_cond.value = None
                         self.state = State.S1
+            elif State.S7 == self.state:
+                self.state = State.S0
+                cond = self.add_cond_value(c)
+                pattern = Pattern()
+                pattern.conditions.append(cond)
+                self.patterns.append(pattern)
 
-
+        return self.patterns
+    
     def print(self):
-        t:Token
-        for t in self.tokens:
-            for c in t.conditions:
-                print('{}'.format(c), end='')
+        pattern:Pattern
+        for i in range(len(self.patterns)):
+            pattern = self.patterns[i]
+            if i > 0:
+                print(' ', end='')
+            print(str(pattern), end='')
             
-            if t.min_repeat >= 0:
-                print('{', end='')
-                if t.max_repeat == -1:
-                    print('{}, inf'.format(t.min_repeat), end='')
-                else:
-                    print('{}, {}'.format(t.min_repeat, t.max_repeat), end='')
-                print('}', end='')
-            print(' ', end='')
-
         print('')
