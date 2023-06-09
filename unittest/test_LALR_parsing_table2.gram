@@ -1,12 +1,17 @@
-CMD : EXP
+%%
+CMD : EXP { $$ = $1 };
 
-EXP : EXP + TERM
-    | EXP - TERM
-    | TERM
+EXP : EXP + TERM { $$ = $1 + $3 }
+    | EXP - TERM { $$ = $1 - $3 }
+    | TERM { $$ = $1 }
+    ;
 
-TERM : TERM * FACTOR
-     | FACTOR
+TERM : TERM * FACTOR { $$ = $1 * $3 }
+     | FACTOR { $$ = $1 }
+     ;
 
-FACTOR : NUMBER
-       | ( EXP )
+FACTOR : NUMBER { $$ = $1 }
+       | ( EXP ) { $$ = $2 }
+       ;
+%%
 

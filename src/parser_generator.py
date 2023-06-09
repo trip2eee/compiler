@@ -5,56 +5,9 @@ Parser Generator
 """
 import enum
 import time
-
-EPSILON = 'ep'  # empty string epsilon
-
-class Rule:
-    def __init__(self, non_terminal):
-        self.left_symbol = non_terminal
-        self.strings = []   # two dimensional array of strings
-        self.rule_ids = []  # IDs of rules
-        self.first = []     # First set
-        self.follow = []    # Follow set
-
-    def __str__(self):
-        str = self.left_symbol
-        str += ' -> '
-        
-        for idx_str in range(len(self.strings)):
-            for s in self.strings[idx_str]:
-                str += s + ' '
-            if idx_str < len(self.strings)-1:
-                str += '| '
-
-        return str
-    
-    def add_first(self, f):
-        if f not in self.first:
-            self.first.append(f)
-            return 1
-        else:
-            return 0
-        
-    def add_follow(self, f):
-        if f not in self.follow and f != EPSILON:
-            self.follow.append(f)
-            return 1
-        else:
-            return 0
-
-    def print_first(self):
-        print('First({}) = '.format(self.left_symbol), end='')
-        print('{', end='')
-        for f in self.first:
-            print('{}, '.format(f), end='')
-        print('}')
-    
-    def print_follow(self):
-        print('Follow({}) = '.format(self.left_symbol), end='')
-        print('{', end='')
-        for f in self.follow:
-            print('{}, '.format(f), end='')
-        print('}')
+from src.grammar_parser import GarmmarParser
+from src.grammar_parser import Rule
+from src.grammar_parser import EPSILON
 
 class LRItem:
     """LR(0) Item
@@ -276,79 +229,19 @@ class ParserGenerator:
         self.states = []            # List of states
 
         State.STATE_ID = 0
-
-    def is_valid_token(self, token):
-        result = True
-        for c in token:
-            if not ('a' <= c <= 'z' or 'A' <= c <= 'Z' or c in '=_+-*/()$[]'):
-                result = False
-                break
-        return result
+        self.grammar_parser = None
 
     def open(self, grammar_path):
-        with open(grammar_path, 'r') as f:
-            while True:
-                line = f.readline()
-
-                if line == '':
-                    break
-            
-                tokens = line.split()
-                if len(tokens) < 2:
-                    continue
-                
-                if self.is_valid_token(tokens[0]) and tokens[1] == ':':
-                    non_terminal = tokens[0]
-                    self.cur_non_terminal = non_terminal
-
-                    if self.start_symbol is None:
-                        self.start_symbol = non_terminal
-
-                    if non_terminal not in self.symbols:
-                        self.symbols.append(non_terminal)
-
-                    if non_terminal not in self.non_terminals:
-                        self.non_terminals.append(non_terminal)
-
-                    rule = Rule(self.cur_non_terminal)
-                    self.rules[self.cur_non_terminal] = rule
-                    self.cur_rule = rule
-
-                    string = []
-                    self.cur_rule.strings.append(string)
-                    for i in range(2, len(tokens)):
-                        if tokens[i] == '#':
-                            # if comment
-                            break
-                        elif tokens[i] == '{':
-                            # if code
-                            break
-                        else:
-                            string.append(tokens[i])
-
-                            if self.is_valid_token(tokens[i]) and tokens[i] not in self.symbols:
-                                self.symbols.append(tokens[i])
-
-                elif tokens[0] == '|':
-                    string = []
-                    self.cur_rule.strings.append(string)
-
-                    for i in range(1, len(tokens)):
-                        if tokens[i] == '#':
-                            # if comment
-                            break
-                        elif tokens[i] == '{':
-                            # if code
-                            break
-                        else:
-                            string.append(tokens[i])
-
-                            if self.is_valid_token(tokens[i]) and tokens[i] not in self.symbols:
-                                self.symbols.append(tokens[i])                
         
-        for s in self.symbols:
-            if s not in self.non_terminals:
-                self.terminals.append(s)
+        self.grammar_parser = GarmmarParser()
+        self.grammar_parser.open(grammar_path)
+
+        self.rules = self.grammar_parser.rules
+        self.start_symbol = self.grammar_parser.start_symbol
+        self.symbols = self.grammar_parser.symbols
+        self.non_terminals = self.grammar_parser.non_terminals
+        self.terminals = self.grammar_parser.terminals
+        self.list_tokens = self.grammar_parser.list_tokens
         
         self.compute_first()
         self.compute_follow()        
@@ -886,7 +779,6 @@ class ParserGenerator:
                         state.action[mark_symbol].action = Action.SHIFT
                     else:
                         state.goto[mark_symbol] = state.next_state_table[mark_symbol]
-                
                 else:
                     # if [A -> a.]
                     mark_symbol = '$'
@@ -920,6 +812,14 @@ class ParserGenerator:
         self.compute_LR0_items()
         self.construct_lalr_parsing_table()
     
+    def find_symbol_alias(self, symbol):
+        alias = ''
+        for t in self.list_tokens:
+            if t.string == symbol and t.alias != '':
+                alias = t.alias
+                break
+        return alias
+
     def export(self, file_path):
 
         f = open(file_path, 'w')
@@ -929,13 +829,21 @@ class ParserGenerator:
 
         cur_time = time.strftime('%Y-%m-%d %H:%M:%S')
         f.write('@date {}\n'.format(cur_time))
-
-
         f.write('"""\n')
+
+        f.write('# Definitions\n')
+        definition = self.grammar_parser.definition
+        idx_start = definition.find('%{')
+        idx_end = definition.find('%}')
+        
+        if idx_start >= 0 and idx_end > idx_start:            
+            f.write(definition[idx_start+2:idx_end])
+            f.write("\n")
+        
+        f.write('# Parsing Table\n')
         symbol_table = []
         symbol_id_table = {}
 
-        
         NUM_TERMINALS = len(self.terminals)
         NUM_NON_TERMINALS = len(self.non_terminals)
 
@@ -971,7 +879,12 @@ class ParserGenerator:
         f.write('# Terminals\n')
         for i in range(NUM_TERMINALS+1):
             symbol = symbol_table[i]
-            f.write('{} = {}\n'.format(symbol, symbol_id_table[symbol]))
+            # if the symbol is special character, replace with alias.
+            alias = self.find_symbol_alias(symbol)
+            if alias == '':
+                f.write('{} = {}\n'.format(symbol, symbol_id_table[symbol]))
+            else:
+                f.write('{} = {}  # {}\n'.format(alias, symbol_id_table[symbol], symbol))
 
         f.write('# Non-Terminals\n')
         for i in range(NUM_TERMINALS+1, NUM_TERMINALS + NUM_NON_TERMINALS + 2):
@@ -980,7 +893,7 @@ class ParserGenerator:
 
         f.write('# RULE table\n')
         NUM_RULES = len(self.aug_rules)
-        f.write('NUM_RULES = {}\n'.format(NUM_RULES))
+        f.write('NUM_RULES = {} # ACCEPT in tbl_reduce\n'.format(NUM_RULES))
         f.write('tbl_rule = [\n')
         rule: Rule
         for rule in self.aug_rules:
@@ -1015,10 +928,10 @@ class ParserGenerator:
                     f.write('{}, '.format(action.next_state))
                 else:
                     f.write('{}, '.format(-1))
-            
+
             for key in state.goto:
                 f.write('{}, '.format(state.goto[key]))
-                
+
             f.write('],\n')
 
         f.write(']\n')
@@ -1039,6 +952,60 @@ class ParserGenerator:
 
             f.write('],\n')
         f.write(']\n')
+
+        # reduce actions
+        f.write('# Reduce Actions\n')
+
+        rule: Rule
+        for key in self.rules:
+            rule = self.rules[key]
+
+            for i in range(len(rule.rule_ids)):
+                action_code = rule.reduce_actions[i]
+                
+                idx_nl = 0
+                while idx_nl < (len(action_code)-1) and action_code[idx_nl] == '\n':
+                    idx_nl += 1
+                action_code = action_code[idx_nl:]
+
+                if action_code != '':
+                    f.write('def reduce_rule_{}('.format(rule.rule_ids[i]))
+                    for j in range(len(rule.strings[i])):
+                        if j > 0:
+                            f.write(', ')
+                        f.write('p{}'.format(j + 1))
+                    f.write('):\n')
+                    
+                    action_code = action_code.replace('$$', 'result')
+                    action_code = action_code.replace('$', 'p')
+
+                    action_code = '    result = Symbol()\n' + action_code
+                    action_code += '\n    result.type = {}'.format(rule.left_symbol)
+                    action_code += '\n    return result\n'
+
+                    action_code = action_code.replace('$', 'p')
+
+                    f.write(action_code)
+                    f.write('\n')
+
+        # embedded actions
+        f.write('# Embedded Actions\n')
+        embedded_actions = self.grammar_parser.embedded_action
+        for key in embedded_actions:
+            action_code = embedded_actions[key]
+
+            if action_code != '':
+                f.write('def embedded_{}(p1):\n'.format(key))
+
+                if '$$' in action_code:
+                    action_code = action_code.replace('$$', 'result')
+                    action_code = action_code.replace('$', 'p')
+                    action_code += '\n    return result\n'
+                else:
+                    action_code = action_code.replace('$', 'p')
+
+                f.write(action_code)
+                f.write('\n')
 
         f.close()
 
@@ -1066,23 +1033,20 @@ class ParserGenerator:
                 token = input[0]
             else:
                 token = '$'
-            
+
             action:Action
             action = self.states[s].action[token]
-            # print(str(action))
 
             if action.action == Action.SHIFT:
                 s = action.next_state
-
                 print('SHIFT {}'.format(s))
-
                 input.pop(0)
 
                 e = StackElem()
                 e.symbol = token
                 e.state = s
                 stack.append(e)
-            
+
             elif action.action == Action.REDUCE:
                 
                 rule_id = action.reduction_rule
@@ -1096,7 +1060,7 @@ class ParserGenerator:
                 s = stack[-1].state
 
                 e = StackElem()
-                e.symbol = rule.left_symbol                
+                e.symbol = rule.left_symbol
                 e.state = self.states[s].goto[rule.left_symbol]
 
                 print('GOTO {}'.format(e.state))
@@ -1107,37 +1071,36 @@ class ParserGenerator:
             elif action.action == Action.ACCEPT:
                 print('ACCEPT')
                 break
-        
+
             for e in stack:
                 print(str(e), end='')
             print('')
-
 
     def print_nonterminals(self):
         print('Non-terminals')
         for s in self.non_terminals:
             print('{} '.format(s), end='')
         print('')
-    
+
     def print_terminals(self):
         print('Terminals')
         for s in self.terminals:
             print('{} '.format(s), end='')
         print('')
-    
+
     def print_rules(self):
         print('Rules')
         for key in self.rules:
             r = self.rules[key]
             print(r)
         print('')
-    
+
     def print_first_follow(self):
         print('First set')
         for key in self.rules:
             r:Rule
-            r = self.rules[key]  
-            r.print_first()          
+            r = self.rules[key]
+            r.print_first()
 
         print('')
         print('Follow set')

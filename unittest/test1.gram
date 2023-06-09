@@ -1,11 +1,17 @@
 # Nonterminal : String 1
 #             | String 2
 
+%%
 S : C 
   | D
+  ;
   
 C : a C 
   | b
+  ;
 
 D : c D 
   | d
+  ;
+%%
+

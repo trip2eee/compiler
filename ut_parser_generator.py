@@ -71,7 +71,7 @@ class ParserGeneratorTest(unittest.TestCase):
     def test_first_follow(self):
         print('test_first_follow')
         gen = ParserGenerator()
-        gen.open('unittest/test_first_follow2.gram')
+        gen.open('unittest/test_calc.gram')
         gen.print_first_follow()
 
         # Check first set
@@ -84,7 +84,7 @@ class ParserGeneratorTest(unittest.TestCase):
         t = ['(', 'number']
         self._compare_set(gen.rules['term'].first, t)
 
-        t = ['*']
+        t = ['*', '/']
         self._compare_set(gen.rules['mulop'].first, t)
 
         t = ['(', 'number']
@@ -97,13 +97,13 @@ class ParserGeneratorTest(unittest.TestCase):
         t = ['(', 'number']
         self._compare_set(gen.rules['addop'].follow, t)
 
-        t = ['$', '+', '-', '*', ')']
+        t = ['$', '+', '-', '*', '/', ')']
         self._compare_set(gen.rules['term'].follow, t)
 
         t = ['(', 'number']
         self._compare_set(gen.rules['mulop'].follow, t)
 
-        t = ['$', '+', '-', '*', ')']
+        t = ['$', '+', '-', '*', '/', ')']
         self._compare_set(gen.rules['factor'].follow, t)
     
     def test_LR0_items(self):

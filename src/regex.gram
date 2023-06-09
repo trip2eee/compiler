@@ -1,21 +1,30 @@
-CMD : EXP
+
+%%
+
+CMD : EXP;
 
 EXP : EXP TERM
     | EXP GROUP
     | TERM
     | GROUP
+    ;
 
 GROUP : LPAR TERM RPAR
       | LPAR TERM RPAR REPEAT
+      ;
 
 TERM : TERM FACTOR
      | FACTOR
+     ;
 
 FACTOR : CHAR
        | CHAR MINUS CHAR
        | LBR TERM RBR
        | LBR TERM RBR REPEAT
+       ;
 
 REPEAT : PLUS
        | TIMES
        | QUES
+       ;
+%%

@@ -1,13 +1,17 @@
-E : T Ep
+%%
+E : T Ep;
 
 Ep : + T Ep 
    | ep
+   ;
 
-T : F Tp
+T : F Tp;
 
 Tp : * F Tp
-   | ep
+   | ep;
 
 F : ( E )
-  | id
+  | id;
+
+%%
 

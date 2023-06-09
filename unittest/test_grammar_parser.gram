@@ -1,0 +1,21 @@
+%{
+cur_type = 0
+%}
+
+%%
+
+decl : type { cur_type = $1 }
+       var_list
+     ;
+
+type : int
+     | float
+     ;
+
+var_list : var_list, id { print("1") }
+         | id { print("2") }
+         ;
+
+%%
+
+

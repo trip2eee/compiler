@@ -1,0 +1,50 @@
+%{
+class Symbol:
+    def __init__(self):
+        self.type = None
+        self.value = None
+%}
+
+%%
+exp : exp addop term {
+    if $2.value == '+':
+        $$.value = $1.value + $3.value
+    else:
+        $$.value = $1.value - $3.value
+}
+| term {
+    $$ = $1
+};
+
+addop : + {
+    $$.value = '+'
+}
+| - {
+    $$.value = '-'
+};
+
+term : term  mulop factor {
+    if $2.value == '*':
+        $$.value = $1.value * $3.value
+    else:
+        $$.value = $1.value / $3.value
+}
+| factor {
+    $$ = $1
+};
+
+mulop : * {
+    $$.value = '*'
+}
+| / {
+    $$.value = '/'
+};
+
+factor : ( exp ) {
+    $$ = $2
+}
+| number {
+    $$  = $1
+};
+
+%%
