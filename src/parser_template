@@ -22,6 +22,9 @@ def parse(list_symbols):
     while True:
         if len(list_symbols) > 0:
             symbol = list_symbols[0]
+
+            # Call Embedded Action Function
+%EMBEDDED_ACTIONS%
         else:
             symbol = Symbol()
             symbol.type = END
@@ -47,15 +50,20 @@ def parse(list_symbols):
                 p = stack.pop()
                 params.insert(0, p.symbol)
 
-            state = stack[-1].state
+            state = stack[-1].state            
 
-            elem = StackElem()
-            elem.symbol = None
-
-            # Call reduce function
+            # Call Reduce Function
 %REDUCE_ACTIONS%
             else:
+                symbol = None
                 print('reduction error')
+                break
+
+            # Call Embedded Action Function
+%EMBEDDED_ACTIONS%
+
+            elem = StackElem()
+            elem.symbol = symbol
 
             # GOTO
             left_symbol = tbl_rule[reduce][0]

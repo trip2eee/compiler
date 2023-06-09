@@ -23,6 +23,11 @@ def parse(list_symbols):
     while True:
         if len(list_symbols) > 0:
             symbol = list_symbols[0]
+
+            # Call Embedded Action Function
+            if symbol.type==term:
+                embedded_term(symbol)
+
         else:
             symbol = Symbol()
             symbol.type = END
@@ -48,37 +53,44 @@ def parse(list_symbols):
                 p = stack.pop()
                 params.insert(0, p.symbol)
 
-            state = stack[-1].state
+            state = stack[-1].state            
 
-            elem = StackElem()
-            elem.symbol = None
-
-            # Call reduce function
+            # Call Reduce Function
             if reduce==1:
-                elem.symbol = reduce_rule_1(params[0], params[1], params[2])
+                symbol = reduce_rule_1(params[0], params[1], params[2])
             elif reduce==2:
-                elem.symbol = reduce_rule_2(params[0])
+                symbol = reduce_rule_2(params[0])
             elif reduce==3:
-                elem.symbol = reduce_rule_3(params[0])
+                symbol = reduce_rule_3(params[0])
             elif reduce==4:
-                elem.symbol = reduce_rule_4(params[0])
+                symbol = reduce_rule_4(params[0])
             elif reduce==5:
-                elem.symbol = reduce_rule_5(params[0], params[1], params[2])
+                symbol = reduce_rule_5(params[0], params[1], params[2])
             elif reduce==6:
-                elem.symbol = reduce_rule_6(params[0], params[1])
+                symbol = reduce_rule_6(params[0], params[1])
             elif reduce==7:
-                elem.symbol = reduce_rule_7(params[0])
+                symbol = reduce_rule_7(params[0])
             elif reduce==8:
-                elem.symbol = reduce_rule_8(params[0])
+                symbol = reduce_rule_8(params[0])
             elif reduce==9:
-                elem.symbol = reduce_rule_9(params[0])
+                symbol = reduce_rule_9(params[0])
             elif reduce==10:
-                elem.symbol = reduce_rule_10(params[0], params[1], params[2])
+                symbol = reduce_rule_10(params[0], params[1], params[2])
             elif reduce==11:
-                elem.symbol = reduce_rule_11(params[0])
+                symbol = reduce_rule_11(params[0])
 
             else:
+                symbol = None
                 print('reduction error')
+                break
+
+            # Call Embedded Action Function
+            if symbol.type==term:
+                embedded_term(symbol)
+
+
+            elem = StackElem()
+            elem.symbol = symbol
 
             # GOTO
             left_symbol = tbl_rule[reduce][0]

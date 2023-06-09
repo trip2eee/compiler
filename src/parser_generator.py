@@ -821,6 +821,9 @@ class ParserGenerator:
         return alias
 
     def export(self, file_path):
+    
+        INDENT1 = '            '
+        INDENT2 = '                '
 
         module_name = file_path
         if module_name.endswith('.py'):
@@ -959,7 +962,7 @@ class ParserGenerator:
 
         # reduce actions
         f.write('# Reduce Actions\n')
-        reduce_actions = ''
+        reduce_action_calls = ''
 
         rule: Rule
         for key in self.rules:
@@ -997,23 +1000,21 @@ class ParserGenerator:
                 f.write(action_code)
                 f.write('\n')
 
-                indent1 = '            '
-                indent2 = '                '
-
                 if rule_id == 1:
-                    reduce_actions += indent1 + 'if reduce=={}:\n'.format(rule_id)
+                    reduce_action_calls += INDENT1 + 'if reduce=={}:\n'.format(rule_id)
                 else:
-                    reduce_actions += indent1 + 'elif reduce=={}:\n'.format(rule_id)
+                    reduce_action_calls += INDENT1 + 'elif reduce=={}:\n'.format(rule_id)
 
-                reduce_actions += indent2 + 'elem.symbol = reduce_rule_{}('.format(rule_id)
+                reduce_action_calls += INDENT2 + 'symbol = reduce_rule_{}('.format(rule_id)
                 for idx_arg in range(len(rule.strings[idx_rule])):
                     if idx_arg > 0:
-                        reduce_actions += ', '
-                    reduce_actions += 'params[{}]'.format(idx_arg)
-                reduce_actions += ')\n'
+                        reduce_action_calls += ', '
+                    reduce_action_calls += 'params[{}]'.format(idx_arg)
+                reduce_action_calls += ')\n'
 
         # embedded actions
         f.write('# Embedded Actions\n')
+        embedded_action_calls = ''
         embedded_actions = self.grammar_parser.embedded_action
         for key in embedded_actions:
             action_code = embedded_actions[key]
@@ -1031,6 +1032,9 @@ class ParserGenerator:
                 f.write(action_code)
                 f.write('\n')
 
+                embedded_action_calls += INDENT1 + 'if symbol.type=={}:\n'.format(key)
+                embedded_action_calls += INDENT2 + 'embedded_{}(symbol)\n'.format(key)
+
         f.close()
 
         import_path = module_name
@@ -1043,7 +1047,8 @@ class ParserGenerator:
         f.close()
 
         parser_template = parser_template.replace('%IMPORT%', import_table)
-        parser_template = parser_template.replace('%REDUCE_ACTIONS%', reduce_actions)
+        parser_template = parser_template.replace('%REDUCE_ACTIONS%', reduce_action_calls)
+        parser_template = parser_template.replace('%EMBEDDED_ACTIONS%', embedded_action_calls)
 
         f = open(module_name + '.py', 'w')
         f.write(parser_template)

@@ -18,7 +18,9 @@ term;
 addop : + | -;
 
 term :
-term  mulop factor {
+term {
+    print('term: ' + str($1.value)) # embedded action test
+} mulop factor {
     if $2.value == '*':
         $$.value = $1.value * $3.value
     else:

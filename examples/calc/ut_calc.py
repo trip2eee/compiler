@@ -1,4 +1,7 @@
 import unittest
+import sys
+
+sys.path += '../../'
 from examples.calc.calc import *
 
 class TestCalc(unittest.TestCase):

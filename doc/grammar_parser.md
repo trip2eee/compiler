@@ -15,8 +15,9 @@ NON_TERMINAL1 :
     NUMBER PLUS NUMBER {
         # action to be done when the symbols are reduced to NON_TERMINAL1
         # $$ : return value
-        # $1 : 1st symbol
-        # $3 : 3rd symbol
+        # $1 : 1st symbol NUMBER
+        # $2 : 2nd symbol PLUS
+        # $3 : 3rd symbol NUMBER
         $$ = $1 + $3
     }
     |   # or operator
@@ -28,7 +29,7 @@ NON_TERMINAL1 :
 
 NON_TERMINAL2 : 
     SYMBOL1 {
-        # action to be done when symbol1 is read
+        # embedded action to be done when symbol1 is read
     }
     SYMBOL2 {
         # action to be done when symbols are reduced to NON_TERMINAL2
