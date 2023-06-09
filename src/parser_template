@@ -1,5 +1,4 @@
-from examples.calc.calc_parser_table import *
-
+%IMPORT%
 
 class StackElem:
     def __init__(self):
@@ -54,29 +53,7 @@ def parse(list_symbols):
             elem.symbol = None
 
             # Call reduce function
-            if reduce==1:
-                elem.symbol = reduce_rule_1(params[0], params[1], params[2])
-            elif reduce==2:
-                elem.symbol = reduce_rule_2(params[0])
-            elif reduce==3:
-                elem.symbol = reduce_rule_3(params[0])
-            elif reduce==4:
-                elem.symbol = reduce_rule_4(params[0])
-            elif reduce==5:
-                elem.symbol = reduce_rule_5(params[0], params[1], params[2])
-            elif reduce==6:
-                elem.symbol = reduce_rule_6(params[0], params[1])
-            elif reduce==7:
-                elem.symbol = reduce_rule_7(params[0])
-            elif reduce==8:
-                elem.symbol = reduce_rule_8(params[0])
-            elif reduce==9:
-                elem.symbol = reduce_rule_9(params[0])
-            elif reduce==10:
-                elem.symbol = reduce_rule_10(params[0], params[1], params[2])
-            elif reduce==11:
-                elem.symbol = reduce_rule_11(params[0])
-
+%REDUCE_ACTIONS%
             else:
                 print('reduction error')
 

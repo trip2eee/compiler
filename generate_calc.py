@@ -10,8 +10,8 @@ if __name__ == '__main__':
     stack = [0, 1, 2, 3]
 
     gen = ParserGenerator()
-    gen.generate_parser('unittest/test_calc.gram')
-    gen.export('examples/calc/calc_parser_table.py')
+    gen.generate_parser('examples/calc/calc.gram')
+    gen.export('examples/calc/calc_parser.py')
 
 
 
