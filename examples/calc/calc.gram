@@ -26,12 +26,6 @@ term {
     else:
         $$.value = $1.value / $3.value
 }|
-addop term {
-    if $1.value == '+':
-        $$.value = $2.value
-    else:
-        $$.value = -1.0 * $2.value
-} |
 factor;
 
 mulop : * | /;
@@ -40,6 +34,12 @@ factor :
 ( exp ) {
     $$ = $2
 } |
-number;
+number | 
+addop factor {
+    if $1.value == '+':
+        $$.value = $2.value
+    else:
+        $$.value = -1.0 * $2.value
+};
 
 %%

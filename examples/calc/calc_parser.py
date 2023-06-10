@@ -67,17 +67,17 @@ def parse(list_symbols):
             elif reduce==5:
                 symbol = reduce_rule_5(params[0], params[1], params[2])
             elif reduce==6:
-                symbol = reduce_rule_6(params[0], params[1])
+                symbol = reduce_rule_6(params[0])
             elif reduce==7:
                 symbol = reduce_rule_7(params[0])
             elif reduce==8:
                 symbol = reduce_rule_8(params[0])
             elif reduce==9:
-                symbol = reduce_rule_9(params[0])
+                symbol = reduce_rule_9(params[0], params[1], params[2])
             elif reduce==10:
-                symbol = reduce_rule_10(params[0], params[1], params[2])
+                symbol = reduce_rule_10(params[0])
             elif reduce==11:
-                symbol = reduce_rule_11(params[0])
+                symbol = reduce_rule_11(params[0], params[1])
 
             else:
                 symbol = None

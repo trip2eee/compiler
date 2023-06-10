@@ -985,6 +985,9 @@ class ParserGenerator:
                     f.write('p{}'.format(idx_arg + 1))
                 f.write('):\n')
                 
+                # Comment
+                f.write('    # ' + str(self.aug_rules[rule_id]) + '\n')
+
                 if action_code == '':
                     action_code = '    $$ = $1'
 

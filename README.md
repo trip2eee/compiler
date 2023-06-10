@@ -67,97 +67,10 @@ NON_TERMINAL2 :
 ```
 ## 4. Examples
 ### 4.1 Calculator
-#### 4.1.1 Grammar
-$exp \rightarrow exp \ addop \ term \ \mid \ term$
 
-$addop \rightarrow + \ \mid \ -$
+Calculator example is implemented in [examples/calc](examples/calc).
 
-$term \rightarrow term \ mulop \ factor \ \mid \ addop \ term \ \mid \ factor$
-
-$mulop \rightarrow * \ \mid \ /$
-
-$factor \rightarrow  ( \ exp \ ) \ \mid \ number$
-
-```python
-%{
-class Symbol:
-    def __init__(self):
-        self.type = None
-        self.value = None
-%}
-
-%%
-exp : 
-exp addop term {
-    if $2.value == '+':
-        $$.value = $1.value + $3.value
-    else:
-        $$.value = $1.value - $3.value
-}|
-term;
-
-addop : + | -;
-
-term :
-term {
-    print('term: ' + str($1.value)) # for embedded action test. it's not necessary
-} mulop factor {
-    if $2.value == '*':
-        $$.value = $1.value * $3.value
-    else:
-        $$.value = $1.value / $3.value
-}|
-addop term {
-    if $1.value == '+':
-        $$.value = $2.value
-    else:
-        $$.value = -1.0 * $2.value
-} |
-factor;
-
-mulop : * | /;
-
-factor : 
-( exp ) {
-    $$ = $2
-} |
-number;
-
-%%
-
-```
-#### 4.1.2 Parser Generation
-```python
-import sys
-sys.path += '../../'
-from src.parser_generator import ParserGenerator
-
-gen = ParserGenerator()
-# generate a parser from a grammar file.
-gen.generate_parser('examples/calc/calc.gram')
-# export the parser in python code.
-gen.export('examples/calc/calc_parser.py')
-
-```
-#### 4.1.3 Lexical Analysis
-Currently a handwritten lexer code [calc_lexer.py](examples/calc/calc_lexer.py) is being used. This code will be replaced by automatically generated lexer.
-#### 4.1.4 Parser Execution
-```python
-from examples.calc.calc_parser_table import *
-from examples.calc.calc_parser import parse
-from examples.calc.calc_lexer import CalcLexer
-
-class Calc:
-    def __init__(self):
-        self.list_symbol = []
-        self.lexer = CalcLexer()
-    
-    def compute(self, expr):
-        list_symbol = self.lexer.lexer(expr)
-        result = parse(list_symbol)
-        
-        return result
-```
+### 4.2 Regular Expression
 
 # Reference
 

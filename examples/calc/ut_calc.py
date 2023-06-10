@@ -37,8 +37,8 @@ class TestCalc(unittest.TestCase):
     
     def test_calc4(self):
         calc = Calc()
-        result = calc.compute('10 + (20 - +5) * 3 / (2 + -4)')
-        y = 10 + (20 - +5) * 3 / (2 + -4)
+        result = calc.compute('10 + -(20 - +5) * 3 / (2 + -4)')
+        y = 10 + -(20 - +5) * 3 / (2 + -4)
 
         print('{} = {}'.format(result.value, y))
         self.assertEqual(result.value, y)
