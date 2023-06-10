@@ -278,6 +278,8 @@ class GarmmarParser:
             self.cur_token.alias = 'DOT'
         elif self.cur_token.string == ',':
             self.cur_token.alias = 'COMMA'
+        elif self.cur_token.string == '?':
+            self.cur_token.alias = 'QUES'
         elif self.cur_token.string == '$':
             self.cur_token.alias = 'END'
 
@@ -298,7 +300,7 @@ class GarmmarParser:
                     self.state = State.SYMBOL
 
                 
-                elif c in '=_+-*/()$[].,':
+                elif c in '=_+-*/()$[].,?':
                     self.cur_token = Token()
                     self.cur_token.type = TokenType.SYMBOL
                     self.cur_token.string = c
