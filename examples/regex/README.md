@@ -54,3 +54,35 @@ $factor \rightarrow char \ \mid \ char \ - \ char \ \mid \ esc$
 $count \rightarrow + \ \mid \ * \ \mid \ ?$
 
 esc denotes escape character.
+
+### 3.1 Data Structure
+
+"[a-zA-Z][a-zA-Z0-9]"
+
+```mermaid
+graph LR
+
+P1["[a-zA-Z]"]
+P2["[a-zA-Z0-9]"]
+
+P1_1["OR"]
+P1_1_1["a-z"]
+P1_1_2["A-Z"]
+
+P2_1["OR"]
+P2_1_1["a-z"]
+P2_1_2["A-Z"]
+P2_1_3["0-9"]
+
+P1 -- next --> P2
+P1 -- child --> P1_1
+P1_1 -- child --> P1_1_1
+P1_1_1 -- sibling --> P1_1_2
+
+P2 -- child --> P2_1
+P2_1 -- child --> P2_1_1
+P2_1_1 -- sibling --> P2_1_2
+P2_1_2 -- sibling --> P2_1_3
+
+```
+

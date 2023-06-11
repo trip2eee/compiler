@@ -5,13 +5,14 @@ class Symbol:
         self.value = None
         self.pattern = None
         self.prev = None
-        self.next = None
+        self.sibling = None
 
 class Pattern:
     VALUE = 0
     RANGE = 1
     OR = 2
-    PARENT = 3
+    CLASS = 3
+    GROUP = 4
 
     def __init__(self):
         self.type = Pattern.VALUE
@@ -19,8 +20,11 @@ class Pattern:
         self.range_min = None
         self.range_max = None
         self.list = []
-        self.min_repeat = 1
-        self.max_repeat = 1
+        self.sibling = None
+        self.child = None
+        self.next = None
+        self.count_min = 1
+        self.count_max = 1
         self.matched = False
 
 %}
@@ -32,8 +36,7 @@ CMD : EXP {
 };
 
 EXP : SUBEXP EXP {    
-    $1.next = $2
-    $2.prev = $1
+    $1.pattern.next = $2.pattern
     $$ = $1
 } |
 SUBEXP |
@@ -52,23 +55,23 @@ SUBEXP COUNT
 ;
 
 GROUP : ( EXP ) {
-    $$ = $2
+    pattern = Pattern()
+    pattern.type = Pattern.GROUP
+    pattern.child = $2.pattern
+
+    $$.pattern = pattern
 }
 ;
 
 CLS : [ TERM ] {
     pattern = Pattern()
-    pattern.type = Pattern.OR
-    s = $2
-    while s is not None:
-        pattern.list.append(s.pattern)
-        s = s.next
+    pattern.type = Pattern.CLASS
+    pattern.child = $2.pattern    
     $$.pattern = pattern
 };
 
 TERM : FACTOR TERM {    
-    $1.next = $2
-    $2.prev = $1
+    $1.pattern.sibling = $2.pattern
     $$ = $1
 } |
 FACTOR | 
@@ -92,16 +95,16 @@ ESC
 ;
 
 COUNT : + {
-    $$.min_repeat = 0
-    $$.max_repeat = -1
+    $$.count_min = 0
+    $$.count_max = -1
 } |
 * {
-    $$.min_repeat = 1
-    $$.max_repeat = -1
+    $$.count_min = 1
+    $$.count_max = -1
 }| 
 ? {
-    $$.min_repeat = 0
-    $$.max_repeat = 1
+    $$.count_min = 0
+    $$.count_max = 1
 }
 ;
 %%
