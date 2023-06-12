@@ -39,16 +39,16 @@ class Symbol:
 # rules
 
 NON_TERMINAL1 : 
-    NUMBER PLUS NUMBER {
+    NUMBER + NUMBER {
         # action to be done when the symbols are reduced to NON_TERMINAL1
         # $$ : return value
         # $1 : 1st symbol NUMBER
-        # $2 : 2nd symbol PLUS
+        # $2 : 2nd symbol +
         # $3 : 3rd symbol NUMBER
         $$.value = $1.value + $3.value
     }
     |   # or operator
-    NUMBER MINUS NUMBER {
+    NUMBER - NUMBER {
         # action for the rule
         $$.value = $1.value - $3.value
     }

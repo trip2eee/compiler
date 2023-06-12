@@ -4,28 +4,27 @@ class Symbol:
         self.type = None
         self.value = None
         self.pattern = None
-        self.prev = None
-        self.sibling = None
 
 class Pattern:
     VALUE = 0
     RANGE = 1
-    OR = 2
-    CLASS = 3
-    GROUP = 4
+    CLASS = 2
+    GROUP = 3
 
     def __init__(self):
         self.type = Pattern.VALUE
         self.value = None
         self.range_min = None
         self.range_max = None
-        self.list = []
-        self.sibling = None
         self.child = None
         self.next = None
         self.count_min = 1
         self.count_max = 1
         self.matched = False
+        self.matched_str = ''
+        self.matched_count = 0
+        self.idx_begin = 0
+        self.idx_end = 0
 
 %}
 
@@ -43,7 +42,7 @@ SUBEXP |
 EXP OR SUBEXP
 ;
 
-SUBEXP : CLS |
+SUBEXP : CLASS |
 CHAR {
     pattern = Pattern()
     pattern.type = Pattern.VALUE
@@ -51,7 +50,11 @@ CHAR {
     $$.pattern = pattern
 } |
 GROUP |
-SUBEXP COUNT
+SUBEXP COUNT {
+    $1.pattern.count_min = $2.pattern.count_min
+    $1.pattern.count_max = $2.pattern.count_max
+    $$ = $1
+}
 ;
 
 GROUP : ( EXP ) {
@@ -63,7 +66,7 @@ GROUP : ( EXP ) {
 }
 ;
 
-CLS : [ TERM ] {
+CLASS : [ TERM ] {
     pattern = Pattern()
     pattern.type = Pattern.CLASS
     pattern.child = $2.pattern    
@@ -71,7 +74,7 @@ CLS : [ TERM ] {
 };
 
 TERM : FACTOR TERM {    
-    $1.pattern.sibling = $2.pattern
+    $1.pattern.next = $2.pattern
     $$ = $1
 } |
 FACTOR | 
@@ -95,16 +98,22 @@ ESC
 ;
 
 COUNT : + {
-    $$.count_min = 0
-    $$.count_max = -1
+    pattern = Pattern()
+    pattern.count_min = 0
+    pattern.count_max = -1
+    $$.pattern = pattern
 } |
 * {
-    $$.count_min = 1
-    $$.count_max = -1
+    pattern = Pattern()
+    pattern.count_min = 1
+    pattern.count_max = -1
+    $$.pattern = pattern
 }| 
 ? {
-    $$.count_min = 0
-    $$.count_max = 1
+    pattern = Pattern()
+    pattern.count_min = 0
+    pattern.count_max = 1
+    $$.pattern = pattern
 }
 ;
 %%

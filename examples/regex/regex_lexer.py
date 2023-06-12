@@ -29,6 +29,8 @@ class RegExLexer:
                     self.add_symbol(type=MINUS, value=c)
                 elif c == '*':
                     self.add_symbol(type=TIMES, value=c)
+                elif c == '?':
+                    self.add_symbol(type=QUES, value=c)
                 elif c == '(':
                     self.add_symbol(type=LPAREN, value=c)
                 elif c == ')':

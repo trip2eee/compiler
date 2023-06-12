@@ -15,119 +15,101 @@ class RegEx:
         self.pattern = result.pattern
 
     def match(self, str):
-        matched = False
-        matched_string = ''
         self.string = str
+        self.matched = []
 
-        for idx_begin in range(len(str)):
+        idx_begin = 0
+        while idx_begin < len(str):
 
             # match
-            substr_matched, matched_string = self.__match_substring(str, idx_begin)
-            if substr_matched:
-                matched = substr_matched
-                break
-
-        return matched, matched_string
+            matched_pattern = self.__match_substring(str, idx_begin)
+            if matched_pattern is not None:
+                self.matched.append(matched_pattern.matched_str)
+                idx_begin = matched_pattern.idx_end + 1
+            else:
+                idx_begin += 1
+        
+        return self.matched
     
     def __match_substring(self, str, idx_begin):
         pattern: Pattern
         pattern = self.pattern
-
-        matched_str = ''
+        pattern.matched_str = ''
+        matched_pattern = None
 
         idx_char = idx_begin
-        matched = True
-        while pattern is not None and idx_char < len(str) and matched == True:
-            matched = False            
 
-            matched, matched_c = self.__match_pattern(pattern, str, idx_char)
+        while pattern is not None and idx_char < len(str):
+            pattern.idx_begin = idx_char
+            self.__match_pattern(pattern, str)
 
-            if matched == False:
+            if pattern.count_min > 0 and pattern.matched == False:
+                matched_pattern = None
                 break
             else:
+                if pattern.matched:
+                    if matched_pattern is None:
+                        matched_pattern = pattern
+                    else:
+                        matched_pattern.matched_str += pattern.matched_str
+
+                idx_char = pattern.idx_end + 1
+                matched_pattern.idx_end = pattern.idx_end
                 pattern = pattern.next
-                matched_str += matched_c
-                idx_char += 1
         
-        return matched, matched_str
+        while pattern is not None:
+            if pattern.count_min > 0:
+                matched_pattern = None
+                break
+            pattern = pattern.next
+
+        return matched_pattern
     
-    def __match_pattern(self, pattern, str, idx_begin):
-        final_pattern = pattern
-        idx_char = idx_begin
+    
+    def __match_pattern(self, pattern: Pattern, str):
+        
+        pattern.matched_count = 0
+        pattern.matched = False
+        pattern.matched_str = ''
+        idx_char = pattern.idx_begin
+        matched = False
 
-        stack = []
-        stack_parent = []
+        while (pattern.matched_count < pattern.count_max or pattern.count_max == -1) and idx_char < len(str):
+            matched = False
+            c = str[idx_char]
 
-        class StackElem:
-            def __init__(self):
-                self.pattern = None
-                self.idx_begin = 0
-
-        # 1st path. matching child patterns
-        elem = StackElem()
-        elem.pattern = pattern
-        elem.idx_begin = idx_begin
-        stack.append(elem)
-
-        if pattern.child is not None:
-            stack_parent.append(elem)
-
-        while len(stack) > 0:
-            elem: StackElem
-            elem = stack.pop()
-            pattern = elem.pattern
-            idx_char = elem.idx_begin
-            
-            pattern.matched = False
-            pattern.matched_str = ''
-
-            if pattern.child is None:
-                c = str[idx_char]
-
-                pattern.matched = False
-                pattern.matched_str = c
-                
-                if pattern.type == Pattern.VALUE:
-                    if pattern.value == c:
-                        pattern.matched = True                        
-
-                elif pattern.type == Pattern.RANGE:
-                    if pattern.range_min <= c <= pattern.range_max:
-                        pattern.matched = True
-            else:                
+            if pattern.type == Pattern.VALUE and pattern.value == c:
+                matched = True
+                pattern.idx_end = idx_char
+                pattern.matched_str += c
+            elif pattern.type == Pattern.RANGE and pattern.range_min <= c <= pattern.range_max:
+                matched = True
+                pattern.idx_end = idx_char
+                pattern.matched_str += c
+            elif pattern.type == Pattern.CLASS:
+                child: Pattern
                 child = pattern.child
 
                 while child is not None:
-                    elem = StackElem()
-                    elem.pattern = child
-                    elem.idx_begin = idx_char
-                    stack.append(elem)
-                    child = child.sibling
+                    child.count_min = max(1, pattern.count_min)
+                    child.count_max = pattern.count_max
 
-                elem = StackElem()
-                elem.pattern = pattern
-                elem.idx_begin = idx_char
-                stack_parent.append(elem)
+                    child.idx_begin = idx_char
+                    self.__match_pattern(child, str)
 
-        # 2nd path. merging child patterns
-        while len(stack_parent) > 0:
-            elem: StackElem
-            elem = stack_parent.pop()
+                    if child.matched:
+                        matched = True
+                        pattern.matched_str += child.matched_str
+                        pattern.idx_end = child.idx_end
+                        idx_char = child.idx_end
+                        break
+                    child = child.next
 
-            pattern : Pattern
-            pattern = elem.pattern
+            if matched:
+                pattern.matched_count += 1                
+                idx_char += 1
+            else:
+                break
 
-            if pattern.type == Pattern.CLASS:
-                pattern.matched = False
-                child = pattern.child
-                while child is not None:
-                    if child.matched == True:
-                        pattern.matched = True
-                        pattern.matched_str = child.matched_str
-                    child = child.sibling
-            
-            if len(stack_parent) == 0:
-                final_pattern = pattern
-
-        return final_pattern.matched, final_pattern.matched_str
-
+        if pattern.matched_count >= max(1, pattern.count_min):
+            pattern.matched = True
