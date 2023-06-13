@@ -22,26 +22,24 @@ class RegEx:
         while idx_begin < len(str):
 
             # match
-            matched_pattern = self.__match_substring(str, idx_begin)
+            matched_pattern = self.__match_substring(self.pattern, str, idx_begin)
             if matched_pattern is not None:
                 self.matched.append(matched_pattern.matched_str)
                 idx_begin = matched_pattern.idx_end + 1
             else:
                 idx_begin += 1
-        
+
         return self.matched
     
-    def __match_substring(self, str, idx_begin):
+    def __match_substring(self, pattern, str, idx_begin):
         pattern: Pattern
-        pattern = self.pattern
         pattern.matched_str = ''
         matched_pattern = None
-
         idx_char = idx_begin
 
         while pattern is not None and idx_char < len(str):
             pattern.idx_begin = idx_char
-            self.__match_pattern(pattern, str, pattern.next)
+            self.__match_pattern(pattern, str)
 
             if pattern.matched:
                 if matched_pattern is None:
@@ -68,7 +66,7 @@ class RegEx:
         return matched_pattern
     
     
-    def __match_pattern(self, pattern: Pattern, str, next_pattern=None):
+    def __match_pattern(self, pattern: Pattern, str):
         
         pattern.matched_count = 0
         pattern.matched = False
@@ -117,7 +115,7 @@ class RegEx:
                 while child is not None:
 
                     child.idx_begin = idx_child_begin
-                    self.__match_pattern(child, str, child.next)
+                    self.__match_pattern(child, str)
 
                     if child.matched:
                         matched = True
@@ -138,10 +136,10 @@ class RegEx:
                 child1 = pattern.child
                 child2 = child1.next
                 child1.idx_begin = idx_char
-                self.__match_pattern(child1, str, next_pattern)
+                self.__match_pattern(child1, str)
 
                 child2.idx_begin = idx_char
-                self.__match_pattern(child2, str, next_pattern)
+                self.__match_pattern(child2, str)
 
                 if child1.matched and child2.matched:
                     matched = True
@@ -167,18 +165,18 @@ class RegEx:
                 pattern.matched_count += 1                
                 idx_char += 1
 
-                if next_pattern is not None:
-                    npattern = next_pattern
-                    npattern.idx_begin = pattern.idx_end+1
-                    while npattern is not None:
-                        self.__match_pattern(npattern, str)
-                        if npattern.matched:
-                            if npattern.next is not None:
-                                npattern.next.idx_begin = npattern.idx_end+1
-                            npattern = npattern.next
+                if pattern.next is not None and ((pattern.matched_count >= pattern.count_min and pattern.matched_count < pattern.count_max) or pattern.count_max == -1):
+                    follow = pattern.next
+                    follow.idx_begin = pattern.idx_end+1
+                    while follow is not None:
+                        self.__match_pattern(follow, str)
+                        if follow.matched:
+                            if follow.next is not None:
+                                follow.next.idx_begin = follow.idx_end+1
+                            follow = follow.next
                         else:
                             break
-                    if npattern is None:
+                    if follow is None:
                         break
             else:
                 break

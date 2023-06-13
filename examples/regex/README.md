@@ -3,16 +3,19 @@
 ## 1. Introduction
 The goal is to implement somewhat limited Regular Expression parser to be used in automaic lexer generation.
 
-
 | Symbol | Description |
 |-|-|
-|[ ] | Matched a character in a set of characters, which is a class. x-y denotes character from x to y|
-| {m} | Matched the preceding element at least m. |
-| {m, n} | Matches the preceding element at least m and not more than n times. |
+|[ ] | Matches a character in a set of characters, which is a class. x-y denotes character from x to y|
+| . | Mathces all characters except new line \n. |
+| \d | Mathces all digits. Equivalent to [0-9]|
 | ? | Matches the preceding element zero or one time. |
 | + | Matches the preceding element one or more times. |
 | * | Matches the preceding element zero or more times. |
 |( ) | Expression in ( ) is considered as a group. |
+| \| | OR operator. |
+| {m} | NOT IMPLEMENTED! ~~Matched the preceding element at least m.~~ |
+| {m, n} | NOT IMPLEMENTED! ~~Matches the preceding element at least m and not more than n times.~~ |
+
 
 ## 2. Lexer
 Since automatic lexer generation is not implemented yet, lexer must be written manually.
@@ -28,6 +31,8 @@ Since automatic lexer generation is not implemented yet, lexer must be written m
 - '+' : PLUS
 - '*' : TIMES
 - '?' : QUES
+
+TODO: To implement recognition of \{ and \} as lexical symbols { and }.
 
 ## 3. Parser
 

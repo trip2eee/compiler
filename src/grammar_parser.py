@@ -274,6 +274,10 @@ class GarmmarParser:
             self.cur_token.alias = 'LBRACKET'
         elif self.cur_token.string == ']':
             self.cur_token.alias = 'RBRACET'
+        elif self.cur_token.string == '{':
+            self.cur_token.alias = 'LBRACE'
+        elif self.cur_token.string == '}':
+            self.cur_token.alias = 'RBRACE'
         elif self.cur_token.string == '.':
             self.cur_token.alias = 'DOT'
         elif self.cur_token.string == ',':
@@ -299,7 +303,6 @@ class GarmmarParser:
                     self.list_tokens.append(self.cur_token)
                     self.state = State.SYMBOL
 
-                
                 elif c in '=_+-*/()$[].,?':
                     self.cur_token = Token()
                     self.cur_token.type = TokenType.SYMBOL
@@ -337,8 +340,7 @@ class GarmmarParser:
                     self.cur_token.type = TokenType.ACTION
                     self.list_tokens.append(self.cur_token)
                     self.num_braces += 1
-                    self.state = State.ACTION                
-
+                    self.state = State.ACTION
 
             elif self.state == State.SYMBOL:
                 if self.is_letter(c) or self.is_digits(c):

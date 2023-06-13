@@ -115,7 +115,7 @@ class TestRegEx(unittest.TestCase):
 
         code = ''
         code += "#include <stdio.h>\n   "
-        code += "/* This is a C style Comment\n *with a line change **/\n"
+        code += "/* This is a C style Comment\n *with a line change. Currently searching this pattern is not efficient. **/\n"
         code += " // This is C++ style comment\n"
         code += " /* comment2 */\n"
 
@@ -124,7 +124,7 @@ class TestRegEx(unittest.TestCase):
         print(matched)
 
         self.assertEqual(len(matched), 3)
-        self.assertEqual(matched[0], '/* This is a C style Comment\n *with a line change **/')
+        self.assertEqual(matched[0], '/* This is a C style Comment\n *with a line change. Currently searching this pattern is not efficient. **/')
         self.assertEqual(matched[1], '// This is C++ style comment\n')
         self.assertEqual(matched[2], '/* comment2 */')
         
