@@ -847,6 +847,10 @@ class ParserGenerator:
             f.write(definition[idx_start+2:idx_end])
             f.write("\n")
         
+        f.write('# Auxiliary Routines\n')
+        f.write(self.grammar_parser.aux_routines)
+        f.write('\n')
+        
         f.write('# Parsing Table\n')
         symbol_table = []
         symbol_id_table = {}
@@ -996,6 +1000,13 @@ class ParserGenerator:
 
                 action_code = '    result = Symbol()\n' + action_code
                 action_code += '\n    result.type = {}'.format(rule.left_symbol)
+                
+                action_code += '\n    result.value = '
+                for idx_arg in range(len(rule.strings[idx_rule])):
+                    if idx_arg > 0:
+                        action_code += ' + '
+                    action_code += 'p{}.value'.format(idx_arg + 1)
+
                 action_code += '\n    return result\n'
 
                 action_code = action_code.replace('$', 'p')
@@ -1045,7 +1056,7 @@ class ParserGenerator:
         import_path = import_path.replace('\\', '.')
         import_table = 'from ' + import_path + '_table import *\n'
 
-        f = open('src/parser_template', 'r')
+        f = open('src/parser_template.py', 'r')
         parser_template = f.read()
         f.close()
 
@@ -1056,10 +1067,6 @@ class ParserGenerator:
         f = open(module_name + '.py', 'w')
         f.write(parser_template)
         f.close()
-        
-
-
-        
 
     def parse_string(self, input):
         input = input.split()

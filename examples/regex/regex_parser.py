@@ -71,27 +71,33 @@ def parse(list_symbols):
             elif reduce==8:
                 symbol = reduce_rule_8(params[0], params[1])
             elif reduce==9:
-                symbol = reduce_rule_9(params[0], params[1], params[2])
+                symbol = reduce_rule_9(params[0])
             elif reduce==10:
                 symbol = reduce_rule_10(params[0], params[1], params[2])
             elif reduce==11:
-                symbol = reduce_rule_11(params[0], params[1])
+                symbol = reduce_rule_11(params[0], params[1], params[2])
             elif reduce==12:
-                symbol = reduce_rule_12(params[0])
+                symbol = reduce_rule_12(params[0], params[1])
             elif reduce==13:
-                symbol = reduce_rule_13(params[0], params[1])
+                symbol = reduce_rule_13(params[0])
             elif reduce==14:
-                symbol = reduce_rule_14(params[0])
+                symbol = reduce_rule_14(params[0], params[1])
             elif reduce==15:
-                symbol = reduce_rule_15(params[0], params[1], params[2])
+                symbol = reduce_rule_15(params[0])
             elif reduce==16:
-                symbol = reduce_rule_16(params[0])
+                symbol = reduce_rule_16(params[0], params[1], params[2])
             elif reduce==17:
                 symbol = reduce_rule_17(params[0])
             elif reduce==18:
                 symbol = reduce_rule_18(params[0])
             elif reduce==19:
                 symbol = reduce_rule_19(params[0])
+            elif reduce==20:
+                symbol = reduce_rule_20(params[0])
+            elif reduce==21:
+                symbol = reduce_rule_21(params[0])
+            elif reduce==22:
+                symbol = reduce_rule_22(params[0])
 
             else:
                 symbol = None
@@ -119,6 +125,15 @@ def parse(list_symbols):
             result = elem.symbol
             break
         else:
-            print('ERROR')
+            # Error
+            # Enter panic mode for error recovery.
+            while shift == -1 and reduce == -1:
+                elem:StackElem
+                elem = stack.pop()
+                print(elem.symbol.value)
+
+                state = stack[-1].state
+                shift = tbl_shift[state][symbol.type]
+                reduce = tbl_reduce[state][symbol.type]
 
     return result

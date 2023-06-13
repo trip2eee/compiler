@@ -27,20 +27,30 @@ class TestRegEx(unittest.TestCase):
         regex = RegEx()
         regex.set_pattern('[a-zA-Z]ell[oO]')
 
+
         matched = regex.match('hello, world')
         self.assertEqual(len(matched), 1)
         self.assertEqual(matched[0], 'hello')
+
 
         matched = regex.match('World, HellO')
         self.assertEqual(len(matched), 1)
         self.assertEqual(matched[0], 'HellO')
 
+
         matched = regex.match('yello, world')
         self.assertEqual(len(matched), 1)
         self.assertEqual(matched[0], 'yello')
 
+
+        regex.set_pattern('[a-zA-Z-]ell[oO]')
+        matched = regex.match('-ellO, world')
+        self.assertEqual(len(matched), 1)
+        self.assertEqual(matched[0], '-ellO')
+
     def test_regex_count(self):
         regex = RegEx()
+
         regex.set_pattern('[a-zA-Z][a-zA-Z0-9]+')
 
         self.assertEqual(regex.pattern.child.type, Pattern.RANGE)
@@ -51,7 +61,7 @@ class TestRegEx(unittest.TestCase):
         self.assertEqual(matched[0], 'f32Value')
         self.assertEqual(matched[1], 'abcd')
 
-        regex.set_pattern('[0-9]*[.]?[0-9]+')
+        regex.set_pattern('[0-9]+[.]?[0-9]*')
         matched = regex.match('3.141592, 12345')
         self.assertEqual(len(matched), 2)
         self.assertEqual(matched[0], '3.141592')
@@ -61,12 +71,63 @@ class TestRegEx(unittest.TestCase):
         matched = regex.match('acccd, abcddddd')
         self.assertEqual(len(matched), 2)
         self.assertEqual(matched[0], 'acccd')
-        self.assertEqual(matched[1], 'abcddddd')
+        self.assertEqual(matched[1], 'abcddddd')    
 
+    def test_regex_group(self):
 
-        # TODO: To handle [+-]
-        # TODO: To implement group and OR operator.
-        # TODO: To optimize
+        regex = RegEx()
+        # + : >= 1
+        # * : >= 0
+        regex.set_pattern('\d+([.]\d*)?')
+        matched = regex.match('-10. 10.321  -.123, +3.141592F')
+        print(matched)
+        self.assertEqual(len(matched), 4)
+        self.assertEqual(matched[0], '10.')
+        self.assertEqual(matched[1], '10.321')
+        self.assertEqual(matched[2], '123')
+        self.assertEqual(matched[3], '3.141592')
+
+        regex.set_pattern('[+-]?((\d+([.]\d*)?)|([.]\d+))[fF]?')
+        matched = regex.match('-10. 10.321  -.123, +3.141592F')
+        print(matched)
+
+        self.assertEqual(len(matched), 4)
+        self.assertEqual(matched[0], '-10.')
+        self.assertEqual(matched[1], '10.321')
+        self.assertEqual(matched[2], '-.123')
+        self.assertEqual(matched[3], '+3.141592F')
+
+    def test_regex_group2(self):
+        regex = RegEx()
+        regex.set_pattern('Wo(r|R)l*d')
+        matched = regex.match('Hello, World, Hello WoRld, Hello Word')
+
+        self.assertEqual(len(matched), 3)
+        self.assertEqual(matched[0], 'World')
+        self.assertEqual(matched[1], 'WoRld')
+        self.assertEqual(matched[2], 'Word')
+
+    def test_cpp_comment(self):
+        regex = RegEx()
+        # regex.set_pattern('(\/\*(.|\n)*\*\/)|(\/\/(.)*\n)')
+        regex.set_pattern('\/(\*(.|\n)*\*\/)|(\/.*\n)')
+
+        code = ''
+        code += "#include <stdio.h>\n   "
+        code += "/* This is a C style Comment\n with a line change */\n"
+        code += " // This is C++ style comment\n"
+        code += " /* comment2 */\n"
+
+        print(code)
+        matched = regex.match(code)
+        print(matched)
+
+        self.assertEqual(len(matched), 3)
+        self.assertEqual(matched[0], '/* This is a C style Comment\n with a line change */')
+        self.assertEqual(matched[1], '// This is C++ style comment\n')
+        self.assertEqual(matched[2], '/* comment2 */')
+        
+        # TODO: To optimize regex match()
 
 if __name__ == '__main__':
     unittest.main()

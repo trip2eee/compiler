@@ -8,20 +8,21 @@ class RegExLexer:
         t = Symbol()
         t.type = type
         t.value = value
+        t.idx_col = self.idx_char
         self.list_symbol.append(t)
     
     def lexer(self, expr):
-        idx_char = 0
+        self.idx_char = 0
         state = 0
         self.list_symbol = []
         
-        while idx_char < len(expr):
-            c = expr[idx_char]
-            idx_char += 1
+        while self.idx_char < len(expr):
+            c = expr[self.idx_char]
+            self.idx_char += 1
 
-            if state == 0:
-                # if escape character
+            if state == 0:                
                 if c == '\\':
+                    # if escape character
                     state = 1
                 elif c == '+':
                     self.add_symbol(type=PLUS, value=c)

@@ -1,15 +1,19 @@
+# Definitions
 %{
 class Symbol:
     def __init__(self):
         self.type = None
         self.value = None
         self.pattern = None
+        self.idx_col = 0
 
 class Pattern:
     VALUE = 0
-    RANGE = 1
-    CLASS = 2
-    GROUP = 3
+    NOT_VALUE = 1
+    RANGE = 2
+    CLASS = 3
+    GROUP = 4
+    OR = 5
 
     def __init__(self):
         self.type = Pattern.VALUE
@@ -39,14 +43,24 @@ EXP : SUBEXP EXP {
     $$ = $1
 } |
 SUBEXP |
-EXP OR SUBEXP
+EXP OR EXP {
+    pattern = Pattern()
+    pattern.type = Pattern.OR
+    pattern.child = $1.pattern
+    pattern.child.next = $3.pattern
+    $$.pattern = pattern
+}
 ;
 
 SUBEXP : CLASS |
 CHAR {
     pattern = Pattern()
-    pattern.type = Pattern.VALUE
-    pattern.value = $1.value
+    if $1.value == '.':
+        pattern.type = Pattern.NOT_VALUE
+        pattern.value = '\n'
+    else:
+        pattern.type = Pattern.VALUE
+        pattern.value = $1.value
     $$.pattern = pattern
 } |
 GROUP |
@@ -54,6 +68,9 @@ SUBEXP COUNT {
     $1.pattern.count_min = $2.pattern.count_min
     $1.pattern.count_max = $2.pattern.count_max
     $$ = $1
+} |
+ESC {
+    $$.pattern = add_esc($1)
 }
 ;
 
@@ -78,7 +95,13 @@ TERM : FACTOR TERM {
     $$ = $1
 } |
 FACTOR | 
-FACTOR -
+FACTOR - {
+    pattern = Pattern()
+    pattern.type = Pattern.VALUE
+    pattern.value = '-'
+    $$.pattern = $1.pattern
+    $1.pattern.next = pattern
+}
 ;
 
 FACTOR : CHAR {
@@ -94,18 +117,32 @@ CHAR - CHAR {
     pattern.range_max = $3.value
     $$.pattern = pattern
 } |
-ESC
+ESC {
+    $$.pattern = add_esc($1)
+} |
++ {
+    pattern = Pattern()
+    pattern.type = Pattern.VALUE
+    pattern.value = $1.value
+    $$.pattern = pattern
+} |
+- {
+    pattern = Pattern()
+    pattern.type = Pattern.VALUE
+    pattern.value = $1.value
+    $$.pattern = pattern
+}
 ;
 
 COUNT : + {
     pattern = Pattern()
-    pattern.count_min = 0
+    pattern.count_min = 1
     pattern.count_max = -1
     $$.pattern = pattern
 } |
 * {
     pattern = Pattern()
-    pattern.count_min = 1
+    pattern.count_min = 0
     pattern.count_max = -1
     $$.pattern = pattern
 }| 
@@ -117,4 +154,17 @@ COUNT : + {
 }
 ;
 %%
+# Auxiliary Routines
 
+def add_esc(p1):
+    pattern = Pattern()
+    if p1.value == 'd':        
+        pattern.type = Pattern.RANGE
+        pattern.range_min = '0'
+        pattern.range_max = '9'
+        
+    else:
+        pattern.type = Pattern.VALUE
+        pattern.value = p1.value
+
+    return pattern
