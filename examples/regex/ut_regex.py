@@ -53,8 +53,8 @@ class TestRegEx(unittest.TestCase):
 
         regex.set_pattern('[a-zA-Z][a-zA-Z0-9]+')
 
-        self.assertEqual(regex.pattern.child.type, Pattern.RANGE)
-        self.assertEqual(regex.pattern.child.next.type, Pattern.RANGE)
+        self.assertEqual(regex.pattern.child.type, PatternType.RANGE)
+        self.assertEqual(regex.pattern.child.next.type, PatternType.RANGE)
 
         matched = regex.match('    f32Value;    1234;    abcd')
         self.assertEqual(len(matched), 2)
@@ -99,13 +99,14 @@ class TestRegEx(unittest.TestCase):
 
     def test_regex_group2(self):
         regex = RegEx()
-        regex.set_pattern('Wo(r|R)l*d')
-        matched = regex.match('Hello, World, Hello WoRld, Hello Word')
+        regex.set_pattern('Wo(r|R|k)l*d')
+        matched = regex.match('Hello, World, Hello WoRld, Hello Word, Wokd')
 
-        self.assertEqual(len(matched), 3)
+        self.assertEqual(len(matched), 4)
         self.assertEqual(matched[0], 'World')
         self.assertEqual(matched[1], 'WoRld')
         self.assertEqual(matched[2], 'Word')
+        self.assertEqual(matched[3], 'Wokd')
 
     def test_cpp_comment(self):
         regex = RegEx()
@@ -114,7 +115,7 @@ class TestRegEx(unittest.TestCase):
 
         code = ''
         code += "#include <stdio.h>\n   "
-        code += "/* This is a C style Comment\n with a line change */\n"
+        code += "/* This is a C style Comment\n *with a line change **/\n"
         code += " // This is C++ style comment\n"
         code += " /* comment2 */\n"
 
@@ -123,7 +124,7 @@ class TestRegEx(unittest.TestCase):
         print(matched)
 
         self.assertEqual(len(matched), 3)
-        self.assertEqual(matched[0], '/* This is a C style Comment\n with a line change */')
+        self.assertEqual(matched[0], '/* This is a C style Comment\n *with a line change **/')
         self.assertEqual(matched[1], '// This is C++ style comment\n')
         self.assertEqual(matched[2], '/* comment2 */')
         

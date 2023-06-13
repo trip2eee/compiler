@@ -80,19 +80,19 @@ class RegEx:
             matched = False
             c = str[idx_char]
 
-            if pattern.type == Pattern.VALUE and pattern.value == c:
+            if pattern.type == PatternType.VALUE and pattern.value == c:
                 matched = True
                 pattern.idx_end = idx_char
                 pattern.matched_str += c
-            elif pattern.type == Pattern.NOT_VALUE and pattern.value != c:
+            elif pattern.type == PatternType.NOT_VALUE and pattern.value != c:
                 matched = True
                 pattern.idx_end = idx_char
                 pattern.matched_str += c
-            elif pattern.type == Pattern.RANGE and pattern.range_min <= c <= pattern.range_max:
+            elif pattern.type == PatternType.RANGE and pattern.range_min <= c <= pattern.range_max:
                 matched = True
                 pattern.idx_end = idx_char
                 pattern.matched_str += c
-            elif pattern.type == Pattern.CLASS:
+            elif pattern.type == PatternType.CLASS:
                 child: Pattern
                 child = pattern.child
 
@@ -110,7 +110,7 @@ class RegEx:
                         idx_char = child.idx_end
                         break
                     child = child.next
-            elif pattern.type == Pattern.GROUP:
+            elif pattern.type == PatternType.GROUP:
                 child: Pattern
                 child = pattern.child
                 idx_child_begin = idx_char
@@ -133,7 +133,7 @@ class RegEx:
                             matched = False
                             break
 
-            elif pattern.type == Pattern.OR:
+            elif pattern.type == PatternType.OR:
                 
                 child1 = pattern.child
                 child2 = child1.next
