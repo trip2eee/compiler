@@ -78,6 +78,7 @@ class TestRegEx(unittest.TestCase):
         regex = RegEx()
         # + : >= 1
         # * : >= 0
+        # ? : 0 or 1
         regex.set_pattern('\d+([.]\d*)?')
         matched = regex.match('-10. 10.321  -.123, +3.141592F')
         print(matched)
@@ -87,7 +88,7 @@ class TestRegEx(unittest.TestCase):
         self.assertEqual(matched[2], '123')
         self.assertEqual(matched[3], '3.141592')
 
-        regex.set_pattern('[+-]?((\d+([.]\d*)?)|([.]\d+))[fF]?')
+        regex.set_pattern('[+-]?((\d+([.]\d{0,10})?)|([.]\d{1,10}))[fF]{0,1}')
         matched = regex.match('-10. 10.321  -.123, +3.141592F')
         print(matched)
 
@@ -99,7 +100,7 @@ class TestRegEx(unittest.TestCase):
 
     def test_regex_group2(self):
         regex = RegEx()
-        regex.set_pattern('Wo(r|R|k)l*d')
+        regex.set_pattern('W{1}o(r|R|k)l*d')
         matched = regex.match('Hello, World, Hello WoRld, Hello Word, Wokd')
 
         self.assertEqual(len(matched), 4)

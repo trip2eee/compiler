@@ -97,7 +97,19 @@ def parse(list_symbols):
             elif reduce==21:
                 symbol = reduce_rule_21(params[0])
             elif reduce==22:
-                symbol = reduce_rule_22(params[0])
+                symbol = reduce_rule_22(params[0], params[1])
+            elif reduce==23:
+                symbol = reduce_rule_23(params[0])
+            elif reduce==24:
+                symbol = reduce_rule_24(params[0])
+            elif reduce==25:
+                symbol = reduce_rule_25(params[0])
+            elif reduce==26:
+                symbol = reduce_rule_26(params[0])
+            elif reduce==27:
+                symbol = reduce_rule_27(params[0], params[1], params[2])
+            elif reduce==28:
+                symbol = reduce_rule_28(params[0], params[1], params[2], params[3], params[4])
 
             else:
                 symbol = None

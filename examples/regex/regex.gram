@@ -56,7 +56,7 @@ EXP OR EXP {
 ;
 
 SUBEXP : CLASS |
-CHAR {
+BASE {
     pattern = Pattern()
     if $1.value == '.':
         pattern.type = PatternType.NOT_VALUE
@@ -107,13 +107,13 @@ FACTOR - {
 }
 ;
 
-FACTOR : CHAR {
+FACTOR : BASE {
     pattern = Pattern()
     pattern.type = PatternType.VALUE
     pattern.value = $1.value
     $$.pattern = pattern
 } |
-CHAR - CHAR {
+BASE - BASE {
     pattern = Pattern()
     pattern.type = PatternType.RANGE
     pattern.range_min = $1.value
@@ -137,6 +137,14 @@ ESC {
 }
 ;
 
+BASE : CHAR | DIGIT;
+
+
+NUMBER : NUMBER DIGIT {
+    $$.value = $1.value + $2.value
+} | DIGIT
+;
+
 COUNT : + {
     pattern = Pattern()
     pattern.count_min = 1
@@ -153,6 +161,18 @@ COUNT : + {
     pattern = Pattern()
     pattern.count_min = 0
     pattern.count_max = 1
+    $$.pattern = pattern
+} |
+\{ NUMBER \} {
+    pattern = Pattern()
+    pattern.count_min = int($2.value)
+    pattern.count_max = -1
+    $$.pattern = pattern
+} |
+\{ NUMBER, NUMBER \} {
+    pattern = Pattern()
+    pattern.count_min = int($2.value)
+    pattern.count_max = int($4.value)
     $$.pattern = pattern
 }
 ;

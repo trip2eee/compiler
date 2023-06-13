@@ -65,6 +65,9 @@ NON_TERMINAL2 :
 %%
 # auxiliary routines
 ```
+
+Symbol { and } shall be input as \\{ and \\} (with leading backslash) otherwise the symbols between { and } are recognized as action.
+
 ## 4. Examples
 ### 4.1 Calculator
 

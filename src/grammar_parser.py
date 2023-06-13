@@ -14,6 +14,7 @@ C_CMT = '#'
 C_LBRACE = '{'
 C_RBRACE = '}'
 C_NEW_LINE = '\n'
+C_ESC = '\\'
 
 EPSILON = 'ep'  # empty string epsilon
 
@@ -23,6 +24,7 @@ class State(enum.IntEnum):
     ACTION = 2
     COMMENT = 3
     SYMBOL2 = 4
+    ESCAPE = 5
 
     LEFT = 10
     RIGHT = 11
@@ -273,7 +275,7 @@ class GarmmarParser:
         elif self.cur_token.string == '[':
             self.cur_token.alias = 'LBRACKET'
         elif self.cur_token.string == ']':
-            self.cur_token.alias = 'RBRACET'
+            self.cur_token.alias = 'RBRACKET'
         elif self.cur_token.string == '{':
             self.cur_token.alias = 'LBRACE'
         elif self.cur_token.string == '}':
@@ -341,6 +343,9 @@ class GarmmarParser:
                     self.list_tokens.append(self.cur_token)
                     self.num_braces += 1
                     self.state = State.ACTION
+                
+                elif c == C_ESC:
+                    self.state = State.ESCAPE
 
             elif self.state == State.SYMBOL:
                 if self.is_letter(c) or self.is_digits(c):
@@ -364,6 +369,22 @@ class GarmmarParser:
                     self.state = State.IDLE
                 else:
                     self.cur_token.string += c
+            
+            elif self.state == State.ESCAPE:
+                if c == C_LBRACE:
+                    self.cur_token = Token()
+                    self.cur_token.type = TokenType.SYMBOL
+                    self.cur_token.string = c
+                    self.list_tokens.append(self.cur_token)
+                    self.set_token_alias()
+                elif c == C_RBRACE:
+                    self.cur_token = Token()
+                    self.cur_token.type = TokenType.SYMBOL
+                    self.cur_token.string = c
+                    self.list_tokens.append(self.cur_token)
+                    self.set_token_alias()
+
+                self.state = State.IDLE
 
     def is_digits(self, c):
         if '0' <= c <= '9':
