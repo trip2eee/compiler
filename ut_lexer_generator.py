@@ -16,5 +16,11 @@ class ParserGeneratorTest(unittest.TestCase):
 
         print('done')
 
+    def test_lex_generator(self):
+        gen = LexerGenerator()
+        gen.open('unittest/cmm.lex')
+
+
+
 if __name__ == '__main__':
     unittest.main()

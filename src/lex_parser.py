@@ -38,12 +38,46 @@ class Token:
         return self.string
 
 class Rule:
+    RULE_ID = 0
     def __init__(self):
         self.symbol = ''
         self.string = ''
-        self.node = None
-        self.rule_id = 0
+        self.node = None        
         self.reduce_action = ''
+        self.mark = 0
+
+        self.id = Rule.RULE_ID
+        Rule.RULE_ID += 1
+
+    def mark_symbol(self):
+        if self.mark < len(self.string):
+            return self.string[self.mark]
+        else:
+            return None
+    
+    def __str__(self):
+        s = self.symbol
+        s += ' -> '
+        for idx_ch in range(len(self.string)):
+            if self.mark == idx_ch:
+                s += '.'
+            s += self.string[idx_ch]
+        
+        if self.mark == len(self.string):
+            s += '.'
+
+        return s
+
+    def copy(self):
+        new_rule = Rule()
+        new_rule.symbol = self.symbol
+        new_rule.string = self.string
+        new_rule.node = self.node
+        new_rule.id = self.id
+        new_rule.reduce_action = self.reduce_action
+        new_rule.mark = self.mark
+
+        return new_rule
 
 class LexParser:
     def __init__(self):

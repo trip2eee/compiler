@@ -2,13 +2,8 @@
 # Rules
 # 'STRING' ACTION
 
-COMMENT '\/\/(.*)\n' {
-
-}
-
-ID '[_a-zA-Z][_a-zA-Z0-9]*' {
-    print(yytext)
-}
+#COMMENT '\/\/(.*)\n' {}
+#ID '[_a-zA-Z][_a-zA-Z0-9]*' {print(yytext)}
 
 IF    'if'
 FOR   'for'
@@ -22,7 +17,6 @@ LTE    '=<'
 GTE    '>='
 LT     '<'
 GT     '>'
-END    '$'
 
 %%
 
