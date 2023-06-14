@@ -1001,12 +1001,6 @@ class ParserGenerator:
                 action_code = '    result = Symbol()\n' + action_code
                 action_code += '\n    result.type = {}'.format(rule.left_symbol)
                 
-                action_code += '\n    result.value = '
-                for idx_arg in range(len(rule.strings[idx_rule])):
-                    if idx_arg > 0:
-                        action_code += ' + '
-                    action_code += 'p{}.value'.format(idx_arg + 1)
-
                 action_code += '\n    return result\n'
 
                 action_code = action_code.replace('$', 'p')

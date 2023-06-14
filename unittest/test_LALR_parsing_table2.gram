@@ -1,17 +1,17 @@
 %%
 CMD : EXP { $$ = $1 };
 
-EXP : EXP + TERM { $$ = $1 + $3 }
-    | EXP - TERM { $$ = $1 - $3 }
+EXP : EXP '+' TERM { $$ = $1 + $3 }
+    | EXP '-' TERM { $$ = $1 - $3 }
     | TERM { $$ = $1 }
     ;
 
-TERM : TERM * FACTOR { $$ = $1 * $3 }
+TERM : TERM '*' FACTOR { $$ = $1 * $3 }
      | FACTOR { $$ = $1 }
      ;
 
 FACTOR : NUMBER { $$ = $1 }
-       | ( EXP ) { $$ = $2 }
+       | '(' EXP ')' { $$ = $2 }
        ;
 %%
 

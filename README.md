@@ -39,7 +39,7 @@ class Symbol:
 # rules
 
 NON_TERMINAL1 : 
-    NUMBER + NUMBER {
+    NUMBER '+' NUMBER {
         # action to be done when the symbols are reduced to NON_TERMINAL1
         # $$ : return value
         # $1 : 1st symbol NUMBER
@@ -48,7 +48,7 @@ NON_TERMINAL1 :
         $$.value = $1.value + $3.value
     }
     |   # or operator
-    NUMBER - NUMBER {
+    NUMBER '-' NUMBER {
         # action for the rule
         $$.value = $1.value - $3.value
     }
@@ -65,8 +65,6 @@ NON_TERMINAL2 :
 %%
 # auxiliary routines
 ```
-
-Symbol { and } shall be input as \\{ and \\} (with leading backslash) otherwise the symbols between { and } are recognized as action.
 
 ## 4. Examples
 ### 4.1 Calculator

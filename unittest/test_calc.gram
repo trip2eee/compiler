@@ -15,7 +15,7 @@ exp addop term {
 }|
 term;
 
-addop : + | -;
+addop : '+' | '-';
 
 term :
 term  mulop factor {
@@ -26,10 +26,10 @@ term  mulop factor {
 }|
 factor;
 
-mulop : * | /;
+mulop : '*' | '/';
 
 factor : 
-( exp ) {
+'(' exp ')' {
     $$ = $2
 } |
 number;

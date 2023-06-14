@@ -107,6 +107,15 @@ def parse(list_symbols):
             result = elem.symbol
             break
         else:
-            print('ERROR')
+            # Error
+            # Enter panic mode for error recovery.
+            while shift == -1 and reduce == -1:
+                elem:StackElem
+                elem = stack.pop()
+                print(elem.symbol.value)
+
+                state = stack[-1].state
+                shift = tbl_shift[state][symbol.type]
+                reduce = tbl_reduce[state][symbol.type]
 
     return result

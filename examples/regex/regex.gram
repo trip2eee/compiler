@@ -77,7 +77,7 @@ ESC {
 }
 ;
 
-GROUP : ( EXP ) {
+GROUP : '(' EXP ')' {
     pattern = Pattern()
     pattern.type = PatternType.GROUP
     pattern.child = $2.pattern
@@ -86,7 +86,7 @@ GROUP : ( EXP ) {
 }
 ;
 
-CLASS : [ TERM ] {
+CLASS : '[' TERM ']' {
     pattern = Pattern()
     pattern.type = PatternType.CLASS
     pattern.child = $2.pattern    
@@ -98,7 +98,7 @@ TERM : FACTOR TERM {
     $$ = $1
 } |
 FACTOR | 
-FACTOR - {
+FACTOR '-' {
     pattern = Pattern()
     pattern.type = PatternType.VALUE
     pattern.value = '-'
@@ -113,7 +113,7 @@ FACTOR : BASE {
     pattern.value = $1.value
     $$.pattern = pattern
 } |
-BASE - BASE {
+BASE '-' BASE {
     pattern = Pattern()
     pattern.type = PatternType.RANGE
     pattern.range_min = $1.value
@@ -123,13 +123,13 @@ BASE - BASE {
 ESC {
     $$.pattern = add_esc($1)
 } |
-+ {
+'+' {
     pattern = Pattern()
     pattern.type = PatternType.VALUE
     pattern.value = $1.value
     $$.pattern = pattern
 } |
-- {
+'-' {
     pattern = Pattern()
     pattern.type = PatternType.VALUE
     pattern.value = $1.value
@@ -145,31 +145,31 @@ NUMBER : NUMBER DIGIT {
 } | DIGIT
 ;
 
-COUNT : + {
+COUNT : '+' {
     pattern = Pattern()
     pattern.count_min = 1
     pattern.count_max = -1
     $$.pattern = pattern
 } |
-* {
+'*' {
     pattern = Pattern()
     pattern.count_min = 0
     pattern.count_max = -1
     $$.pattern = pattern
 }| 
-? {
+'?' {
     pattern = Pattern()
     pattern.count_min = 0
     pattern.count_max = 1
     $$.pattern = pattern
 } |
-\{ NUMBER \} {
+'{' NUMBER '}' {
     pattern = Pattern()
     pattern.count_min = int($2.value)
     pattern.count_max = -1
     $$.pattern = pattern
 } |
-\{ NUMBER, NUMBER \} {
+'{' NUMBER ',' NUMBER '}' {
     pattern = Pattern()
     pattern.count_min = int($2.value)
     pattern.count_max = int($4.value)

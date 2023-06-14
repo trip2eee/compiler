@@ -14,7 +14,7 @@ C_CMT = '#'
 C_LBRACE = '{'
 C_RBRACE = '}'
 C_NEW_LINE = '\n'
-C_ESC = '\\'
+C_QUOT = "'"
 
 EPSILON = 'ep'  # empty string epsilon
 
@@ -24,7 +24,7 @@ class State(enum.IntEnum):
     ACTION = 2
     COMMENT = 3
     SYMBOL2 = 4
-    ESCAPE = 5
+    QUOT = 5
 
     LEFT = 10
     RIGHT = 11
@@ -288,6 +288,8 @@ class GarmmarParser:
             self.cur_token.alias = 'QUES'
         elif self.cur_token.string == '$':
             self.cur_token.alias = 'END'
+        else:
+            print('ERROR: Unknown Token')
 
     def tokenize(self, file_path):
         self.state = State.IDLE
@@ -304,13 +306,6 @@ class GarmmarParser:
                     self.cur_token.string = c
                     self.list_tokens.append(self.cur_token)
                     self.state = State.SYMBOL
-
-                elif c in '=_+-*/()$[].,?':
-                    self.cur_token = Token()
-                    self.cur_token.type = TokenType.SYMBOL
-                    self.cur_token.string = c
-                    self.list_tokens.append(self.cur_token)
-                    self.set_token_alias()
 
                 elif c == C_CMT:
                     self.cur_token = Token()
@@ -344,8 +339,9 @@ class GarmmarParser:
                     self.num_braces += 1
                     self.state = State.ACTION
                 
-                elif c == C_ESC:
-                    self.state = State.ESCAPE
+                elif c == C_QUOT:
+                    self.cur_token = Token()
+                    self.state = State.QUOT
 
             elif self.state == State.SYMBOL:
                 if self.is_letter(c) or self.is_digits(c):
@@ -370,21 +366,16 @@ class GarmmarParser:
                 else:
                     self.cur_token.string += c
             
-            elif self.state == State.ESCAPE:
-                if c == C_LBRACE:
-                    self.cur_token = Token()
+            elif self.state == State.QUOT:
+                
+                if c == "'":
                     self.cur_token.type = TokenType.SYMBOL
-                    self.cur_token.string = c
                     self.list_tokens.append(self.cur_token)
                     self.set_token_alias()
-                elif c == C_RBRACE:
-                    self.cur_token = Token()
-                    self.cur_token.type = TokenType.SYMBOL
-                    self.cur_token.string = c
-                    self.list_tokens.append(self.cur_token)
-                    self.set_token_alias()
+                    self.state = State.IDLE
 
-                self.state = State.IDLE
+                else:
+                    self.cur_token.string += c                
 
     def is_digits(self, c):
         if '0' <= c <= '9':

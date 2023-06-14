@@ -12,7 +12,7 @@ type : int
      | float
      ;
 
-var_list : var_list, id { print("1") }
+var_list : var_list ',' id { print("1") }
          | id { print("2") }
          ;
 
