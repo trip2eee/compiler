@@ -27,7 +27,7 @@ def parse(list_symbols):
 %EMBEDDED_ACTIONS%
         else:
             symbol = Symbol()
-            symbol.type = END
+            symbol.type = END__RESERVED
 
         shift = tbl_shift[state][symbol.type]
         reduce = tbl_reduce[state][symbol.type]

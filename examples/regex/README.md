@@ -42,7 +42,7 @@ For better readability, some strings are spaced.
 
 $exp \rightarrow expsub \ exp \ \mid \ subexp \ \mid \ exp \ or \ exp$
 
-$subexp \rightarrow class \ \mid char \ \mid group \ | \ subexp \ count$
+$subexp \rightarrow class \ \mid base \ \mid group \ | \ subexp \ count$
 
 $group \rightarrow ( \ exp \ )$
 
@@ -50,9 +50,13 @@ $class \rightarrow [ \ term \ ]$
 
 $term \rightarrow term \ factor \ \mid factor \ \mid term \ -$
 
-$factor \rightarrow char \ \mid \ char \ - \ char \ \mid \ esc$
+$factor \rightarrow base \ \mid \ base \ - \ base \ \mid \ esc$
 
-$count \rightarrow + \ \mid \ * \ \mid \ ?$
+$base \rightarrow char \ \mid \ digit$
+
+$number \rightarrow number \ digit \ \mid \ digit$
+
+$count \rightarrow + \ \mid \ * \ \mid \ ? \ \mid \ \lbrace \ number \ \rbrace \ \mid \ \lbrace \ number \ , \ number\rbrace$
 
 esc denotes escape character.
 

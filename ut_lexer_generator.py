@@ -1,5 +1,6 @@
 import unittest
 from src.lexer_generator import *
+from src.lex_parser import *
 
 class ParserGeneratorTest(unittest.TestCase):
 
@@ -9,8 +10,11 @@ class ParserGeneratorTest(unittest.TestCase):
     def tearDown(self):
         pass
     
-    def test_open(self):
-        gen = LexerGenerator()
+    def test_lex_parser(self):
+        parser = LexParser()
+        parser.open('unittest/cmm.lex')
+
+        print('done')
 
 if __name__ == '__main__':
     unittest.main()

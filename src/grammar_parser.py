@@ -156,7 +156,7 @@ class GarmmarParser:
                 self.definition += line
 
         # find rules
-        self.parse(file_path)
+        self.parse()
 
         while True:
             line = self.f.readline()
@@ -166,8 +166,8 @@ class GarmmarParser:
         
         self.f.close()
 
-    def parse(self, file_path):
-        self.tokenize(file_path)
+    def parse(self, ):
+        self.tokenize()
 
         self.state = State.IDLE
         while True:
@@ -291,7 +291,7 @@ class GarmmarParser:
         else:
             print('ERROR: Unknown Token')
 
-    def tokenize(self, file_path):
+    def tokenize(self):
         self.state = State.IDLE
 
         while True:

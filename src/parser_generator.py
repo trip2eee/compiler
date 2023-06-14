@@ -866,7 +866,7 @@ class ParserGenerator:
             symbol_id_table[symbol] = symbol_id
             symbol_id += 1
 
-        symbol = 'END'
+        symbol = 'END__RESERVED'
         symbol_table.append(symbol)
         symbol_id_table[symbol] = symbol_id
         symbol_id += 1
