@@ -42,7 +42,7 @@ class Rule:
     def __init__(self):
         self.symbol = ''
         self.string = ''
-        self.node = None        
+        self.regex = None
         self.reduce_action = ''
         self.mark = 0
 

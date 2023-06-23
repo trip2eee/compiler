@@ -33,6 +33,29 @@ class LexState:
 
         return s
     
+    def __eq__(self, value: object) -> bool:        
+
+        equal = True
+
+        if len(self.rules) == len(value.rules):
+            for idx_rule in range(len(self.rules)):
+                if self.rules[idx_rule].symbol != value.rules[idx_rule].symbol:
+                    equal = False
+                    break
+                
+                if self.rules[idx_rule].string != value.rules[idx_rule].string:
+                    equal = False
+                    break
+
+                if self.rules[idx_rule].mark != value.rules[idx_rule].mark:
+                    equal = False
+                    break
+
+        else:
+            equal = False
+
+        return equal
+            
 class LexerGenerator:
     def __init__(self):
         self.states = []
@@ -90,7 +113,10 @@ class LexerGenerator:
                         item.shift[t] = new_state.id
 
                 if new_state is not None:
-                    self.states.append(new_state)
+                    if new_state not in self.states:
+                        self.states.append(new_state)
+                    else:
+                        LexState.ITEM_ID -= 1
 
             for r in item.rules:
                 mark_symbol = r.mark_symbol()

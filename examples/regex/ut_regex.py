@@ -53,8 +53,8 @@ class TestRegEx(unittest.TestCase):
 
         regex.set_pattern('[a-zA-Z][a-zA-Z0-9]+')
 
-        self.assertEqual(regex.pattern.child.type, PatternType.RANGE)
-        self.assertEqual(regex.pattern.child.next.type, PatternType.RANGE)
+        self.assertEqual(regex.pattern.childs[0].type, PatternType.RANGE)
+        self.assertEqual(regex.pattern.childs[0].next.type, PatternType.RANGE)
 
         matched = regex.match('    f32Value;    1234;    abcd')
         self.assertEqual(len(matched), 2)

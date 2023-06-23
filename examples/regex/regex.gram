@@ -23,7 +23,7 @@ class Pattern:
         self.value = None
         self.range_min = None
         self.range_max = None
-        self.child = None
+        self.childs = []
         self.next = None
         self.count_min = 1
         self.count_max = 1
@@ -49,8 +49,7 @@ SUBEXP |
 EXP OR EXP {
     pattern = Pattern()
     pattern.type = PatternType.OR
-    pattern.child = $1.pattern
-    pattern.child.next = $3.pattern
+    pattern.childs = [$1.pattern, $3.pattern]
     $$.pattern = pattern
 }
 ;
@@ -78,9 +77,13 @@ ESC {
 ;
 
 GROUP : '(' EXP ')' {
-    pattern = Pattern()
-    pattern.type = PatternType.GROUP
-    pattern.child = $2.pattern
+
+    if $2.pattern.next is not None:
+        pattern = Pattern()
+        pattern.type = PatternType.GROUP
+        pattern.childs = [$2.pattern]
+    else:
+        pattern = $2.pattern
 
     $$.pattern = pattern
 }
@@ -89,7 +92,13 @@ GROUP : '(' EXP ')' {
 CLASS : '[' TERM ']' {
     pattern = Pattern()
     pattern.type = PatternType.CLASS
-    pattern.child = $2.pattern    
+    
+    pattern.childs = []
+    child = $2.pattern
+    while child is not None:
+        pattern.childs.append(child)
+        child = child.next
+
     $$.pattern = pattern
 };
 
