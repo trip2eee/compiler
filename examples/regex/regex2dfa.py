@@ -10,8 +10,9 @@ regex = RegEx()
 # regex.set_pattern('[_a-zA-Z][_a-zA-Z0-9]*')
 # code = '    f32Value;    1234;    abcd'
 
-regex.set_pattern('[+-]?((\d+([.]\d{0,10})?)|([.]\d{1,10}))[fF]{0,1}')
-code = '-10. 10.321  -.123, +3.141592F, +1.234f -.321F'
+# regex.set_pattern('[+-]?((\d+([.]\d{0,10})?)|([.]\d{1,10}))[fF]{0,1}')
+# regex.set_pattern('((\d+([.]\d{0,10})?)|([.]\d{1,10}))[fF]{0,1}')
+# code = '-10. 10.321  -.123, +3.141592F, +1.234f -.321F'
 
 # regex.set_pattern('W{1}o(r|R|k)l*d')
 # code = 'Hello, World, Hello WoRld, Hello Word, Wokd'
@@ -33,9 +34,8 @@ code += " /***/\n"
 
 print(utils.symbols_to_str(regex.pattern))
 list_pattern, _ = regex.augment_rules(regex.pattern)
+list_terminals = regex.find_terminals()
 
-regex.find_terminals()
-list_terminals = regex.list_terminals
 
 print('Terminals')
 for t in list_terminals:
@@ -210,10 +210,10 @@ def create_states(list_pattern):
                                                 state.shift_backward[prev_symbol] = state.prev_state
                 else:
                     # Reduce
-                    if state.reduce == -1:
-                        state.reduce = rule.id
+                    if state.accept == -1:
+                        state.accept = rule.id
                     else:
-                        if state.reduce != rule.id:
+                        if state.accept != rule.id:
                             print('ERROR: REDUCE - REDUCE Conflict!')
 
             if len(new_state.list_rules) > 0:

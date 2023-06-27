@@ -88,6 +88,16 @@ class TestRegEx(unittest.TestCase):
         self.assertEqual(matched[2], '123')
         self.assertEqual(matched[3], '3.141592')
 
+        regex.set_pattern('((\d+([.]\d{0,10})?)|([.]\d{1,10}))[fF]{0,1}')
+        matched = regex.match('-10. 10.321  -.123, +3.141592F')
+        print(matched)
+
+        self.assertEqual(len(matched), 4)
+        self.assertEqual(matched[0], '10.')
+        self.assertEqual(matched[1], '10.321')
+        self.assertEqual(matched[2], '.123')
+        self.assertEqual(matched[3], '3.141592F')
+
         regex.set_pattern('[+-]?((\d+([.]\d{0,10})?)|([.]\d{1,10}))[fF]{0,1}')
         matched = regex.match('-10. 10.321  -.123, +3.141592F')
         print(matched)

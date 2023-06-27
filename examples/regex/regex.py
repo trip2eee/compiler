@@ -119,7 +119,7 @@ class RegExState:
         self.list_rules = []
         self.shift_forward = {}
         self.shift_backward = {}
-        self.reduce = -1
+        self.accept = -1
         self.prev_state = -1
         self.count = 0
 
@@ -141,8 +141,8 @@ class RegExState:
             str_state += '  {} -> {}\n'.format(str_key, self.shift_backward[key])
 
         str_state += '  REDUCE\n'
-        if self.reduce != -1:
-            str_state += '  {}'.format(self.reduce)
+        if self.accept != -1:
+            str_state += '  {}'.format(self.accept)
 
         return str_state
 
@@ -201,6 +201,7 @@ class RegEx:
         self.list_terminals = []
         self.utils = RegExUtils()
 
+        RegExState.STATE_ID = 0
 
     def set_pattern(self, expr):
         list_symbol = self.lexer.lexer(expr)
@@ -452,6 +453,14 @@ class RegEx:
                             child2 = self.copy_pattern(next.childs[1])
                             stack.append(child1)
                             stack.append(child2)
+                            
+                            while child1.next is not None:
+                                child1 = child1.next
+                            child1.next = next.next
+
+                            while child2.next is not None:
+                                child2 = child2.next
+                            child2.next = next.next
 
                             print('push -> {}'.format(RegExUtils.symbols_to_str(child1)))
                             print('push -> {}'.format(RegExUtils.symbols_to_str(child2)))
@@ -505,7 +514,15 @@ class RegEx:
 
                         if root == next:
                             print('push -> {}'.format(RegExUtils.symbols_to_str(elem)))
-                            stack.append(elem)                            
+                            stack.append(elem)
+
+                            while elem.next is not None:
+                                elem = elem.next
+                            elem.next = next.next
+
+                            # prevent cyclic link
+                            if elem.next == elem:
+                                elem.next = None
 
                         else:    
                             root1 = self.copy_pattern(root)
@@ -516,74 +533,28 @@ class RegEx:
                             if prev is not None:
                                 prev.next = elem
 
-                                # if elem.next is None:
-                                #     elem.count_min = next.count_min
-                                #     elem.count_max = next.count_max
-
                             while elem.next is not None:
                                 elem = elem.next
-
                             elem.next = next.next
+                            
+                            # prevent cyclic link
                             if elem.next == elem:
                                 elem.next = None
                             
                             print('push -> {}'.format(RegExUtils.symbols_to_str(root1)))
                             stack.append(root1)
 
-                    # if next.count_min == 0:
-                    #     if root != next:
-                    #         root1 = self.copy_pattern(root)
-                    #         prev = root1
-                    #         while prev.next.type != PatternType.GROUP:
-                    #             prev = prev.next
-                    #         prev.next = prev.next.next
-                    #         print('push -> {}'.format(RegExUtils.symbols_to_str(root1)))
-                    #         stack.append(root1)
-                
-                # else:
-
-                # if next.count_min == 0:
-                #     # if next.type == PatternType.CLASS:
-                #     if next == root:
-                #         root1 = self.copy_pattern(root)
-                #         root1 = root1.next
-
-                #         if root1 is not None:
-                #             print('node -> {}'.format(RegExUtils.symbols_to_str(next)))
-                #             print('push -> {}'.format(RegExUtils.symbols_to_str(root1)))
-                #             stack.append(root1)
-                        
-                #     else:
-                #         root1 = self.copy_pattern(root)
-                #         prev = root1
-
-                #         while True:
-                #             print('  compare : {}'.format(RegExUtils.symbol_to_str(prev.next)))
-                #             print('  compare : {}'.format(RegExUtils.symbol_to_str(next)))
-
-                #             if RegExUtils.symbol_to_str(prev.next) == RegExUtils.symbol_to_str(next):
-                #                 break
-                #             else:
-                #                 prev = prev.next
-                            
-                #         prev.next = prev.next.next
-
-                #         print('node -> {}'.format(RegExUtils.symbols_to_str(next)))
-                #         print('push -> {}'.format(RegExUtils.symbols_to_str(root1)))
-                #         stack.append(root1)
-
                 next = next.next
-
             
             if no_split and no_group:
 
                 str_root = RegExUtils.symbols_to_str(root)
                 exists = False
-                print('check existence')
-                print('*   {}'.format(str_root))
+                # print('check existence')
+                # print('*   {}'.format(str_root))
                 for p in list_patterns:
                     str_p = RegExUtils.symbols_to_str(p)
-                    print('    {}'.format(str_p))
+                    # print('    {}'.format(str_p))
 
                     if str_root == str_p:
                         exists = True
@@ -618,3 +589,286 @@ class RegEx:
                         self.list_terminals.append(node)
 
                 node = node.next
+        
+        return self.list_terminals
+
+    def compile(self, expr):
+        list_symbol = self.lexer.lexer(expr)
+        result = parse(list_symbol)
+        
+        self.pattern = result.pattern
+        self.list_pattern, _ = self.augment_rules(self.pattern)
+        self.list_terminals = self.find_terminals()
+        self.list_states = self.create_states(self.list_pattern, self.list_terminals)
+    
+
+        
+    def check_inclusion(self, set_pattern:Pattern, elem_pattern:Pattern):
+        result = True
+
+        if set_pattern.type == PatternType.RANGE:
+            if elem_pattern.type == PatternType.VALUE:
+                if set_pattern.range_min <= elem_pattern.value <= set_pattern.range_max:
+                    result = True
+                else:
+                    result = False
+            elif elem_pattern.type == PatternType.NOT_VALUE:
+                if set_pattern.range_min <= elem_pattern.value <= set_pattern.range_max:
+                    result = False
+                else:
+                    result = True
+
+            elif elem_pattern.type == PatternType.CLASS:
+                result = False
+                for c in elem_pattern.childs:
+                    result_child = self.check_inclusion(set_pattern, c)
+                    if result_child == True:
+                        result = True
+                        break
+        
+        elif set_pattern.type == PatternType.VALUE:
+            if elem_pattern.type == PatternType.VALUE:
+                if set_pattern.value == elem_pattern.value:
+                    result = True
+                else:
+                    result = False
+            
+            elif elem_pattern.type == PatternType.NOT_VALUE:
+                if set_pattern.value != elem_pattern.value:
+                    result = True
+                else:
+                    result = False
+            
+            else:
+                result = False
+        
+        elif set_pattern.type == PatternType.NOT_VALUE:
+            if elem_pattern.type == PatternType.VALUE:
+                if set_pattern.value != elem_pattern.value:
+                    result = True
+                else:
+                    result = False
+            
+            elif elem_pattern.type == PatternType.NOT_VALUE:
+                if set_pattern.value == elem_pattern.value:
+                    result = True
+                else:
+                    result = False
+            
+            else:
+                result = False
+
+        elif set_pattern.type == PatternType.OR or set_pattern.type == PatternType.CLASS:
+            result = False
+            for child in set_pattern.childs:
+                result_child = self.check_inclusion(child, elem_pattern)
+                if result_child == True:
+                    result = True
+                    break
+
+
+        return result
+
+    def match_char(self, pattern:Pattern, char):
+
+        result = False
+        if pattern is not None:
+            if pattern.type == PatternType.VALUE:
+                if pattern.value == char:
+                    result = True
+                else:
+                    result = False
+
+            elif pattern.type == PatternType.NOT_VALUE:
+                if pattern.value != char:
+                    result = True
+                else:
+                    result = False
+                
+            elif pattern.type == PatternType.RANGE:
+                if pattern.range_min <= char <= pattern.range_max:
+                    result = True
+                else:
+                    result = False
+                
+            elif pattern.type == PatternType.OR or pattern.type == PatternType.CLASS:
+                for child in pattern.childs:
+                    result_child = self.match_char(child, char)
+                    if result_child == True:
+                        result = True
+                        break
+
+        return result
+
+
+    def create_states(self, list_pattern, list_terminals):
+        state0 = RegExState()
+        for pattern in list_pattern:
+            rule = RegExRule()
+            rule.set_pattern(pattern)
+            state0.list_rules.append(rule)
+
+        list_states = [state0]
+
+        for state in list_states:
+            for t in list_terminals:
+                str_t = RegExUtils.symbol_to_str(t)
+                new_state = RegExState()
+                new_state.prev_state = state.id
+                
+                rule:RegExRule
+                for rule in state.list_rules:
+                    mark_symbol = rule.mark_symbol()
+                    if mark_symbol is not None:
+                                        
+                        str_mark = RegExUtils.symbol_to_str(mark_symbol)
+
+                        if str_t == str_mark:
+                            rule_copy = rule.copy()
+                            rule_copy.mark += 1
+                            new_state.list_rules.append(rule_copy)
+
+                            # Forward Transition
+                            ext = False
+                            for key in state.shift_forward:
+                                str_key = RegExUtils.symbol_to_str(key)
+                                if str_key == str_mark:
+                                    ext = True
+                                    break
+                            if ext == False:
+                                state.shift_forward[mark_symbol] = new_state.id
+
+                            # Backward Transition
+                            if rule.mark >= 1:
+                                
+                                # print('backward test')
+                                # print(rule)
+
+                                if state.prev_state >= 0:
+                                    for prev_rule in list_states[state.prev_state].list_rules:
+                                        if prev_rule.mark >= 2:
+
+                                            count_max = prev_symbol = rule.symbols[rule.mark-2].count_max
+
+                                            if count_max > 1 or count_max == -1:
+                                                # check if the mark symbol can be included in the previous symbol
+                                                prev_symbol = rule.symbols[rule.mark-2]
+                                                cur_symbol = rule.symbols[rule.mark-1]
+
+                                                # print('prev. symbol : ' + RegExUtils.symbol_to_str(prev_symbol))
+                                                # print('cur. symbol : ' + RegExUtils.symbol_to_str(cur_symbol))
+
+                                                included = self.check_inclusion(prev_symbol, cur_symbol)
+
+                                                if included:
+                                                    state.shift_backward[prev_symbol] = state.prev_state
+                    else:
+                        # Reduce
+                        if state.accept == -1:
+                            state.accept = rule.id
+                        else:
+                            if state.accept != rule.id:
+                                print('ERROR: ACCEPT - ACCEPT Conflict!')
+
+                if len(new_state.list_rules) > 0:
+                    list_states.append(new_state)
+                else:
+                    RegExState.STATE_ID -= 1
+
+        for state in list_states:
+            print(state)
+
+        return list_states
+
+
+    def match_dfa(self, str):
+        
+        list_matched = []
+        list_states = self.list_states
+
+        for state in list_states:
+            for rule in state.list_rules:
+                rule.matched_count = 0
+
+        cur_state_id = 0
+        idx_begin = 0
+        cur_state = list_states[cur_state_id]
+
+        idx_char = 0
+        while idx_char < len(str):
+            c = str[idx_char]
+
+            if cur_state_id == 0:
+                idx_begin = idx_char
+
+            next_matched = False
+            cur_matched = False
+
+        
+            for sym in cur_state.shift_forward:
+
+                if self.match_char(sym, c):
+                    cur_state_id = cur_state.shift_forward[sym]
+                    cur_state = list_states[cur_state_id]
+                    cur_state.count += 1
+
+                    next_matched = True
+                    break
+
+            if next_matched == False:
+                for rule in cur_state.list_rules:
+                    if rule.mark >= 1:
+                        cur_symbol = rule.symbols[rule.mark-1]
+
+                        if (cur_symbol.count_max == -1 or cur_symbol.matched_count < cur_symbol.count_max) and self.match_char(cur_symbol, c):
+                            cur_symbol.matched_count += 1
+                            cur_matched = True
+                            break
+
+            if next_matched == False and cur_matched == False:
+
+                # handle cases in which minimum count=0 (?, {0}, {0,M})
+                if next_matched == False:
+                    for rule in cur_state.list_rules:
+                        mark_symbol = rule.mark_symbol()
+
+                        if mark_symbol is not None and mark_symbol.count_min == 0:
+                            cur_state_id = cur_state.shift_forward[mark_symbol]
+                            cur_state = list_states[cur_state_id]
+                            mark_symbol.matched_count += 1
+                            idx_char -= 1
+                            next_matched = True
+                            break
+
+                if next_matched == False:
+                    backward = False
+                    if len(cur_state.shift_backward) > 0:                
+                        for s in cur_state.shift_backward:
+                            if self.match_char(s, c):
+                                cur_state_id = cur_state.shift_backward[s]
+                                cur_state = list_states[cur_state_id]
+                                s.matched_count += 1
+                                idx_char -= 1
+                                backward = True
+
+                    if backward == False:
+                        if cur_state.accept != -1:
+                            idx_char -= 1
+                            idx_end = idx_char
+
+                            str_matched = str[idx_begin:idx_end+1]
+                            list_matched.append(str_matched)
+
+                        # return to state 0
+                        cur_state_id = 0
+                        cur_state = list_states[cur_state_id]
+            
+            idx_char += 1
+        
+        if cur_state.accept != -1:
+            idx_char -= 1
+            idx_end = idx_char
+            str_matched = str[idx_begin:idx_end+1]
+            list_matched.append(str_matched)
+
+        return list_matched
