@@ -48,6 +48,30 @@ class RegExUtils:
                     s += '}'
         
         return s
+    
+    @staticmethod
+    def compare_symbol(p1:Pattern, p2:Pattern):
+        result = False
+
+        if p1 is not None and p2 is not None:
+            if p1.type == p2.type:
+                if p1.value == p2.value and p1.range_min == p2.range_min and p1.range_max == p2.range_max and p1.count_min == p2.count_min and p1.count_max == p2.count_max:
+                    
+                    if len(p1.childs) == len(p2.childs):
+                        result = True
+
+                        for i in range(len(p1.childs)):
+                            if RegExUtils.compare_symbol(p1.childs[i], p2.childs[i]) == False:
+                                result = False
+                                break
+                    else:
+                        result = False
+                else:
+                    result = False
+        else:
+            result = False
+
+        return result
 
     @staticmethod
     def symbols_to_str(pattern:Pattern, ws=True, trace_next=True):
@@ -110,6 +134,27 @@ class RegExUtils:
                 s += ' '
         return s
     
+    @staticmethod
+    def compare_symbols(p1:Pattern, p2:Pattern, trace_next=True):
+
+        result = True
+
+        while p1 is not None:
+            if p2 is None:
+                result = False
+                break
+            
+            if RegExUtils.compare_symbol(p1, p2) == False:
+                result = False
+                break
+            
+            p1 = p1.next
+
+        if p1 is not None:
+            result = False
+
+        return result
+    
 class RegExState:
     STATE_ID = 0
     def __init__(self):
@@ -140,7 +185,7 @@ class RegExState:
             str_key = RegExUtils.symbol_to_str(key)
             str_state += '  {} -> {}\n'.format(str_key, self.shift_backward[key])
 
-        str_state += '  REDUCE\n'
+        str_state += '  ACCEPT\n'
         if self.accept != -1:
             str_state += '  {}'.format(self.accept)
 
@@ -412,61 +457,46 @@ class RegEx:
         while len(stack) > 0:
             root = stack.pop()
 
-            print('POP {}'.format(RegExUtils.symbols_to_str(root)))
-
             no_split = True
             no_group = True
-            next:Pattern
-            next = root
+            cur_node:Pattern
+            cur_node = root
         
-            while next is not None:
+            while cur_node is not None:
 
-                if next.type == PatternType.OR:
-                    print('OR {}'.format(RegExUtils.symbols_to_str(next)))
-
-                    if next.next is not None:
-                        print(' - next {}'.format(RegExUtils.symbols_to_str(next.next)))
-
-                    print(' - child1 {}'.format(RegExUtils.symbols_to_str(next.childs[0])))
-                    print(' - child2 {}'.format(RegExUtils.symbols_to_str(next.childs[1])))
-
+                if cur_node.type == PatternType.OR:
 
                     terminal = False
-                    if self.is_leaf(next.childs[0]) and self.is_leaf(next.childs[1]):
-                        print(' -- Leaf OR')
-
+                    if self.is_leaf(cur_node.childs[0]) and self.is_leaf(cur_node.childs[1]):
                         terminal = True
-                    elif next.childs[1].type == PatternType.OR:
-                        if self.is_leaf(next.childs[1].childs[0]) and self.is_leaf(next.childs[1].childs[1]):
-                            print(' -- Leaf OR 2')
-                            c1 = next.childs[1].childs[0]
-                            c2 = next.childs[1].childs[1]
-                            next.childs[1] = c1
-                            next.childs.append(c2)
+
+                    elif cur_node.childs[1].type == PatternType.OR:
+                        if self.is_leaf(cur_node.childs[1].childs[0]) and self.is_leaf(cur_node.childs[1].childs[1]):
+                            c1 = cur_node.childs[1].childs[0]
+                            c2 = cur_node.childs[1].childs[1]
+                            cur_node.childs[1] = c1
+                            cur_node.childs.append(c2)
                             terminal = True
 
                     if terminal == False:
                         no_split = False
 
-                        if root == next:
-                            child1 = self.copy_pattern(next.childs[0])
-                            child2 = self.copy_pattern(next.childs[1])
+                        if root == cur_node:
+                            child1 = self.copy_pattern(cur_node.childs[0])
+                            child2 = self.copy_pattern(cur_node.childs[1])
                             stack.append(child1)
                             stack.append(child2)
                             
                             while child1.next is not None:
                                 child1 = child1.next
-                            child1.next = next.next
+                            child1.next = cur_node.next
 
                             while child2.next is not None:
                                 child2 = child2.next
-                            child2.next = next.next
-
-                            print('push -> {}'.format(RegExUtils.symbols_to_str(child1)))
-                            print('push -> {}'.format(RegExUtils.symbols_to_str(child2)))
+                            child2.next = cur_node.next
 
                         else:
-                            for child in next.childs:
+                            for child in cur_node.childs:
                                 root1 = self.copy_pattern(root)
                                 child_next = root1
                                 
@@ -475,50 +505,26 @@ class RegEx:
                                 
                                 if child_next is not None:
                                     child_next.next = child
-                                    child_next.next.next = next.next
+                                    child_next.next.next = cur_node.next
 
                                 stack.append(root1)
-                                print('push -> {}'.format(RegExUtils.symbols_to_str(root1)))
 
-                            # root2 = self.copy_pattern(root)
-
-                            # child_next = root2
-                            
-                            # while child_next.next.type != PatternType.OR:
-                            #     child_next = child_next.next
-
-                            # if child_next is not None:
-                            #     child_next.next = next.childs[1]
-                            
-                            # stack.append(root2)
-                            # print('push2 -> {}'.format(RegExUtils.symbols_to_str(root2)))
-
-                elif next.type == PatternType.GROUP:
-                    print('GROUP {}'.format(RegExUtils.symbols_to_str(next)))
-                    if next.next is not None:
-                        print(' - next {}'.format(RegExUtils.symbols_to_str(next.next)))
+                elif cur_node.type == PatternType.GROUP:
 
                     no_group = False
-                    # if next.next is None:
-                    #     print('next.next == None')
-                    #     for child in next.childs:
-                    #         stack.append(child)
-                    #         print('push -> {}'.format(RegExUtils.symbols_to_str(child)))
-                    # else:
-
-                    list_group_elem, no_split_elem = self.augment_rules(next.childs[0], level+1, next)
+                    
+                    list_group_elem, no_split_elem = self.augment_rules(cur_node.childs[0], level+1, cur_node)
                     if no_split_elem == False:
                         no_split = False
 
                     for elem in list_group_elem:
 
-                        if root == next:
-                            print('push -> {}'.format(RegExUtils.symbols_to_str(elem)))
+                        if root == cur_node:
                             stack.append(elem)
 
                             while elem.next is not None:
                                 elem = elem.next
-                            elem.next = next.next
+                            elem.next = cur_node.next
 
                             # prevent cyclic link
                             if elem.next == elem:
@@ -535,28 +541,21 @@ class RegEx:
 
                             while elem.next is not None:
                                 elem = elem.next
-                            elem.next = next.next
+                            elem.next = cur_node.next
                             
                             # prevent cyclic link
                             if elem.next == elem:
                                 elem.next = None
-                            
-                            print('push -> {}'.format(RegExUtils.symbols_to_str(root1)))
+
                             stack.append(root1)
 
-                next = next.next
+                cur_node = cur_node.next
             
             if no_split and no_group:
-
-                str_root = RegExUtils.symbols_to_str(root)
                 exists = False
-                # print('check existence')
-                # print('*   {}'.format(str_root))
-                for p in list_patterns:
-                    str_p = RegExUtils.symbols_to_str(p)
-                    # print('    {}'.format(str_p))
 
-                    if str_root == str_p:
+                for p in list_patterns:
+                    if RegExUtils.compare_symbols(root, p):
                         exists = True
                         break
 
@@ -578,11 +577,9 @@ class RegEx:
             while node is not None:
 
                 if node.type in terminal_types:
-                    str_node = RegExUtils.symbol_to_str(node)
                     exists = False
                     for t in self.list_terminals:
-                        str_t = RegExUtils.symbol_to_str(t)
-                        if str_node == str_t:
+                        if RegExUtils.compare_symbol(node, t):
                             exists = True
                             break
                     if exists == False:
@@ -712,7 +709,6 @@ class RegEx:
 
         for state in list_states:
             for t in list_terminals:
-                str_t = RegExUtils.symbol_to_str(t)
                 new_state = RegExState()
                 new_state.prev_state = state.id
                 
@@ -720,10 +716,7 @@ class RegEx:
                 for rule in state.list_rules:
                     mark_symbol = rule.mark_symbol()
                     if mark_symbol is not None:
-                                        
-                        str_mark = RegExUtils.symbol_to_str(mark_symbol)
-
-                        if str_t == str_mark:
+                        if RegExUtils.compare_symbol(mark_symbol, t):
                             rule_copy = rule.copy()
                             rule_copy.mark += 1
                             new_state.list_rules.append(rule_copy)
@@ -731,8 +724,7 @@ class RegEx:
                             # Forward Transition
                             ext = False
                             for key in state.shift_forward:
-                                str_key = RegExUtils.symbol_to_str(key)
-                                if str_key == str_mark:
+                                if RegExUtils.compare_symbol(mark_symbol, key):
                                     ext = True
                                     break
                             if ext == False:
