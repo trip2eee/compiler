@@ -19,7 +19,7 @@ class State(enum.IntEnum):
     STRING = 2
     ACTION = 3
     COMMENT = 4
-
+    ESCAPE = 5
 
 class TokenType(enum.IntEnum):
     NDEF = 0
@@ -39,11 +39,11 @@ class Token:
 
 class Rule:
     RULE_ID = 0
-    def __init__(self):
-        self.symbol = ''
+    def __init__(self):        
         self.string = ''
-        self.regex = None
-        self.reduce_action = ''
+        self.symbol = ''
+        self.accept_action = ''
+        self.pattern = None        
         self.mark = 0
 
         self.id = Rule.RULE_ID
@@ -56,8 +56,7 @@ class Rule:
             return None
     
     def __str__(self):
-        s = self.symbol
-        s += ' -> '
+        s = str(self.id) + ' -> '
         for idx_ch in range(len(self.string)):
             if self.mark == idx_ch:
                 s += '.'
@@ -72,9 +71,9 @@ class Rule:
         new_rule = Rule()
         new_rule.symbol = self.symbol
         new_rule.string = self.string
-        new_rule.node = self.node
+        new_rule.pattern = self.pattern
         new_rule.id = self.id
-        new_rule.reduce_action = self.reduce_action
+        new_rule.accept_action = self.accept_action
         new_rule.mark = self.mark
 
         return new_rule
@@ -99,6 +98,7 @@ class LexParser:
         
         self.idx_token = 0
         self.list_tokens = []
+        self.cur_string = ''
         
     def __del__(self):
         if self.f is not None:
@@ -142,31 +142,33 @@ class LexParser:
                 break
 
             if self.state == State.IDLE:
+                if token.type == TokenType.STRING:                    
+                    self.cur_string = token.string
+                    self.state = State.SYMBOL
+                elif token.type == TokenType.NEW_LINE:
+                    pass # No Action
+
+            elif self.state == State.SYMBOL:
                 if token.type == TokenType.SYMBOL:
-                                        
+
                     rule = Rule()
                     rule.symbol = token.string
                     self.rules.append(rule)
                     self.cur_rule = rule
+                    self.cur_rule.string = self.cur_string
 
-                    self.state = State.SYMBOL
+                elif token.type == TokenType.ACTION:
+                   
+                    rule = Rule()
+                    rule.symbol = token.string
+                    self.rules.append(rule)
+                    self.cur_rule = rule
+                    self.cur_rule.string = self.cur_string
+                    self.cur_rule.accept_action = token.string
 
-            elif self.state == State.SYMBOL:
-                if token.type == TokenType.STRING:
-                    self.cur_rule.string = token.string
-
-                    self.state = State.STRING
                 else:
                     print('ERROR')
             
-            elif self.state == State.STRING:
-                if token.type == TokenType.NEW_LINE:
-                    pass # No Action
-                elif token.type == TokenType.ACTION:
-                   self.cur_rule.reduce_action = token.string
-                else:
-                    print('ERROR')
-                
                 self.state = State.IDLE
 
     def get_token(self):
@@ -240,14 +242,12 @@ class LexParser:
                     self.cur_token.string += c
             
             elif self.state == State.STRING:
-                
-                if c == "'":
+                if c == C_QUOT:
                     self.cur_token.type = TokenType.STRING
                     self.list_tokens.append(self.cur_token)
                     self.state = State.IDLE
-
                 else:
-                    self.cur_token.string += c                
+                    self.cur_token.string += c
 
     def is_digits(self, c):
         if '0' <= c <= '9':

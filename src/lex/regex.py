@@ -1,6 +1,6 @@
-from examples.regex.regex_parser_table import *
-from examples.regex.regex_parser import parse
-from examples.regex.regex_lexer import RegExLexer
+from src.lex.regex_parser_table import *
+from src.lex.regex_parser import parse
+from src.lex.regex_lexer import RegExLexer
 
 class RegExUtils:
 
@@ -246,7 +246,7 @@ class RegEx:
         self.list_terminals = []
         self.list_states = []
 
-        RegExState.STATE_ID = 0
+        # RegExState.STATE_ID = 0
 
     def set_pattern(self, expr):
         list_symbol = self.lexer.lexer(expr)
@@ -597,7 +597,7 @@ class RegEx:
         self.augment_rules(self.pattern)
         self.find_terminals()
         self.create_states()
-
+        
     def check_inclusion(self, set_pattern:Pattern, elem_pattern:Pattern):
         result = True
 
@@ -695,6 +695,7 @@ class RegEx:
 
         return result
 
+
     def create_states(self):
         list_patterns = self.list_patterns
         list_terminals = self.list_terminals
@@ -769,7 +770,6 @@ class RegEx:
 
         for state in list_states:
             print(state)
-
         self.list_states = list_states
 
         return list_states
@@ -798,7 +798,6 @@ class RegEx:
             next_matched = False
             cur_matched = False
 
-        
             for sym in cur_state.shift_forward:
 
                 if self.match_char(sym, c):

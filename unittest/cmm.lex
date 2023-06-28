@@ -1,22 +1,30 @@
 %%
 # Rules
-# 'STRING' ACTION
+# 'STRING' SYMBOL
+# 'STRING' { ACTION }
 
-#COMMENT '\/\/(.*)\n' {}
-#ID '[_a-zA-Z][_a-zA-Z0-9]*' {print(yytext)}
+'\/\/(.*)\n' {
+    yytype = COMMENT
+}
 
-IF    'if'
-FOR   'for'
-WHILE 'while'
+'[_a-zA-Z][_a-zA-Z0-9]*' {
+    print(yytext)
 
-PLUS   '+'
-MINUS  '-'
-ASSIGN '='
-EQUAL  '=='
-LTE    '=<'
-GTE    '>='
-LT     '<'
-GT     '>'
+    if yytext == 'if':
+        yytype = IF
+    elif yytext == 'for':
+        yytype = FOR
+    else:
+        yytype = ID
+}
+
+'\+'  PLUS
+'\-'  MINUS
+'='  ASSIGN
+'==' EQUAL
+'=<' LTE
+'>=' GTE
+'<'  LT
+'>'  GT
 
 %%
-

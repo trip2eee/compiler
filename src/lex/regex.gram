@@ -1,0 +1,202 @@
+# Definitions
+%{
+import enum
+
+class Symbol:
+    def __init__(self):
+        self.type = None
+        self.value = None
+        self.pattern = None
+        self.idx_col = 0
+
+class PatternType(enum.IntEnum):
+    VALUE = 0
+    NOT_VALUE = 1
+    RANGE = 2
+    CLASS = 3
+    GROUP = 4
+    OR = 5
+
+class Pattern:
+    def __init__(self):
+        self.type = PatternType.VALUE
+        self.value = None
+        self.range_min = None
+        self.range_max = None
+        self.childs = []
+        self.next = None
+        self.count_min = 1
+        self.count_max = 1
+        self.matched = False
+        self.matched_str = ''
+        self.matched_count = 0
+        self.idx_begin = 0
+        self.idx_end = 0
+
+%}
+
+%%
+
+CMD : EXP {
+    $$ = $1
+};
+
+EXP : SUBEXP EXP {    
+    $1.pattern.next = $2.pattern
+    $$ = $1
+} |
+SUBEXP |
+EXP OR EXP {
+    pattern = Pattern()
+    pattern.type = PatternType.OR
+    pattern.childs = [$1.pattern, $3.pattern]
+    $$.pattern = pattern
+}
+;
+
+SUBEXP : CLASS |
+BASE {
+    pattern = Pattern()
+    if $1.value == '.':
+        pattern.type = PatternType.NOT_VALUE
+        pattern.value = '\n'
+    else:
+        pattern.type = PatternType.VALUE
+        pattern.value = $1.value
+    $$.pattern = pattern
+} |
+GROUP |
+SUBEXP COUNT {
+    $1.pattern.count_min = $2.pattern.count_min
+    $1.pattern.count_max = $2.pattern.count_max
+    $$ = $1
+} |
+ESC {
+    $$.pattern = add_esc($1)
+}
+;
+
+GROUP : '(' EXP ')' {
+
+    if $2.pattern.next is not None:
+        pattern = Pattern()
+        pattern.type = PatternType.GROUP
+        pattern.childs = [$2.pattern]
+    else:
+        pattern = $2.pattern
+
+    $$.pattern = pattern
+}
+;
+
+CLASS : '[' TERM ']' {
+    pattern = Pattern()
+    pattern.type = PatternType.CLASS
+    
+    pattern.childs = []
+    child = $2.pattern
+    while child is not None:
+        pattern.childs.append(child)
+        child = child.next
+
+    $$.pattern = pattern
+};
+
+TERM : FACTOR TERM {    
+    $1.pattern.next = $2.pattern
+    $$ = $1
+} |
+FACTOR | 
+FACTOR '-' {
+    pattern = Pattern()
+    pattern.type = PatternType.VALUE
+    pattern.value = '-'
+    $$.pattern = $1.pattern
+    $1.pattern.next = pattern
+}
+;
+
+FACTOR : BASE {
+    pattern = Pattern()
+    pattern.type = PatternType.VALUE
+    pattern.value = $1.value
+    $$.pattern = pattern
+} |
+BASE '-' BASE {
+    pattern = Pattern()
+    pattern.type = PatternType.RANGE
+    pattern.range_min = $1.value
+    pattern.range_max = $3.value
+    $$.pattern = pattern
+} |
+ESC {
+    $$.pattern = add_esc($1)
+} |
+'+' {
+    pattern = Pattern()
+    pattern.type = PatternType.VALUE
+    pattern.value = $1.value
+    $$.pattern = pattern
+} |
+'-' {
+    pattern = Pattern()
+    pattern.type = PatternType.VALUE
+    pattern.value = $1.value
+    $$.pattern = pattern
+}
+;
+
+BASE : CHAR | DIGIT;
+
+
+NUMBER : NUMBER DIGIT {
+    $$.value = $1.value + $2.value
+} | DIGIT
+;
+
+COUNT : '+' {
+    pattern = Pattern()
+    pattern.count_min = 1
+    pattern.count_max = -1
+    $$.pattern = pattern
+} |
+'*' {
+    pattern = Pattern()
+    pattern.count_min = 0
+    pattern.count_max = -1
+    $$.pattern = pattern
+}| 
+'?' {
+    pattern = Pattern()
+    pattern.count_min = 0
+    pattern.count_max = 1
+    $$.pattern = pattern
+} |
+'{' NUMBER '}' {
+    pattern = Pattern()
+    pattern.count_min = int($2.value)
+    pattern.count_max = -1
+    $$.pattern = pattern
+} |
+'{' NUMBER ',' NUMBER '}' {
+    pattern = Pattern()
+    pattern.count_min = int($2.value)
+    pattern.count_max = int($4.value)
+    $$.pattern = pattern
+}
+;
+%%
+# Auxiliary Routines
+
+def add_esc(p1):
+    pattern = Pattern()
+    if p1.value == 'd':        
+        pattern.type = PatternType.RANGE
+        pattern.range_min = '0'
+        pattern.range_max = '9'
+        
+    else:
+        pattern.type = PatternType.VALUE
+        pattern.value = p1.value
+
+    return pattern

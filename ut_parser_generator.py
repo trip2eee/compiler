@@ -1,5 +1,5 @@
 import unittest
-from src.parser_generator import *
+from src.yacc.parser_generator import *
 
 class ParserGeneratorTest(unittest.TestCase):
 

@@ -1,5 +1,5 @@
 import unittest
-from src.grammar_parser import *
+from src.yacc.grammar_parser import *
 
 class GarmmarFileParserTest(unittest.TestCase):
     def setUp(self):

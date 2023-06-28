@@ -1,6 +1,6 @@
 import unittest
-from src.lexer_generator import *
-from src.lex_parser import *
+from src.lex.lexer_generator import *
+from src.lex.lex_parser import *
 
 class ParserGeneratorTest(unittest.TestCase):
 
@@ -20,6 +20,7 @@ class ParserGeneratorTest(unittest.TestCase):
         gen = LexerGenerator()
         gen.open('unittest/cmm.lex')
 
+        gen.generate_code('./cmm_lexer.py')
 
 
 if __name__ == '__main__':
