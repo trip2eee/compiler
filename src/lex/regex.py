@@ -149,6 +149,7 @@ class RegExUtils:
                 break
             
             p1 = p1.next
+            p2 = p2.next
 
         if p1 is not None:
             result = False

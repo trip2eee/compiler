@@ -297,7 +297,7 @@ def match(list_states, str):
                             backward = True
 
                 if backward == False:
-                    if cur_state.reduce != -1:
+                    if cur_state.accept != -1:
                         idx_char -= 1
                         idx_end = idx_char
 
@@ -310,7 +310,7 @@ def match(list_states, str):
         
         idx_char += 1
     
-    if cur_state.reduce != -1:
+    if cur_state.accept != -1:
         idx_char -= 1
         idx_end = idx_char
         str_matched = str[idx_begin:idx_end+1]
