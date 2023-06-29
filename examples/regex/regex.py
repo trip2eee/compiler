@@ -1,5 +1,5 @@
 from examples.regex.regex_parser_table import *
-from examples.regex.regex_parser import parse
+from examples.regex.regex_parser import Parser
 from examples.regex.regex_lexer import RegExLexer
 
 class RegExUtils:
@@ -244,12 +244,13 @@ class RegEx:
         self.list_patterns = []
         self.list_terminals = []
         self.list_states = []
+        self.parser = Parser()
 
         RegExState.STATE_ID = 0
 
     def set_pattern(self, expr):
         list_symbol = self.lexer.lexer(expr)
-        result = parse(list_symbol)
+        result = self.parser.parse(list_symbol)
         
         self.pattern = result.pattern
 
@@ -590,7 +591,7 @@ class RegEx:
 
     def compile(self, expr):
         list_symbol = self.lexer.lexer(expr)
-        result = parse(list_symbol)
+        result = self.parser.parse(list_symbol)
         
         self.pattern = result.pattern
         self.augment_rules(self.pattern)

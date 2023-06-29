@@ -824,6 +824,7 @@ class ParserGenerator:
     
         INDENT1 = '            '
         INDENT2 = '                '
+        INDENT3 = '                    '
 
         module_name = file_path
         if module_name.endswith('.py'):
@@ -1010,11 +1011,11 @@ class ParserGenerator:
                 f.write('\n')
 
                 if rule_id == 1:
-                    reduce_action_calls += INDENT1 + 'if reduce=={}:\n'.format(rule_id)
+                    reduce_action_calls += INDENT2 + 'if reduce=={}:\n'.format(rule_id)
                 else:
-                    reduce_action_calls += INDENT1 + 'elif reduce=={}:\n'.format(rule_id)
+                    reduce_action_calls += INDENT2 + 'elif reduce=={}:\n'.format(rule_id)
 
-                reduce_action_calls += INDENT2 + 'symbol = reduce_rule_{}('.format(rule_id)
+                reduce_action_calls += INDENT3 + 'symbol = reduce_rule_{}('.format(rule_id)
                 for idx_arg in range(len(rule.strings[idx_rule])):
                     if idx_arg > 0:
                         reduce_action_calls += ', '
