@@ -179,16 +179,14 @@ class RegExState:
         str_state += '  SHIFT FORWARD\n'
         for key in self.shift_forward:
             str_key = RegExUtils.symbol_to_str(key)
-            str_state += '  {} -> {}\n'.format(str_key, self.shift_forward[key])
+            str_state += '    {} -> {}\n'.format(str_key, self.shift_forward[key])
         
         str_state += '  SHIFT BACKWARD\n'
         for key in self.shift_backward:
             str_key = RegExUtils.symbol_to_str(key)
-            str_state += '  {} -> {}\n'.format(str_key, self.shift_backward[key])
+            str_state += '    {} -> {}\n'.format(str_key, self.shift_backward[key])
 
-        str_state += '  ACCEPT\n'
-        if self.accept != -1:
-            str_state += '  {}'.format(self.accept)
+        str_state += '  ACCEPT: {}'.format(self.accept)
 
         return str_state
 

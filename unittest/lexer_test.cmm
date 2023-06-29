@@ -1,8 +1,9 @@
 f32Value
-u8Test
 
-// Comment!
+// Comment 1
+/* Comment *2* */
+
 u8Test == f32Test
-
 f32Value =< f64Value
 
+11

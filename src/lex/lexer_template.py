@@ -1,5 +1,7 @@
 %FILE_COMMENT%
-%IMPORT%
+
+# Definitions
+%DEFINITIONS%
 
 class Lexer:
     def __init__(self):        
@@ -49,11 +51,17 @@ class Lexer:
     def add_token(self, yytext, yytype):
          print('{} - {} in {}:{}'.format(yytext, yytype, self.idx_start_line+1, self.idx_start_col+1))
 
+    def error_handler(self):
+        text = self.code[self.idx_start:self.idx_char]
+        if text != '\n' and text != '\t' and text != ' ' and text != '':
+            print("Unexpected Character: '{}' in {}:{}".format(text, self.idx_line+1, self.idx_col+1))
+
     def scan(self, file_path):
         
         f = open(file_path, 'r')
         if f is not None:
-            self.code = f.read()    
+            self.code = f.read()
+            f.close()
             self.__scan()
             return True
         else:

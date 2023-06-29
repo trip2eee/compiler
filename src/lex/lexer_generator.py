@@ -121,6 +121,7 @@ class LexerGenerator:
 
         f = open('src/lex/lexer_template.py', 'r')
         lexer_template = f.read()
+        f.close()
 
         INDENT1 = '    '
         INDENT2 = '        '
@@ -143,6 +144,15 @@ class LexerGenerator:
         file_comment += '"""\n'
 
         lexer_template = lexer_template.replace('%FILE_COMMENT%', file_comment)
+
+        definition = self.lex_parser.definition
+        idx_start = definition.find('%{')
+        idx_end = definition.find('%}')
+
+        if idx_start != -1 and idx_end != -1 and idx_end > idx_start:
+            lexer_template = lexer_template.replace('%DEFINITIONS%', definition[idx_start+2:idx_end])
+        else:
+            lexer_template = lexer_template.replace('%DEFINITIONS%', '')
 
         scan_body = ''
         idx_if = 0
@@ -213,7 +223,43 @@ class LexerGenerator:
 
 
             # Shift Backward condition
-            state_func += INDENT2 + '# Shift Backward\n'
+            if len(state.shift_backward) > 0:
+                state_func += INDENT2 + '# Shift Backward\n'
+
+                for cond in state.shift_backward:
+
+                    if idx_if == 0:
+                        state_func += INDENT2 + 'if '
+                    else:
+                        state_func += INDENT2 + 'elif '
+                    idx_if += 1
+
+                    if cond.type == PatternType.VALUE:
+                        state_func += "('{}' == c):\n".format(self.value_check(cond.value))
+                        state_func += INDENT3 + 'state = {}\n'.format(state.shift_backward[cond])
+
+                    elif cond.type == PatternType.NOT_VALUE:
+                        state_func += "('{}' != c):\n".format(self.value_check(cond.value))
+                        state_func += INDENT3 + 'state = {}\n'.format(state.shift_backward[cond])
+
+                    elif cond.type == PatternType.CLASS or cond.type == PatternType.OR:
+                        child: Pattern
+                        for idx, child in enumerate(cond.childs):
+                            if idx > 0:
+                                state_func += ' or '
+
+                            if child.type == PatternType.VALUE:
+                                state_func += "('{}' == c)".format(self.value_check(child.value))
+
+                            elif child.type == PatternType.NOT_VALUE:
+                                state_func += "('{}' != c)".format(self.value_check(child.value))
+
+                            elif child.type == PatternType.RANGE:
+                                state_func += "('{}' <= c <= '{}')".format(child.range_min, child.range_max)
+
+                        state_func += ':\n'
+                        state_func += INDENT3 + 'state = {}\n'.format(state.shift_backward[cond])
+
 
             # Stay in the current state            
             gen_stay_cond = False
@@ -265,12 +311,14 @@ class LexerGenerator:
                                 state_func += ':\n'
                                 state_func += INDENT3 + 'state = {}\n'.format(state.id)
 
+            else_exists = False
+
             # handle cases in which minimum count=0 (?, {0}, {0,M})            
             for rule in state.list_rules:
                 mark_symbol = rule.mark_symbol()
 
                 if mark_symbol is not None and mark_symbol.count_min == 0:
-                    state_func += INDENT2 + '# Handling minimum count=0 (?, {0}, {0,M})\n'
+                    state_func += INDENT2 + '# Handle minimum count=0 (?, {0}, {0,M})\n'
 
                     next_state_id = state.shift_forward[mark_symbol]
 
@@ -284,36 +332,46 @@ class LexerGenerator:
 
                     state_func += INDENT3 + 'state = {}\n'.format(next_state_id)
                     state_func += INDENT3 + 'self.unget_char()\n'.format(next_state_id)
+                    else_exists = True
                     break
 
             if state.accept != -1:
-                state_func += INDENT2 + '# Accept\n'
-                indent = ''
-                indent2 = ''
-                if idx_if == 0:
-                    indent = INDENT1
+                if else_exists == False:
+                    state_func += INDENT2 + '# Accept\n'
+                    indent = ''
+                    indent2 = ''
+                    if idx_if == 0:
+                        indent = INDENT1
+                    else:
+                        indent = INDENT2
+                        state_func += INDENT2 + 'else:\n'
+                    
+                    indent2 = indent + '    '
+                    idx_if += 1
+
+                    rule_accept: RegExRule
+                    rule_accept = self.aug_rules[state.accept]
+
+                    accept_symbol = rule_accept.symbol
+                    accept_action = rule_accept.accept_action
+
+                    state_func += indent2 + 'yytext = self.get_text()\n'
+                    if accept_action != '':
+                        accept_action = accept_action.replace('\n', '\n' + indent)
+                        state_func += accept_action + '\n'
+                    else:
+                        state_func += indent2 + 'yytype = ' + accept_symbol + '\n'
+
+                    state_func += indent2 + 'self.unget_char()\n'
+                    state_func += indent2 + 'self.add_token(yytext, yytype)\n'
+                    else_exists = True
                 else:
-                    indent = INDENT2
+                    print('ERROR: Accept Conflict in state {}!'.format(state.id))
+
+            if else_exists == False:
+                if idx_if > 0:                    
                     state_func += INDENT2 + 'else:\n'
-                
-                indent2 = indent + '    '
-                idx_if += 1
-
-                rule_accept: RegExRule
-                rule_accept = self.aug_rules[state.accept]
-
-                accept_symbol = rule_accept.symbol
-                accept_action = rule_accept.accept_action
-
-                state_func += indent2 + 'yytext = self.get_text()\n'
-                if accept_action != '':
-                    accept_action = accept_action.replace('\n', '\n' + indent)
-                    state_func += accept_action + '\n'
-                else:
-                    state_func += indent2 + 'yytype = ' + accept_symbol + '\n'
-
-                state_func += indent2 + 'self.unget_char()\n'
-                state_func += indent2 + 'self.add_token(yytext, yytype)\n'                
+                    state_func += INDENT3 + 'self.error_handler()\n'
 
             state_func += INDENT2 + 'return state\n\n'
 
@@ -326,3 +384,4 @@ class LexerGenerator:
         lexer_file_path = module_name + '.py'
         f = open(lexer_file_path, 'w')
         f.write(lexer_template)
+        f.close()
