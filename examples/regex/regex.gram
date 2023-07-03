@@ -46,7 +46,7 @@ EXP : SUBEXP EXP {
     $$ = $1
 } |
 SUBEXP |
-EXP OR EXP {
+EXP '|' EXP {
     pattern = Pattern()
     pattern.type = PatternType.OR
     pattern.childs = [$1.pattern, $3.pattern]

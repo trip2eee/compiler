@@ -23,31 +23,9 @@ class RegExLexer:
             if state == 0:                
                 if c == '\\':
                     # if escape character
-                    state = 1
-                elif c == '+':
-                    self.add_symbol(type=PLUS, value=c)
-                elif c == '-':
-                    self.add_symbol(type=MINUS, value=c)
-                elif c == '*':
-                    self.add_symbol(type=TIMES, value=c)
-                elif c == '?':
-                    self.add_symbol(type=QUES, value=c)
-                elif c == '(':
-                    self.add_symbol(type=LPAREN, value=c)
-                elif c == ')':
-                    self.add_symbol(type=RPAREN, value=c)
-                elif c == '[':
-                    self.add_symbol(type=LBRACKET, value=c)
-                elif c == ']':
-                    self.add_symbol(type=RBRACKET, value=c)
-                elif c == '{':
-                    self.add_symbol(type=LBRACE, value=c)
-                elif c == '}':
-                    self.add_symbol(type=RBRACE, value=c)
-                elif c == '|':
-                    self.add_symbol(type=OR, value=c)
-                elif c == ',':
-                    self.add_symbol(type=COMMA, value=c)
+                    state = 1                
+                elif c in yy_token_names:
+                    self.add_symbol(type=yy_token_names[c], value=c)
                 else:
                     if '0' <= c <= '9':
                         self.add_symbol(type=DIGIT, value=c)

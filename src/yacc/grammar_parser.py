@@ -42,7 +42,6 @@ class Token:
     def __init__(self):
         self.type = TokenType.NDEF
         self.string = ''
-        self.alias = ''
     def __str__(self):
         return self.string
 
@@ -133,7 +132,7 @@ class GarmmarParser:
 
         self.cur_string = []
         self.cur_reduce_action = ''
-        self.embedded_action = {}        
+        self.embedded_action = {}
         
     def __del__(self):
         if self.f is not None:
@@ -257,40 +256,6 @@ class GarmmarParser:
             token = None
         return token
 
-    def set_token_alias(self):
-        if self.cur_token.string == '=':
-            self.cur_token.alias = 'EQUAL'
-        elif self.cur_token.string == '+':
-            self.cur_token.alias = 'PLUS'
-        elif self.cur_token.string == '-':
-            self.cur_token.alias = 'MINUS'
-        elif self.cur_token.string == '*':
-            self.cur_token.alias = 'TIMES'
-        elif self.cur_token.string == '/':
-            self.cur_token.alias = 'DIV'
-        elif self.cur_token.string == '(':
-            self.cur_token.alias = 'LPAREN'
-        elif self.cur_token.string == ')':
-            self.cur_token.alias = 'RPAREN'
-        elif self.cur_token.string == '[':
-            self.cur_token.alias = 'LBRACKET'
-        elif self.cur_token.string == ']':
-            self.cur_token.alias = 'RBRACKET'
-        elif self.cur_token.string == '{':
-            self.cur_token.alias = 'LBRACE'
-        elif self.cur_token.string == '}':
-            self.cur_token.alias = 'RBRACE'
-        elif self.cur_token.string == '.':
-            self.cur_token.alias = 'DOT'
-        elif self.cur_token.string == ',':
-            self.cur_token.alias = 'COMMA'
-        elif self.cur_token.string == '?':
-            self.cur_token.alias = 'QUES'
-        elif self.cur_token.string == '$':
-            self.cur_token.alias = 'END'
-        else:
-            print('ERROR: Unknown Token')
-
     def tokenize(self):
         self.state = State.IDLE
 
@@ -325,7 +290,7 @@ class GarmmarParser:
                     token.type = TokenType.OR
                     token.string = c
                     self.list_tokens.append(token)
-                
+
                 elif c == C_SEMI:
                     token = Token()
                     token.type = TokenType.SEMI
@@ -371,7 +336,6 @@ class GarmmarParser:
                 if c == "'":
                     self.cur_token.type = TokenType.SYMBOL
                     self.list_tokens.append(self.cur_token)
-                    self.set_token_alias()
                     self.state = State.IDLE
 
                 else:

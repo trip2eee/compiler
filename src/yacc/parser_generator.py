@@ -852,7 +852,7 @@ class ParserGenerator:
         f.write('# Auxiliary Routines\n')
         f.write(self.grammar_parser.aux_routines)
         f.write('\n')
-        
+
         f.write('# Parsing Table\n')
         symbol_table = []
         symbol_id_table = {}
@@ -885,24 +885,38 @@ class ParserGenerator:
         symbol_table.append(symbol)
         symbol_id_table[symbol] = symbol_id
         symbol_id += 1
-
+        
         f.write('NUM_TERMINALS = {}\n'.format(NUM_TERMINALS))
         f.write('NUM_NON_TERMINALS = {}\n'.format(NUM_NON_TERMINALS))
 
         f.write('# Terminals\n')
         for idx_rule in range(NUM_TERMINALS+1):
             symbol = symbol_table[idx_rule]
-            # if the symbol is special character, replace with alias.
-            alias = self.find_symbol_alias(symbol)
-            if alias == '':
+            # if the symbol does not begin with special character
+            if 'a' <= symbol[0] <= 'z' or 'A' <= symbol[0] <= 'Z' or symbol[0] == '_':
                 f.write('{} = {}\n'.format(symbol, symbol_id_table[symbol]))
-            else:
-                f.write('{} = {}  # {}\n'.format(alias, symbol_id_table[symbol], symbol))
 
         f.write('# Non-Terminals\n')
         for idx_rule in range(NUM_TERMINALS+1, NUM_TERMINALS + NUM_NON_TERMINALS + 2):
             symbol = symbol_table[idx_rule]
             f.write('{} = {}\n'.format(symbol, symbol_id_table[symbol]))
+
+        str_token_names = ''
+        str_token_names += 'yy_token_names = {\n    '
+        for i, symbol in enumerate(symbol_id_table):
+            if i > 0:
+                str_token_names += ', '
+                if i % 10 == 0:
+                  str_token_names += '\n    '
+
+            str_token_names += "'"
+            str_token_names += symbol
+            str_token_names += "':"
+            str_token_names += str(i)
+
+        str_token_names += '\n}\n'
+
+        f.write(str_token_names)
 
         f.write('# RULE table\n')
         NUM_RULES = len(self.aug_rules)
@@ -1001,7 +1015,8 @@ class ParserGenerator:
                 action_code = action_code.replace('$', 'p')
 
                 action_code = '    result = Symbol()\n' + action_code
-                action_code += '\n    result.type = {}'.format(rule.left_symbol)
+                symbol_id = symbol_id_table[rule.left_symbol]
+                action_code += '\n    result.type = {}  # {}'.format(symbol_id, rule.left_symbol)
                 
                 action_code += '\n    return result\n'
 
