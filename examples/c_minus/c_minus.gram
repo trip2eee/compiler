@@ -1,0 +1,130 @@
+# C-- language
+%{
+import enum
+
+class Symbol:
+    def __init__(self):
+        self.type = None
+        self.text = None
+        self.value = None
+        self.node = None
+        self.idx_line = 0
+        self.idx_col = 0
+
+class NodeType(enum.IntEnum):
+    EXP = 0
+    STMT = 1
+    IF_STMT = 2
+    TERM = 3
+
+class Node:
+    def __init__(self):
+        self.type = NodeType.EXP
+        self.next = None
+        self.childs = [None] * 4
+
+%}
+
+%%
+
+PROGRAM : STMT_SEQ {
+    $$ = $1
+} | 
+COMMENT;
+
+STMT_SEQ : STMT_SEQ STMT {
+    $$ = $1
+    node = $1.node
+
+    while node.next is not None:
+        node = node.next
+    node.next = $2.node
+    
+} | 
+STMT {
+    $$ = $1
+} |
+COMMENT;
+
+STMT : EXP ';' | IF_STMT | FOR_STMT | ';'
+;
+
+IF_STMT : IF '(' EXP ')' '{' STMT_SEQ '}' {
+    node = Node()
+    node.type = NodeType.IF_STMT
+    node.childs[0] = $3
+    node.childs[1] = $6
+
+    $$.node = node
+} | 
+IF '(' EXP ')' '{' STMT_SEQ '}' ELSE '{' STMT_SEQ '}' {
+    node = Node()
+    node.type = NodeType.IF_STMT
+    node.childs[0] = $3
+    node.childs[1] = $6
+    node.childs[2] = $10
+
+    $$.node = node
+}
+;
+
+FOR_STMT : FOR '(' EXP ';' EXP ';' EXP ')' '{' STMT_SEQ '}' {
+    node = Node()
+    node.type = NodeType.FOR_STMT
+    node.childs[0] = $3
+    node.childs[1] = $5
+    node.childs[2] = $7
+    node.childs[3] = $10
+
+    $$.node = node
+};
+
+EXP : ASSIGN_EXP |
+EXP ADDOP TERM {
+    node = Node()
+    node.type = NodeType.EXP
+    node.childs[0] = $1
+    node.childs[1] = $2
+    node.childs[2] = $3
+
+    $$.node = node
+} |
+TERM;
+
+ASSIGN_EXP : ID '=' EXP {
+    node = Node()
+    node.type = NodeType.EXP
+    node.childs[0] = $1
+    node.childs[1] = $2
+    node.childs[2] = $3
+
+    $$.node = node
+}
+;
+
+ADDOP : '+' | '-';
+
+TERM: TERM MULOP FACTOR {
+    node = Node()
+    node.type = NodeType.TERM
+    node.childs[0] = $1
+    node.childs[1] = $2
+    node.childs[2] = $3
+
+    $$.node = node
+}| 
+FACTOR;
+
+MULOP : '*' | '/';
+
+FACTOR : 
+NUMBER | 
+ID | 
+'(' EXP ')' {
+    $$ = $2
+};
+
+%%
+
+
+
