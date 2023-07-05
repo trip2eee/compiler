@@ -83,6 +83,8 @@ class LexerGenerator:
             
             aug_rules, _ = regex.augment_rules(regex.pattern)
 
+            # print(RegExUtils.symbols_to_str(regex.pattern))
+
             # append augmented rules
             for r in aug_rules:
                 # duplication check
@@ -351,8 +353,7 @@ class LexerGenerator:
 
                     rule_accept: RegExRule
                     rule_accept = self.aug_rules[state.accept]
-
-                    accept_symbol = rule_accept.symbol
+                    
                     accept_action = rule_accept.accept_action
 
                     state_func += indent2 + 'yytext = self.get_text()\n'
@@ -360,7 +361,19 @@ class LexerGenerator:
                         accept_action = accept_action.replace('\n', '\n' + indent)
                         state_func += accept_action + '\n'
                     else:
-                        state_func += indent2 + 'yytype = ' + accept_symbol + '\n'
+
+                        # yytype = yy_token_names['" + cur_string + "']"
+                        # state_func += indent2 + 'yytype = ' + accept_symbol + '\n'
+                        accept_symbol = ''
+                        pattern = rule_accept
+                        while pattern is not None:
+                            if pattern.type == PatternType.VALUE:
+                                accept_symbol += pattern.value
+                            else:
+                                print('Not supported lexical rule')
+                            pattern = pattern.next
+
+                        state_func += indent2 + "yytype = yy_token_names['" + accept_symbol + "']\n"
 
                     state_func += indent2 + 'self.unget_char()\n'
                     state_func += indent2 + 'self.add_token(yytext, yytype)\n'

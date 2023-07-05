@@ -151,7 +151,7 @@ class RegExUtils:
             p1 = p1.next
             p2 = p2.next
 
-        if p1 is not None:
+        if p1 is not None or p2 is not None:
             result = False
 
         return result

@@ -142,7 +142,7 @@ class LexParser:
                 break
 
             if self.state == State.IDLE:
-                if token.type == TokenType.STRING:                    
+                if token.type == TokenType.STRING:
                     self.cur_string = token.string
                     self.state = State.SYMBOL
                 elif token.type == TokenType.NEW_LINE:
@@ -153,18 +153,33 @@ class LexParser:
 
                     rule = Rule()
                     rule.symbol = token.string
+                    rule.string = self.cur_string
+
                     self.rules.append(rule)
                     self.cur_rule = rule
-                    self.cur_rule.string = self.cur_string
 
                 elif token.type == TokenType.ACTION:
                    
                     rule = Rule()
                     rule.symbol = token.string
+                    rule.string = self.cur_string
+                    rule.accept_action = token.string
+
                     self.rules.append(rule)
                     self.cur_rule = rule
-                    self.cur_rule.string = self.cur_string
-                    self.cur_rule.accept_action = token.string
+
+                elif token.type == TokenType.NEW_LINE:
+                    rule = Rule()
+                    rule.symbol = self.cur_string
+                    rule.string = self.cur_string
+
+                    self.rules.append(rule)
+                    self.cur_rule = rule
+
+                    # cur_string = self.cur_string
+                    # if len(cur_string) > 1 and cur_string[0] == '\\':
+                    #     cur_string = cur_string[1:]
+                    # self.cur_rule.accept_action = "\n    yytype = yy_token_names['" + cur_string + "']"
 
                 else:
                     print('ERROR')

@@ -1,4 +1,4 @@
-from examples.regex.regex_parser_table import *
+from src.lex.regex_parser_table import *
 
 class RegExLexer:
     def __init__(self):

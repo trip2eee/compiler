@@ -49,7 +49,13 @@ class Lexer:
         return self.code[self.idx_start:self.idx_char-1]
 
     def add_token(self, yytext, yytype):
-         print('{} - {} in {}:{}'.format(yytext, yytype, self.idx_start_line+1, self.idx_start_col+1))
+        print('{} - {} in {}:{}'.format(yytext, yytype, self.idx_start_line+1, self.idx_start_col+1))
+        symbol = Symbol()
+        symbol.type = yytype
+        symbol.text = yytext
+        symbol.idx_line = self.idx_start_line+1
+        symbol.idx_col = self.idx_start_col+1
+        self.list_tokens.append(symbol)
 
     def error_handler(self):
         text = self.code[self.idx_start:self.idx_char]
