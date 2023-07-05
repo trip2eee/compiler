@@ -29,18 +29,9 @@ class CalcLexer:
                 if '0' <= c <= '9':
                     num = c
                     state = 1
-                elif c == '+':
-                    self.add_symbol(type=PLUS, value=c)
-                elif c == '-':
-                    self.add_symbol(type=MINUS, value=c)
-                elif c == '*':
-                    self.add_symbol(type=TIMES, value=c)
-                elif c == '/':
-                    self.add_symbol(type=DIV, value=c)
-                elif c == '(':
-                    self.add_symbol(type=LPAREN, value=c)
-                elif c == ')':
-                    self.add_symbol(type=RPAREN, value=c)
+                elif c in yy_token_names:
+                    self.add_symbol(type=yy_token_names[c], value=c)
+                
             elif state == 1:
                 if '0' <= c <= '9':
                     num += c

@@ -1,5 +1,8 @@
+import sys
+sys.path += '../../'
+
 from examples.calc.calc_parser_table import *
-from examples.calc.calc_parser import parse
+from examples.calc.calc_parser import Parser
 from examples.calc.calc_lexer import CalcLexer
 
 class Calc:
@@ -9,7 +12,8 @@ class Calc:
     
     def compute(self, expr):
         list_symbol = self.lexer.lexer(expr)
-        result = parse(list_symbol)
+        parser = Parser()
+        result = parser.parse(list_symbol)
         
         return result
 

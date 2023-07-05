@@ -12,6 +12,8 @@ GTE = 9
 EQUAL = 10
 LT = 11
 GT = 12
+MUL = 13
+DIV = 14
 %}
 
 %%
@@ -39,6 +41,8 @@ GT = 12
 
 '\+'  PLUS
 '\-'  MINUS
+'\*'  MUL
+'\/'  DIV
 '='  ASSIGN
 '==' EQUAL
 '=<' LTE

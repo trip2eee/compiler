@@ -55,7 +55,7 @@ class Parser:
                     p = stack.pop()
                     params.insert(0, p.symbol)
 
-                state = stack[-1].state            
+                state = stack[-1].state
 
                 # Call Reduce Function
                 if reduce==1:

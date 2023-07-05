@@ -1015,8 +1015,7 @@ class ParserGenerator:
                 action_code = action_code.replace('$', 'p')
 
                 action_code = '    result = Symbol()\n' + action_code
-                symbol_id = symbol_id_table[rule.left_symbol]
-                action_code += '\n    result.type = {}  # {}'.format(symbol_id, rule.left_symbol)
+                action_code += '\n    result.type = {}'.format(rule.left_symbol)
                 
                 action_code += '\n    return result\n'
 
@@ -1057,8 +1056,8 @@ class ParserGenerator:
                 f.write(action_code)
                 f.write('\n')
 
-                embedded_action_calls += INDENT1 + 'if symbol.type=={}:\n'.format(key)
-                embedded_action_calls += INDENT2 + 'embedded_{}(symbol)\n'.format(key)
+                embedded_action_calls += INDENT2 + 'if symbol.type=={}:\n'.format(key)
+                embedded_action_calls += INDENT3 + 'embedded_{}(symbol)\n'.format(key)
 
         f.close()
 
