@@ -54,7 +54,7 @@ IF_STMT : IF '(' EXP ')' '{' STMT_SEQ '}' {
     node.type = NodeType.IF_STMT
     node.childs[0] = $3
     node.childs[1] = $6
-
+    $$ = Symbol()
     $$.node = node
 } | 
 IF '(' EXP ')' '{' STMT_SEQ '}' ELSE '{' STMT_SEQ '}' {
@@ -63,7 +63,7 @@ IF '(' EXP ')' '{' STMT_SEQ '}' ELSE '{' STMT_SEQ '}' {
     node.childs[0] = $3
     node.childs[1] = $6
     node.childs[2] = $10
-
+    $$ = Symbol()
     $$.node = node
 }
 ;
@@ -75,7 +75,7 @@ FOR_STMT : FOR '(' EXP ';' EXP ';' EXP ')' '{' STMT_SEQ '}' {
     node.childs[1] = $5
     node.childs[2] = $7
     node.childs[3] = $10
-
+    $$ = Symbol()
     $$.node = node
 };
 
@@ -86,7 +86,7 @@ EXP ADDOP TERM {
     node.childs[0] = $1
     node.childs[1] = $2
     node.childs[2] = $3
-
+    $$ = Symbol()
     $$.node = node
 } |
 TERM;
@@ -97,7 +97,7 @@ ASSIGN_EXP : ID '=' EXP {
     node.childs[0] = $1
     node.childs[1] = $2
     node.childs[2] = $3
-
+    $$ = Symbol()
     $$.node = node
 }
 ;
@@ -110,7 +110,7 @@ TERM: TERM MULOP FACTOR {
     node.childs[0] = $1
     node.childs[1] = $2
     node.childs[2] = $3
-
+    $$ = Symbol()
     $$.node = node
 }| 
 FACTOR;

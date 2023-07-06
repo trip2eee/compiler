@@ -8,6 +8,7 @@ class Symbol:
 %%
 exp : 
 exp addop term {
+    $$ = Symbol()
     if $2.value == '+':
         $$.value = $1.value + $3.value
     else:
@@ -21,6 +22,7 @@ term :
 term {
     print('term: ' + str($1.value)) # embedded action test
 } mulop factor {
+    $$ = Symbol()
     if $2.value == '*':
         $$.value = $1.value * $3.value
     else:
@@ -36,6 +38,7 @@ factor :
 } |
 number | 
 addop factor {
+    $$ = Symbol()
     if $1.value == '+':
         $$.value = $2.value
     else:
