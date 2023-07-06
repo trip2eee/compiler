@@ -356,22 +356,32 @@ class LexerGenerator:
                     
                     accept_action = rule_accept.accept_action
 
-                    state_func += indent2 + 'yytext = self.get_text()\n'
+                    state_func += indent2 + 'yytext = self.get_text()\n'                    
+                    
                     if accept_action != '':
+                        # if the symbol is defined as 
+                        # 'regex' {
+                        #     ACTION code
+                        # }
                         accept_action = accept_action.replace('\n', '\n' + indent)
                         state_func += accept_action + '\n'
                     else:
-
-                        # yytype = yy_token_names['" + cur_string + "']"
-                        # state_func += indent2 + 'yytype = ' + accept_symbol + '\n'
-                        accept_symbol = ''
-                        pattern = rule_accept
-                        while pattern is not None:
-                            if pattern.type == PatternType.VALUE:
-                                accept_symbol += pattern.value
-                            else:
-                                print('Not supported lexical rule')
-                            pattern = pattern.next
+                        
+                        if '' != rule_accept.symbol:
+                            # if the symbol is defined as
+                            # 'regex' SYMBOL
+                            accept_symbol = rule_accept.symbol
+                        else:
+                            # if the symbol is defined as
+                            # 'regex'
+                            accept_symbol = ''
+                            pattern = rule_accept
+                            while pattern is not None:
+                                if pattern.type == PatternType.VALUE:
+                                    accept_symbol += pattern.value
+                                else:
+                                    print('Not supported lexical rule')
+                                pattern = pattern.next
 
                         state_func += indent2 + "yytype = yy_token_names['" + accept_symbol + "']\n"
 

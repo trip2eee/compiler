@@ -89,25 +89,39 @@ class Parser:
                 elif reduce==15:
                     symbol = reduce_rule_15(params[0])
                 elif reduce==16:
-                    symbol = reduce_rule_16(params[0], params[1], params[2])
+                    symbol = reduce_rule_16(params[0])
                 elif reduce==17:
                     symbol = reduce_rule_17(params[0])
                 elif reduce==18:
                     symbol = reduce_rule_18(params[0])
                 elif reduce==19:
-                    symbol = reduce_rule_19(params[0], params[1], params[2])
+                    symbol = reduce_rule_19(params[0])
                 elif reduce==20:
                     symbol = reduce_rule_20(params[0])
                 elif reduce==21:
-                    symbol = reduce_rule_21(params[0])
+                    symbol = reduce_rule_21(params[0], params[1], params[2])
                 elif reduce==22:
                     symbol = reduce_rule_22(params[0])
                 elif reduce==23:
-                    symbol = reduce_rule_23(params[0])
+                    symbol = reduce_rule_23(params[0], params[1], params[2])
                 elif reduce==24:
                     symbol = reduce_rule_24(params[0])
                 elif reduce==25:
-                    symbol = reduce_rule_25(params[0], params[1], params[2])
+                    symbol = reduce_rule_25(params[0])
+                elif reduce==26:
+                    symbol = reduce_rule_26(params[0], params[1], params[2])
+                elif reduce==27:
+                    symbol = reduce_rule_27(params[0])
+                elif reduce==28:
+                    symbol = reduce_rule_28(params[0])
+                elif reduce==29:
+                    symbol = reduce_rule_29(params[0])
+                elif reduce==30:
+                    symbol = reduce_rule_30(params[0])
+                elif reduce==31:
+                    symbol = reduce_rule_31(params[0])
+                elif reduce==32:
+                    symbol = reduce_rule_32(params[0], params[1], params[2])
 
                 else:
                     symbol = None

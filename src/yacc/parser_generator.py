@@ -1015,7 +1015,6 @@ class ParserGenerator:
                 action_code = action_code.replace('$', 'p')
 
                 action_code += '\n    result.type = {}'.format(rule.left_symbol)
-                
                 action_code += '\n    return result\n'
 
                 action_code = action_code.replace('$', 'p')

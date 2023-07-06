@@ -1,9 +1,11 @@
-value = 10;
+int value = 10;
+int k = 100;
 
-k = 100;
-
-if(k=10)
+if(k==10)
 {
-    ffff = 10;
+    value = 11;
 }
-
+else
+{
+    value = 12;
+}

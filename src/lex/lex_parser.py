@@ -170,17 +170,11 @@ class LexParser:
 
                 elif token.type == TokenType.NEW_LINE:
                     rule = Rule()
-                    rule.symbol = self.cur_string
+                    rule.symbol = ''
                     rule.string = self.cur_string
 
                     self.rules.append(rule)
                     self.cur_rule = rule
-
-                    # cur_string = self.cur_string
-                    # if len(cur_string) > 1 and cur_string[0] == '\\':
-                    #     cur_string = cur_string[1:]
-                    # self.cur_rule.accept_action = "\n    yytype = yy_token_names['" + cur_string + "']"
-
                 else:
                     print('ERROR')
             

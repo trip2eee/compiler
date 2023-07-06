@@ -35,11 +35,9 @@ COMMENT;
 STMT_SEQ : STMT_SEQ STMT {
     $$ = $1
     node = $1.node
-
     while node.next is not None:
         node = node.next
     node.next = $2.node
-    
 } | 
 STMT {
     $$ = $1
@@ -79,8 +77,22 @@ FOR_STMT : FOR '(' EXP ';' EXP ';' EXP ')' '{' STMT_SEQ '}' {
     $$.node = node
 };
 
-EXP : ASSIGN_EXP |
-EXP ADDOP TERM {
+EXP : SIMPLE_EXP | 
+SIMPLE_EXP COMP_OP SIMPLE_EXP {
+    node = Node()
+    node.type = NodeType.EXP
+    node.childs[0] = $1
+    node.childs[1] = $2
+    node.childs[2] = $3
+    $$ = Symbol()
+    $$.node = node
+}
+;
+
+COMP_OP : EQU | LTE | GTE | LT | GT;
+
+SIMPLE_EXP : ASSIGN_EXP |
+TERM ADDOP TERM {
     node = Node()
     node.type = NodeType.EXP
     node.childs[0] = $1
@@ -89,7 +101,8 @@ EXP ADDOP TERM {
     $$ = Symbol()
     $$.node = node
 } |
-TERM;
+TERM
+;
 
 ASSIGN_EXP : ID '=' EXP {
     node = Node()
