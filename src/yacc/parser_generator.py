@@ -227,6 +227,7 @@ class ParserGenerator:
 
         self.start_symbol = None    # the start symbol of program (the first non-terminal of grammar file)
         self.states = []            # List of states
+        self.verbose = True
 
         State.STATE_ID = 0
         self.grammar_parser = None
@@ -405,7 +406,8 @@ class ParserGenerator:
         s0 = State(closure)
         self.states.append(s0)
 
-        s0.print()
+        if self.verbose:
+            s0.print()
 
         state:State
         for state in self.states:
@@ -415,10 +417,12 @@ class ParserGenerator:
                 new_state = State(closure)
 
                 if new_state not in self.states:
-                    print('GOTO(I{}, {}) = '.format(state.id, m), end='')
+                    if self.verbose:
+                        print('GOTO(I{}, {}) = '.format(state.id, m), end='')
 
-                    self.states.append(new_state)                    
-                    new_state.print()
+                    self.states.append(new_state)
+                    if self.verbose:
+                        new_state.print()
 
                     # mark the next state to be used in construction of parsing table.
                     state.next_state_table[m] = new_state.id
@@ -446,7 +450,8 @@ class ParserGenerator:
                     else:
                         new_state.prev_state_table[m] = [state.id]
 
-                    print('GOTO(I{}, {}) = I{}'.format(state.id, m, new_state_id))
+                    if self.verbose:
+                        print('GOTO(I{}, {}) = I{}'.format(state.id, m, new_state_id))
 
                     State.STATE_ID -= 1
 
@@ -565,7 +570,9 @@ class ParserGenerator:
         closure = self.compute_LR1_closures([item0])
         s0 = State(closure)
         self.states.append(s0)
-        s0.print()
+
+        if self.verbose:
+            s0.print()
 
         changed = True
         while changed:
@@ -579,13 +586,15 @@ class ParserGenerator:
                     new_state = State(closure)
 
                     if new_state not in self.states:
-                        print('GOTO(I{}, {}) = '.format(state.id, m), end='')                        
+                        if self.verbose:
+                            print('GOTO(I{}, {}) = '.format(state.id, m), end='')                        
                         self.states.append(new_state)
 
                         # mark the next state to be used in construction of parsing table.
                         state.next_state_table[m] = new_state.id
 
-                        new_state.print()
+                        if self.verbose:
+                            new_state.print()
                         # changed = True
                     else:
 
@@ -596,7 +605,9 @@ class ParserGenerator:
                                 break
                         
                         state.next_state_table[m] = next_state_id
-                        print('GOTO(I{}, {}) = I{}'.format(state.id, m, next_state_id))
+    
+                        if self.verbose:
+                            print('GOTO(I{}, {}) = I{}'.format(state.id, m, next_state_id))
 
                         State.STATE_ID -= 1
 
@@ -639,7 +650,7 @@ class ParserGenerator:
                             state.action['$'].action = Action.REDUCE
                             state.action['$'].reduction_rule = item.rule_id
 
-            state.print_table_row()        
+            state.print_table_row()
         print('done')
 
     def clear_search_flag(self):
@@ -663,7 +674,8 @@ class ParserGenerator:
         state: State
         for state in self.states:
             
-            print(state.id)
+            if self.verbose:
+                print(state.id)
 
             item: LRItem
             for item in state.closure.items:
@@ -693,7 +705,8 @@ class ParserGenerator:
                     else:
                         list_prev_states = []
                     
-                    print('cur item: I' + str(cur_state.id) + ' ' + str(cur_item))
+                    if self.verbose:
+                        print('cur item: I' + str(cur_state.id) + ' ' + str(cur_item))
 
                     if cur_item.mark == 0:
                         # add lookahead
@@ -706,13 +719,14 @@ class ParserGenerator:
                                 else:
                                     item.add_lookahead(self.rules[la].first)
 
-                                print('add first 1: I' + str(cur_state.id) + ' ' + la)
-                                if la in self.terminals:
-                                    print(la)
-                                else:
-                                    for f in self.rules[la].first:
-                                        print('{} '.format(f), end='')
-                                    print('')
+                                if self.verbose:
+                                    print('add first 1: I' + str(cur_state.id) + ' ' + la)
+                                    if la in self.terminals:
+                                        print(la)
+                                    else:
+                                        for f in self.rules[la].first:
+                                            print('{} '.format(f), end='')
+                                        print('')
 
                         # epsilon transition [A -> .a], [B -> .A]
                         trans_item: LRItem
@@ -727,8 +741,9 @@ class ParserGenerator:
                                 new_elem.state = cur_state
                                 new_elem.epsilon = True
                                 stack_search.append(new_elem)
-
-                                print('epsilon transition 1: I' + str(cur_state.id) + ' ' + str(cur_item) + ' -> I' + str(cur_state.id) + ' ' + str(trans_item))
+                                
+                                if self.verbose:
+                                    print('epsilon transition 1: I' + str(cur_state.id) + ' ' + str(cur_item) + ' -> I' + str(cur_state.id) + ' ' + str(trans_item))
 
                     # transition to the previous state
                     for idx_prev_state in list_prev_states:
@@ -748,15 +763,19 @@ class ParserGenerator:
                                     new_elem.mark_symbol = cur_item.left_symbol
                                     new_elem.state = prev_state                                    
                                     stack_search.append(new_elem)
-                                    print('transition : I' + str(cur_state.id) + ' ' + str(cur_item) + ' -> I' + str(prev_state.id) + ' ' + str(prev_item))
 
-            state.print()
+                                    if self.verbose:
+                                        print('transition : I' + str(cur_state.id) + ' ' + str(cur_item) + ' -> I' + str(prev_state.id) + ' ' + str(prev_item))
+            if self.verbose:
+                state.print()
 
     def construct_lalr_parsing_table(self):
         """ This method constructs LALR parsing table
         """
         self.compute_lookahead()
-        print('')
+
+        if self.verbose:
+            print('')
         
         state: State
         for state in self.states:
@@ -798,7 +817,7 @@ class ParserGenerator:
                                 state.action[f].reduction_rule = item.rule_id
                             else:
                                 if state.action[f].action == Action.SHIFT:
-                                    print('shift - reduce conflict')
+                                    print('ERROR: shift - reduce conflict')
 
         state: State
         state.print_table_header()
@@ -807,7 +826,9 @@ class ParserGenerator:
 
         print('done')
 
-    def generate_parser(self, grammar_path):
+    def generate_parser(self, grammar_path, verbose=True):
+        self.verbose = verbose
+
         self.open(grammar_path)
         self.compute_LR0_items()
         self.construct_lalr_parsing_table()

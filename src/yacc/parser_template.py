@@ -86,13 +86,16 @@ class Parser:
             else:
                 # Error
                 # Enter panic mode for error recovery.
+                print('Syntax Error:')
                 while shift == -1 and reduce == -1:
                     elem:StackElem
                     elem = stack.pop()
-                    print(elem.symbol.value)
 
-                    state = stack[-1].state
-                    shift = tbl_shift[state][symbol.type]
-                    reduce = tbl_reduce[state][symbol.type]
+                    if elem.symbol is not None:
+                        print(elem.symbol.value)
+
+                        state = stack[-1].state
+                        shift = tbl_shift[state][symbol.type]
+                        reduce = tbl_reduce[state][symbol.type]
 
         return result

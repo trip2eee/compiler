@@ -63,39 +63,39 @@ class Parser:
                 elif reduce==2:
                     symbol = reduce_rule_2(params[0])
                 elif reduce==3:
-                    symbol = reduce_rule_3(params[0], params[1])
+                    symbol = reduce_rule_3(params[0])
                 elif reduce==4:
                     symbol = reduce_rule_4(params[0])
                 elif reduce==5:
                     symbol = reduce_rule_5(params[0])
                 elif reduce==6:
-                    symbol = reduce_rule_6(params[0], params[1])
+                    symbol = reduce_rule_6(params[0])
                 elif reduce==7:
-                    symbol = reduce_rule_7(params[0])
+                    symbol = reduce_rule_7(params[0], params[1], params[2])
                 elif reduce==8:
-                    symbol = reduce_rule_8(params[0])
+                    symbol = reduce_rule_8(params[0], params[1], params[2], params[3], params[4])
                 elif reduce==9:
-                    symbol = reduce_rule_9(params[0])
+                    symbol = reduce_rule_9(params[0], params[1])
                 elif reduce==10:
-                    symbol = reduce_rule_10(params[0], params[1], params[2], params[3], params[4], params[5], params[6])
+                    symbol = reduce_rule_10(params[0])
                 elif reduce==11:
-                    symbol = reduce_rule_11(params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7], params[8], params[9], params[10])
+                    symbol = reduce_rule_11(params[0])
                 elif reduce==12:
-                    symbol = reduce_rule_12(params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7], params[8], params[9], params[10])
+                    symbol = reduce_rule_12(params[0], params[1])
                 elif reduce==13:
                     symbol = reduce_rule_13(params[0])
                 elif reduce==14:
-                    symbol = reduce_rule_14(params[0], params[1], params[2])
+                    symbol = reduce_rule_14(params[0])
                 elif reduce==15:
                     symbol = reduce_rule_15(params[0])
                 elif reduce==16:
                     symbol = reduce_rule_16(params[0])
                 elif reduce==17:
-                    symbol = reduce_rule_17(params[0])
+                    symbol = reduce_rule_17(params[0], params[1], params[2], params[3], params[4], params[5], params[6])
                 elif reduce==18:
-                    symbol = reduce_rule_18(params[0])
+                    symbol = reduce_rule_18(params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7], params[8], params[9], params[10])
                 elif reduce==19:
-                    symbol = reduce_rule_19(params[0])
+                    symbol = reduce_rule_19(params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7], params[8], params[9], params[10])
                 elif reduce==20:
                     symbol = reduce_rule_20(params[0])
                 elif reduce==21:
@@ -103,25 +103,39 @@ class Parser:
                 elif reduce==22:
                     symbol = reduce_rule_22(params[0])
                 elif reduce==23:
-                    symbol = reduce_rule_23(params[0], params[1], params[2])
+                    symbol = reduce_rule_23(params[0])
                 elif reduce==24:
                     symbol = reduce_rule_24(params[0])
                 elif reduce==25:
                     symbol = reduce_rule_25(params[0])
                 elif reduce==26:
-                    symbol = reduce_rule_26(params[0], params[1], params[2])
+                    symbol = reduce_rule_26(params[0])
                 elif reduce==27:
                     symbol = reduce_rule_27(params[0])
                 elif reduce==28:
-                    symbol = reduce_rule_28(params[0])
+                    symbol = reduce_rule_28(params[0], params[1], params[2])
                 elif reduce==29:
                     symbol = reduce_rule_29(params[0])
                 elif reduce==30:
-                    symbol = reduce_rule_30(params[0])
+                    symbol = reduce_rule_30(params[0], params[1], params[2])
                 elif reduce==31:
                     symbol = reduce_rule_31(params[0])
                 elif reduce==32:
-                    symbol = reduce_rule_32(params[0], params[1], params[2])
+                    symbol = reduce_rule_32(params[0])
+                elif reduce==33:
+                    symbol = reduce_rule_33(params[0], params[1], params[2])
+                elif reduce==34:
+                    symbol = reduce_rule_34(params[0])
+                elif reduce==35:
+                    symbol = reduce_rule_35(params[0])
+                elif reduce==36:
+                    symbol = reduce_rule_36(params[0])
+                elif reduce==37:
+                    symbol = reduce_rule_37(params[0])
+                elif reduce==38:
+                    symbol = reduce_rule_38(params[0])
+                elif reduce==39:
+                    symbol = reduce_rule_39(params[0], params[1], params[2])
 
                 else:
                     symbol = None
@@ -151,13 +165,16 @@ class Parser:
             else:
                 # Error
                 # Enter panic mode for error recovery.
+                print('Syntax Error:')
                 while shift == -1 and reduce == -1:
                     elem:StackElem
                     elem = stack.pop()
-                    print(elem.symbol.value)
 
-                    state = stack[-1].state
-                    shift = tbl_shift[state][symbol.type]
-                    reduce = tbl_reduce[state][symbol.type]
+                    if elem.symbol is not None:
+                        print(elem.symbol.value)
+
+                        state = stack[-1].state
+                        shift = tbl_shift[state][symbol.type]
+                        reduce = tbl_reduce[state][symbol.type]
 
         return result

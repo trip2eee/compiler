@@ -2,27 +2,37 @@
 %{
 import enum
 
+# input: symbol/node -> symbol?
+# return: symbol
+
+class SymbolTable:
+    def __init__(self):
+        # symbol[name] = [type, value]
+        self.symbols = {}
+        self.parent = None
+        self.child = None
+
+
+class OpType(enum.IntEnum):
+    TERMINAL = 0
+    EXP = 1
+    STMT = 2
+    IF_STMT = 3
+    TERM = 4
+    VAR_DECL = 5
+
 class Symbol:
     def __init__(self):
         self.type = None
         self.text = None
         self.value = None
-        self.node = None
         self.idx_line = 0
         self.idx_col = 0
+        self.symbol_table = SymbolTable()
 
-class NodeType(enum.IntEnum):
-    EXP = 0
-    STMT = 1
-    IF_STMT = 2
-    TERM = 3
-
-class Node:
-    def __init__(self):
-        self.type = NodeType.EXP
+        self.op_type = OpType.TERMINAL
         self.next = None
         self.childs = [None] * 4
-
 %}
 
 %%
@@ -32,60 +42,82 @@ PROGRAM : STMT_SEQ {
 } | 
 COMMENT;
 
+TYPE_SPEC : INT | FLOAT | CHAR | VOID;
+
+VAR_DECL :
+TYPE_SPEC ID ';'{    
+    
+    $$ = Symbol()
+    $$.op_type = OpType.VAR_DECL
+    $$.childs[0] = $1
+    $$.childs[1] = $2
+
+    $$.symbol_table.symbols[$2.text] = [$1.text, 0]
+
+} | 
+TYPE_SPEC ID '=' EXP ';'{   
+    $$ = Symbol()
+    $$.op_type = OpType.VAR_DECL
+    $$.childs[0] = $1
+    $$.childs[1] = $2
+    $$.childs[2] = $4
+
+    $$.symbol_table.symbols[$2.text] = [$1.text, $4.text]
+};
+
 STMT_SEQ : STMT_SEQ STMT {
     $$ = $1
-    node = $1.node
+    node = $1
     while node.next is not None:
         node = node.next
-    node.next = $2.node
+    $$.next = $2
+
+    # merge symbol tables
+    for key in $2.symbol_table.symbols:
+        if key not in $$.symbol_table.symbols:
+            $$.symbol_table.symbols[key] = $2.symbol_table.symbols[key]
 } | 
 STMT {
     $$ = $1
 } |
 COMMENT;
 
-STMT : EXP ';' | IF_STMT | FOR_STMT | ';'
+STMT : EXP ';' | IF_STMT | FOR_STMT | ';' | VAR_DECL
 ;
 
-IF_STMT : IF '(' EXP ')' '{' STMT_SEQ '}' {
-    node = Node()
-    node.type = NodeType.IF_STMT
-    node.childs[0] = $3
-    node.childs[1] = $6
+IF_STMT : IF '(' EXP ')' '{' STMT_SEQ '}' {    
     $$ = Symbol()
-    $$.node = node
+    $$.op_type = OpType.IF_STMT
+    $$.childs[0] = $3
+    $$.childs[1] = $6
 } | 
 IF '(' EXP ')' '{' STMT_SEQ '}' ELSE '{' STMT_SEQ '}' {
-    node = Node()
-    node.type = NodeType.IF_STMT
-    node.childs[0] = $3
-    node.childs[1] = $6
-    node.childs[2] = $10
+
     $$ = Symbol()
-    $$.node = node
+    $$.op_type = OpType.IF_STMT
+    $$.childs[0] = $3
+    $$.childs[1] = $6
+    $$.childs[2] = $10
 }
 ;
 
 FOR_STMT : FOR '(' EXP ';' EXP ';' EXP ')' '{' STMT_SEQ '}' {
-    node = Node()
-    node.type = NodeType.FOR_STMT
-    node.childs[0] = $3
-    node.childs[1] = $5
-    node.childs[2] = $7
-    node.childs[3] = $10
+
     $$ = Symbol()
-    $$.node = node
+    $$.op_type = OpType.FOR_STMT
+    $$.childs[0] = $3
+    $$.childs[1] = $5
+    $$.childs[2] = $7
+    $$.childs[3] = $10
 };
 
 EXP : SIMPLE_EXP | 
 SIMPLE_EXP COMP_OP SIMPLE_EXP {
-    node = Node()
-    node.type = NodeType.EXP
-    node.childs[0] = $1
-    node.childs[1] = $2
-    node.childs[2] = $3
     $$ = Symbol()
-    $$.node = node
+    $$.op_type = OpType.EXP
+    $$.childs[0] = $1
+    $$.childs[1] = $2
+    $$.childs[2] = $3
 }
 ;
 
@@ -93,38 +125,32 @@ COMP_OP : EQU | LTE | GTE | LT | GT;
 
 SIMPLE_EXP : ASSIGN_EXP |
 TERM ADDOP TERM {
-    node = Node()
-    node.type = NodeType.EXP
-    node.childs[0] = $1
-    node.childs[1] = $2
-    node.childs[2] = $3
     $$ = Symbol()
-    $$.node = node
+    $$.op_type = OpType.EXP
+    $$.childs[0] = $1
+    $$.childs[1] = $2
+    $$.childs[2] = $3
 } |
 TERM
 ;
 
 ASSIGN_EXP : ID '=' EXP {
-    node = Node()
-    node.type = NodeType.EXP
-    node.childs[0] = $1
-    node.childs[1] = $2
-    node.childs[2] = $3
     $$ = Symbol()
-    $$.node = node
+    $$.op_type = OpType.EXP
+    $$.childs[0] = $1
+    $$.childs[1] = $2
+    $$.childs[2] = $3
 }
 ;
 
 ADDOP : '+' | '-';
 
 TERM: TERM MULOP FACTOR {
-    node = Node()
-    node.type = NodeType.TERM
-    node.childs[0] = $1
-    node.childs[1] = $2
-    node.childs[2] = $3
     $$ = Symbol()
-    $$.node = node
+    $$.op_type = OpType.TERM
+    $$.childs[0] = $1
+    $$.childs[1] = $2
+    $$.childs[2] = $3
 }| 
 FACTOR;
 

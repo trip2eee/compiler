@@ -63,8 +63,10 @@ class LexerGenerator:
         self.states = []
         self.lex_parser = None
         self.terminals = []
+        self.verbose = True
 
-    def open(self, lex_path):
+    def open(self, lex_path, verbose=True):
+        self.verbose = verbose
 
         self.lex_parser = LexParser()
         self.lex_parser.open(lex_path)
@@ -98,16 +100,18 @@ class LexerGenerator:
                     r.accept_action = rule.accept_action
                     self.aug_rules.append(r)
 
-        for r in self.aug_rules:
-            print(RegExUtils.symbols_to_str(r))
+        if self.verbose:
+            for r in self.aug_rules:
+                print(RegExUtils.symbols_to_str(r))
 
         regex.list_patterns = self.aug_rules
         regex.find_terminals()
 
-        print('Terminals')
-        for t in regex.list_terminals:
-            print(RegExUtils.symbol_to_str(t))
-        print('')
+        if self.verbose:
+            print('Terminals')
+            for t in regex.list_terminals:
+                print(RegExUtils.symbol_to_str(t))
+            print('')
 
         self.list_states = regex.create_states()
 
