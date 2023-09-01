@@ -1,5 +1,5 @@
 %{
-class Symbol:
+class TreeNode:
     def __init__(self):
         self.type = None
         self.value = None

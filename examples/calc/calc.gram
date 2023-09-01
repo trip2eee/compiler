@@ -1,5 +1,5 @@
 %{
-class Symbol:
+class TreeNode:
     def __init__(self):
         self.type = None
         self.value = None
@@ -8,7 +8,7 @@ class Symbol:
 %%
 exp : 
 exp addop term {
-    $$ = Symbol()
+    $$ = TreeNode()
     if $2.value == '+':
         $$.value = $1.value + $3.value
     else:
@@ -22,7 +22,7 @@ term :
 term {
     print('term: ' + str($1.value)) # embedded action test
 } mulop factor {
-    $$ = Symbol()
+    $$ = TreeNode()
     if $2.value == '*':
         $$.value = $1.value * $3.value
     else:
@@ -38,7 +38,7 @@ factor :
 } |
 number | 
 addop factor {
-    $$ = Symbol()
+    $$ = TreeNode()
     if $1.value == '+':
         $$.value = $2.value
     else:

@@ -29,7 +29,7 @@ The goal of this project is as follows
 
 %{
 # definitions of class, structure, variables to be copied to parser code.
-class Symbol:
+class TreeNode:
     def __init__(self):
         self.type = None
         self.value = None

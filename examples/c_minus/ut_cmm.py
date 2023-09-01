@@ -18,7 +18,6 @@ class TestCMM(unittest.TestCase):
         lexer.scan('examples/c_minus/hello_world.cmm')
         list_tokens = lexer.list_tokens
 
-
         program = parser.parse(list_tokens)
 
         print('done')

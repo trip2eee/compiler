@@ -49,17 +49,17 @@ class Lexer:
         return self.code[self.idx_start:self.idx_char-1]
 
     def add_token(self, yytext, yytype):
-        symbol = Symbol()
-        symbol.type = yytype
-        symbol.text = yytext
-        symbol.idx_line = self.idx_start_line+1
-        symbol.idx_col = self.idx_start_col+1
-        self.list_tokens.append(symbol)
+        node = TreeNode()
+        node.type = yytype
+        node.text = yytext
+        node.idx_line = self.idx_start_line+1
+        node.idx_col = self.idx_start_col+1
+        self.list_tokens.append(node)
 
     def error_handler(self):
         text = self.code[self.idx_start:self.idx_char]
         if text != '\n' and text != '\t' and text != ' ' and text != '':
-            print("Error: Unexpected symbol: '{}' in {}:{}".format(text, self.idx_line+1, self.idx_col+1))
+            print("Error: Unexpected token: '{}' in {}:{}".format(text, self.idx_line+1, self.idx_col+1))
 
     def scan(self, file_path):
         

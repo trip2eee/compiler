@@ -2,7 +2,7 @@
 %{
 import enum
 
-class Symbol:
+class TreeNode:
     def __init__(self):
         self.type = None
         self.value = None
@@ -50,7 +50,7 @@ EXP '|' EXP {
     pattern = Pattern()
     pattern.type = PatternType.OR
     pattern.childs = [$1.pattern, $3.pattern]
-    $$ = Symbol()
+    $$ = TreeNode()
     $$.pattern = pattern
 }
 ;
@@ -64,7 +64,7 @@ BASE {
     else:
         pattern.type = PatternType.VALUE
         pattern.value = $1.value
-    $$ = Symbol()
+    $$ = TreeNode()
     $$.pattern = pattern
 } |
 GROUP |
@@ -74,7 +74,7 @@ SUBEXP COUNT {
     $$ = $1
 } |
 ESC {
-    $$ = Symbol()
+    $$ = TreeNode()
     $$.pattern = add_esc($1)
 }
 ;
@@ -87,7 +87,7 @@ GROUP : '(' EXP ')' {
         pattern.childs = [$2.pattern]
     else:
         pattern = $2.pattern
-    $$ = Symbol()
+    $$ = TreeNode()
     $$.pattern = pattern
 }
 ;
@@ -101,7 +101,7 @@ CLASS : '[' TERM ']' {
     while child is not None:
         pattern.childs.append(child)
         child = child.next
-    $$ = Symbol()
+    $$ = TreeNode()
     $$.pattern = pattern
 };
 
@@ -114,7 +114,7 @@ FACTOR '-' {
     pattern = Pattern()
     pattern.type = PatternType.VALUE
     pattern.value = '-'
-    $$ = Symbol()
+    $$ = TreeNode()
     $$.pattern = $1.pattern
     $1.pattern.next = pattern
 }
@@ -124,7 +124,7 @@ FACTOR : BASE {
     pattern = Pattern()
     pattern.type = PatternType.VALUE
     pattern.value = $1.value
-    $$ = Symbol()
+    $$ = TreeNode()
     $$.pattern = pattern
 } |
 BASE '-' BASE {
@@ -132,25 +132,25 @@ BASE '-' BASE {
     pattern.type = PatternType.RANGE
     pattern.range_min = $1.value
     pattern.range_max = $3.value
-    $$ = Symbol()
+    $$ = TreeNode()
     $$.pattern = pattern
 } |
 ESC {
-    $$ = Symbol()
+    $$ = TreeNode()
     $$.pattern = add_esc($1)
 } |
 '+' {
     pattern = Pattern()
     pattern.type = PatternType.VALUE
     pattern.value = $1.value
-    $$ = Symbol()
+    $$ = TreeNode()
     $$.pattern = pattern
 } |
 '-' {
     pattern = Pattern()
     pattern.type = PatternType.VALUE
     pattern.value = $1.value
-    $$ = Symbol()
+    $$ = TreeNode()
     $$.pattern = pattern
 }
 ;
@@ -159,7 +159,7 @@ BASE : CHAR | DIGIT;
 
 
 NUMBER : NUMBER DIGIT {
-    $$ = Symbol()
+    $$ = TreeNode()
     $$.value = $1.value + $2.value
 } | DIGIT
 ;
@@ -168,35 +168,35 @@ COUNT : '+' {
     pattern = Pattern()
     pattern.count_min = 1
     pattern.count_max = -1
-    $$ = Symbol()
+    $$ = TreeNode()
     $$.pattern = pattern
 } |
 '*' {
     pattern = Pattern()
     pattern.count_min = 0
     pattern.count_max = -1
-    $$ = Symbol()
+    $$ = TreeNode()
     $$.pattern = pattern
 }| 
 '?' {
     pattern = Pattern()
     pattern.count_min = 0
     pattern.count_max = 1
-    $$ = Symbol()
+    $$ = TreeNode()
     $$.pattern = pattern
 } |
 '{' NUMBER '}' {
     pattern = Pattern()
     pattern.count_min = int($2.value)
     pattern.count_max = -1
-    $$ = Symbol()
+    $$ = TreeNode()
     $$.pattern = pattern
 } |
 '{' NUMBER ',' NUMBER '}' {
     pattern = Pattern()
     pattern.count_min = int($2.value)
     pattern.count_max = int($4.value)
-    $$ = Symbol()
+    $$ = TreeNode()
     $$.pattern = pattern
 }
 ;

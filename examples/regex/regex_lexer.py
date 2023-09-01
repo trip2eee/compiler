@@ -5,7 +5,7 @@ class RegExLexer:
         self.list_symbol = []
     
     def add_symbol(self, type=0, value=0):
-        t = Symbol()
+        t = TreeNode()
         t.type = type
         t.value = value
         t.idx_col = self.idx_char

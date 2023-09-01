@@ -1048,7 +1048,7 @@ class ParserGenerator:
                 else:
                     reduce_action_calls += INDENT2 + 'elif reduce=={}:\n'.format(rule_id)
 
-                reduce_action_calls += INDENT3 + 'symbol = reduce_rule_{}('.format(rule_id)
+                reduce_action_calls += INDENT3 + 'node = reduce_rule_{}('.format(rule_id)
                 for idx_arg in range(len(rule.strings[idx_rule])):
                     if idx_arg > 0:
                         reduce_action_calls += ', '
@@ -1075,8 +1075,8 @@ class ParserGenerator:
                 f.write(action_code)
                 f.write('\n')
 
-                embedded_action_calls += INDENT2 + 'if symbol.type=={}:\n'.format(key)
-                embedded_action_calls += INDENT3 + 'embedded_{}(symbol)\n'.format(key)
+                embedded_action_calls += INDENT2 + 'if node.type=={}:\n'.format(key)
+                embedded_action_calls += INDENT3 + 'embedded_{}(node)\n'.format(key)
 
         f.close()
 

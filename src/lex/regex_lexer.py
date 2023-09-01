@@ -4,8 +4,8 @@ class RegExLexer:
     def __init__(self):
         self.list_symbol = []
     
-    def add_symbol(self, type=0, value=0):
-        t = Symbol()
+    def add_token(self, type=0, value=0):
+        t = TreeNode()
         t.type = type
         t.value = value
         t.idx_col = self.idx_char
@@ -25,20 +25,20 @@ class RegExLexer:
                     # if escape character
                     state = 1
                 elif c in yy_token_names:
-                    self.add_symbol(type=yy_token_names[c], value=c)
+                    self.add_token(type=yy_token_names[c], value=c)
                 else:
                     if '0' <= c <= '9':
-                        self.add_symbol(type=DIGIT, value=c)
+                        self.add_token(type=DIGIT, value=c)
                     else:
-                        self.add_symbol(type=CHAR, value=c)
+                        self.add_token(type=CHAR, value=c)
                 
             elif state == 1:
                 if c == 'd':
-                    self.add_symbol(type=ESC, value=c)
+                    self.add_token(type=ESC, value=c)
                 elif c == 'n':
-                    self.add_symbol(type=CHAR, value='\n')
+                    self.add_token(type=CHAR, value='\n')
                 else:
-                    self.add_symbol(type=CHAR, value=c)
+                    self.add_token(type=CHAR, value=c)
                 state = 0
 
         return self.list_symbol
