@@ -50,6 +50,11 @@ class LRItem:
             self.string.append(s)
 
     def __str__(self):
+        """ This method converts LR(0) Item in string
+            I<id>
+              [RULE -> STRING, Lookaheads separated by '/']
+        """
+        # print rule
         str = '[ ' + self.left_symbol + ' -> '
         for idx in range(len(self.string)):
             if self.mark == idx:
@@ -62,7 +67,8 @@ class LRItem:
         if self.mark == len(self.string):
             str += '.'
 
-        str += ', '
+        # print Lookaheads
+        str += ', '        
         if len(self.lookahead) == 0:
             str += '$'
         else:
@@ -823,6 +829,9 @@ class ParserGenerator:
         state.print_table_header()
         for state in self.states:
             state.print_table_row()
+        # TODO: To save in log file
+        for state in self.states:
+            state.print()
 
         print('done')
 

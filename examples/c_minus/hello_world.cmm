@@ -1,12 +1,14 @@
 int value = 10;
 int k = 100;
 
-if(k==10)
+int main()
 {
-    value = 11;
+    if(k==10)
+    {
+        value = 11;
+    }
+    else
+    {
+        value = 12;
+    }
 }
-else
-{
-    value = 12;
-}
-

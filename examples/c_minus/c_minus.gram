@@ -2,9 +2,6 @@
 %{
 import enum
 
-# input: symbol/node -> symbol?
-# return: symbol
-
 class SymbolInfo:
     def __init__(self):
         self.name = ''
@@ -30,11 +27,11 @@ class OpType(enum.IntEnum):
 class TreeNode:
     def __init__(self):
         self.type = None
-        self.text = None
+        self.text = ''
         self.value = None
         self.idx_line = 0
         self.idx_col = 0
-        self.symbol_table = SymbolTable()
+        self.symbol_table = None
 
         self.op_type = OpType.TERMINAL
         self.next = None
@@ -43,24 +40,40 @@ class TreeNode:
 
 %%
 
-PROGRAM : STMT_SEQ {
+PROGRAM : DECL_LIST {
     $$ = $1
-} | 
-COMMENT;
+}
+;
 
-TYPE_SPEC : INT | FLOAT | CHAR | VOID;
+DECL_LIST : DECL_LIST DECL {
+    $$ = $1
 
-VAR_DECL :
-TYPE_SPEC ID ';'{    
-    
+    next = $$
+    while next.next is not None:
+        next = next.next
+    next.next = $2
+
+    merge_symbol_table($$, $2)
+} |
+DECL
+{
+    $$ = $1
+}
+;
+
+DECL : VAR_DECL | FUNC_DECL | COMMENT
+;
+
+VAR_DECL : TYPE_SPEC ID ';'
+{
     $$ = TreeNode()
     $$.op_type = OpType.VAR_DECL
     $$.childs[0] = $1
     $$.childs[1] = $2
 
+    $$.symbol_table = SymbolTable()
     $$.symbol_table.symbols[$2.text] = [$1.text, 0]
-
-} | 
+} |
 TYPE_SPEC ID '=' EXP ';'{   
     $$ = TreeNode()
     $$.op_type = OpType.VAR_DECL
@@ -68,11 +81,41 @@ TYPE_SPEC ID '=' EXP ';'{
     $$.childs[1] = $2
     $$.childs[2] = $4
 
+    $$.symbol_table = SymbolTable()
     $$.symbol_table.symbols[$2.text] = [$1.text, $4.text]
+}
+;
+
+FUNC_DECL : TYPE_SPEC ID '(' PARAMS ')' COMPOUND_STMT | TYPE_SPEC ID '(' ')' COMPOUND_STMT;
+
+TYPE_SPEC : INT | FLOAT | CHAR | VOID;
+
+PARAMS : PARAM_LIST | VOID;
+
+PARAM_LIST : PARAM_LIST ',' PARAM {
+    $$ = $1
+    next = $$
+    while next.next is not None:
+        next = next.next
+        next.next = $3
+} |
+PARAM;
+
+PARAM : TYPE_SPEC ID {
+    $$ = TreeNode()
+
+    info.name = $2.text
+    info.type = $1.text
+    info = SymbolInfo()    
+    $$.symbol_table.symbols[$2.text] = info
 };
 
+COMPOUND_STMT : '{' STMT_LIST '}' {
+    $$ = $2;
+}
+;
 
-STMT_SEQ : STMT_SEQ STMT {
+STMT_LIST : STMT_LIST STMT {
     $$ = $1
     node = $1
     while node.next is not None:
@@ -86,33 +129,36 @@ STMT {
 } |
 COMMENT;
 
-STMT : EXP ';' | IF_STMT | FOR_STMT | ';' | VAR_DECL
+STMT : EXP_STMT | IF_STMT | FOR_STMT 
 ;
 
-IF_STMT : IF '(' EXP ')' '{' STMT_SEQ '}' {    
+EXP_STMT : EXP ';' | ';'
+;
+
+IF_STMT : IF '(' EXP ')' COMPOUND_STMT {    
     $$ = TreeNode()
     $$.op_type = OpType.IF_STMT
     $$.childs[0] = $3
-    $$.childs[1] = $6
+    $$.childs[1] = $5
 } | 
-IF '(' EXP ')' '{' STMT_SEQ '}' ELSE '{' STMT_SEQ '}' {
+IF '(' EXP ')' COMPOUND_STMT ELSE COMPOUND_STMT {
 
     $$ = TreeNode()
     $$.op_type = OpType.IF_STMT
     $$.childs[0] = $3
-    $$.childs[1] = $6
-    $$.childs[2] = $10
+    $$.childs[1] = $5
+    $$.childs[2] = $7
 }
 ;
 
-FOR_STMT : FOR '(' EXP ';' EXP ';' EXP ')' '{' STMT_SEQ '}' {
+FOR_STMT : FOR '(' EXP ';' EXP ';' EXP ')' COMPOUND_STMT {
 
     $$ = TreeNode()
     $$.op_type = OpType.FOR_STMT
     $$.childs[0] = $3
     $$.childs[1] = $5
     $$.childs[2] = $7
-    $$.childs[3] = $10
+    $$.childs[3] = $9
 };
 
 EXP : SIMPLE_EXP | 
@@ -171,7 +217,11 @@ ID |
 
 def merge_symbol_table(src, dst):
     # This function merges symbol tables
-    for key in src.symbol_table.symbols:
-        if key not in dst.symbol_table.symbols:
-            dst.symbol_table.symbols[key] = src.symbol_table.symbols[key]
+
+    if dst.symbol_table is None:
+        dst.symbol_table = src.symbol_table
+    elif dst.symbol_table is not None and src.symbol_table is not None:
+        for key in src.symbol_table.symbols:
+            if key not in dst.symbol_table.symbols:
+                dst.symbol_table.symbols[key] = src.symbol_table.symbols[key]
 

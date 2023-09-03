@@ -61,7 +61,7 @@ class Parser:
                 if reduce==1:
                     node = reduce_rule_1(params[0])
                 elif reduce==2:
-                    node = reduce_rule_2(params[0])
+                    node = reduce_rule_2(params[0], params[1])
                 elif reduce==3:
                     node = reduce_rule_3(params[0])
                 elif reduce==4:
@@ -75,13 +75,13 @@ class Parser:
                 elif reduce==8:
                     node = reduce_rule_8(params[0], params[1], params[2], params[3], params[4])
                 elif reduce==9:
-                    node = reduce_rule_9(params[0], params[1])
+                    node = reduce_rule_9(params[0], params[1], params[2], params[3], params[4], params[5])
                 elif reduce==10:
-                    node = reduce_rule_10(params[0])
+                    node = reduce_rule_10(params[0], params[1], params[2], params[3], params[4])
                 elif reduce==11:
                     node = reduce_rule_11(params[0])
                 elif reduce==12:
-                    node = reduce_rule_12(params[0], params[1])
+                    node = reduce_rule_12(params[0])
                 elif reduce==13:
                     node = reduce_rule_13(params[0])
                 elif reduce==14:
@@ -91,15 +91,15 @@ class Parser:
                 elif reduce==16:
                     node = reduce_rule_16(params[0])
                 elif reduce==17:
-                    node = reduce_rule_17(params[0], params[1], params[2], params[3], params[4], params[5], params[6])
+                    node = reduce_rule_17(params[0], params[1], params[2])
                 elif reduce==18:
-                    node = reduce_rule_18(params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7], params[8], params[9], params[10])
+                    node = reduce_rule_18(params[0])
                 elif reduce==19:
-                    node = reduce_rule_19(params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7], params[8], params[9], params[10])
+                    node = reduce_rule_19(params[0], params[1])
                 elif reduce==20:
-                    node = reduce_rule_20(params[0])
+                    node = reduce_rule_20(params[0], params[1], params[2])
                 elif reduce==21:
-                    node = reduce_rule_21(params[0], params[1], params[2])
+                    node = reduce_rule_21(params[0], params[1])
                 elif reduce==22:
                     node = reduce_rule_22(params[0])
                 elif reduce==23:
@@ -111,15 +111,15 @@ class Parser:
                 elif reduce==26:
                     node = reduce_rule_26(params[0])
                 elif reduce==27:
-                    node = reduce_rule_27(params[0])
+                    node = reduce_rule_27(params[0], params[1])
                 elif reduce==28:
-                    node = reduce_rule_28(params[0], params[1], params[2])
+                    node = reduce_rule_28(params[0])
                 elif reduce==29:
-                    node = reduce_rule_29(params[0])
+                    node = reduce_rule_29(params[0], params[1], params[2], params[3], params[4])
                 elif reduce==30:
-                    node = reduce_rule_30(params[0], params[1], params[2])
+                    node = reduce_rule_30(params[0], params[1], params[2], params[3], params[4], params[5], params[6])
                 elif reduce==31:
-                    node = reduce_rule_31(params[0])
+                    node = reduce_rule_31(params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7], params[8])
                 elif reduce==32:
                     node = reduce_rule_32(params[0])
                 elif reduce==33:
@@ -135,7 +135,31 @@ class Parser:
                 elif reduce==38:
                     node = reduce_rule_38(params[0])
                 elif reduce==39:
-                    node = reduce_rule_39(params[0], params[1], params[2])
+                    node = reduce_rule_39(params[0])
+                elif reduce==40:
+                    node = reduce_rule_40(params[0], params[1], params[2])
+                elif reduce==41:
+                    node = reduce_rule_41(params[0])
+                elif reduce==42:
+                    node = reduce_rule_42(params[0], params[1], params[2])
+                elif reduce==43:
+                    node = reduce_rule_43(params[0])
+                elif reduce==44:
+                    node = reduce_rule_44(params[0])
+                elif reduce==45:
+                    node = reduce_rule_45(params[0], params[1], params[2])
+                elif reduce==46:
+                    node = reduce_rule_46(params[0])
+                elif reduce==47:
+                    node = reduce_rule_47(params[0])
+                elif reduce==48:
+                    node = reduce_rule_48(params[0])
+                elif reduce==49:
+                    node = reduce_rule_49(params[0])
+                elif reduce==50:
+                    node = reduce_rule_50(params[0])
+                elif reduce==51:
+                    node = reduce_rule_51(params[0], params[1], params[2])
 
                 else:
                     node = None
@@ -164,17 +188,20 @@ class Parser:
                 break
             else:
                 # Error
-                # Enter panic mode for error recovery.
-                print('Syntax Error:')
+                # Enter panic mode for error recovery.                
+                error_code = ''
                 while shift == -1 and reduce == -1:
                     elem:StackElem
                     elem = stack.pop()
 
-                    if elem.node is not None:
-                        print(elem.node.value)
+                    if elem.node is not None:                        
+                        error_code = elem.node.text + ' ' + error_code
 
                         state = stack[-1].state
                         shift = tbl_shift[state][node.type]
                         reduce = tbl_reduce[state][node.type]
+                
+                print('Syntax Error: ', end='')
+                print(error_code)
 
         return result
