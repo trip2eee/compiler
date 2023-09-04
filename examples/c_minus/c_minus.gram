@@ -2,19 +2,23 @@
 %{
 import enum
 
+class SymbolType(enum.IntEnum):
+    VARIABLE = 0
+    ARRAY = 1
+    FUNCTION = 2
+    TYPE = 3
+
 class SymbolInfo:
     def __init__(self):
-        self.name = ''
         self.value = ''
         self.init = False
-        self.type = 0
+        self.type = ''
+        self.symtype = SymbolType.VARIABLE
 
 class SymbolTable:
     def __init__(self):
         self.symbols = {}
         self.parent = None
-        self.child = None
-
 
 class OpType(enum.IntEnum):
     TERMINAL = 0
@@ -23,6 +27,7 @@ class OpType(enum.IntEnum):
     IF_STMT = 3
     TERM = 4
     VAR_DECL = 5
+    FUNC_DECL = 6
 
 class TreeNode:
     def __init__(self):
@@ -31,7 +36,7 @@ class TreeNode:
         self.value = None
         self.idx_line = 0
         self.idx_col = 0
-        self.symbol_table = None
+        self.symtab = None  # Symbol Table
 
         self.op_type = OpType.TERMINAL
         self.next = None
@@ -47,13 +52,9 @@ PROGRAM : DECL_LIST {
 
 DECL_LIST : DECL_LIST DECL {
     $$ = $1
-
-    next = $$
-    while next.next is not None:
-        next = next.next
-    next.next = $2
-
-    merge_symbol_table($$, $2)
+    
+    merge_symtab($2, $$)
+    append_node($$, $2)
 } |
 DECL
 {
@@ -71,8 +72,11 @@ VAR_DECL : TYPE_SPEC ID ';'
     $$.childs[0] = $1
     $$.childs[1] = $2
 
-    $$.symbol_table = SymbolTable()
-    $$.symbol_table.symbols[$2.text] = [$1.text, 0]
+    $$.symtab = SymbolTable()
+    info = SymbolInfo()
+    info.type = $1.text
+    info.symtype = SymbolType.VARIABLE
+    $$.symtab.symbols[$2.text] = info
 } |
 TYPE_SPEC ID '=' EXP ';'{   
     $$ = TreeNode()
@@ -81,12 +85,50 @@ TYPE_SPEC ID '=' EXP ';'{
     $$.childs[1] = $2
     $$.childs[2] = $4
 
-    $$.symbol_table = SymbolTable()
-    $$.symbol_table.symbols[$2.text] = [$1.text, $4.text]
+    $$.symtab = SymbolTable()
+    info = SymbolInfo()
+    info.type = $1.text
+    info.symtype = SymbolType.VARIABLE
+    info.init = True
+    info.value = $4
+    $$.symtab.symbols[$2.text] = info
 }
 ;
 
-FUNC_DECL : TYPE_SPEC ID '(' PARAMS ')' COMPOUND_STMT | TYPE_SPEC ID '(' ')' COMPOUND_STMT;
+FUNC_DECL : TYPE_SPEC ID '(' PARAMS ')' COMPOUND_STMT {
+    $$ = TreeNode()
+    $$.op_type = OpType.FUNC_DECL
+    $$.childs[0] = $1.text
+    $$.childs[1] = $2.text
+    $$.childs[2] = $4
+    $$.childs[3] = $6
+
+    # TODO: To add symtab for parameters
+
+    $$.symtab = SymbolTable()
+    info = SymbolInfo()
+    info.symtype = SymbolType.FUNCTION
+    $$.symtab.symbols[$2.text] = info
+
+    $6.symtab.parent = $$.symtab
+
+} |
+TYPE_SPEC ID '(' ')' COMPOUND_STMT {
+    $$ = TreeNode()
+    $$.op_type = OpType.FUNC_DECL
+    $$.childs[0] = $1.text
+    $$.childs[1] = $2.text
+    $$.childs[2] = None
+    $$.childs[3] = $5
+
+    $$.symtab = SymbolTable()
+    info = SymbolInfo()
+    info.symtype = SymbolType.FUNCTION
+    $$.symtab.symbols[$2.text] = info
+
+    $5.symtab.parent = $$.symtab
+}
+;
 
 TYPE_SPEC : INT | FLOAT | CHAR | VOID;
 
@@ -94,20 +136,21 @@ PARAMS : PARAM_LIST | VOID;
 
 PARAM_LIST : PARAM_LIST ',' PARAM {
     $$ = $1
-    next = $$
-    while next.next is not None:
-        next = next.next
-        next.next = $3
+    append_node($$, $3)
 } |
 PARAM;
 
 PARAM : TYPE_SPEC ID {
     $$ = TreeNode()
 
+    $$.symtab = SymbolTable()
+    
+    info = SymbolInfo()
     info.name = $2.text
     info.type = $1.text
-    info = SymbolInfo()    
-    $$.symbol_table.symbols[$2.text] = info
+    info.symtype = SymbolType.VARIABLE
+
+    $$.symtab.symbols[$2.text] = info
 };
 
 COMPOUND_STMT : '{' STMT_LIST '}' {
@@ -117,19 +160,16 @@ COMPOUND_STMT : '{' STMT_LIST '}' {
 
 STMT_LIST : STMT_LIST STMT {
     $$ = $1
-    node = $1
-    while node.next is not None:
-        node = node.next
-    $$.next = $2
-
-    merge_symbol_table($2, $$)
+    
+    append_node($$, $2)
+    merge_symtab($2, $$)
 } | 
 STMT {
     $$ = $1
 } |
 COMMENT;
 
-STMT : EXP_STMT | IF_STMT | FOR_STMT 
+STMT : EXP_STMT | IF_STMT | FOR_STMT | VAR_DECL
 ;
 
 EXP_STMT : EXP ';' | ';'
@@ -215,13 +255,24 @@ ID |
 
 %%
 
-def merge_symbol_table(src, dst):
+def merge_symtab(dst, src):
     # This function merges symbol tables
+    
+    # find the last node of src
+    while src.next is not None:
+        src = src.next
 
-    if dst.symbol_table is None:
-        dst.symbol_table = src.symbol_table
-    elif dst.symbol_table is not None and src.symbol_table is not None:
-        for key in src.symbol_table.symbols:
-            if key not in dst.symbol_table.symbols:
-                dst.symbol_table.symbols[key] = src.symbol_table.symbols[key]
+    if dst.symtab is None:
+        dst.symtab = src.symtab
+    elif dst.symtab is not None and src.symtab is not None:
+        for key in src.symtab.symbols:
+            if key not in dst.symtab.symbols:
+                dst.symtab.symbols[key] = src.symtab.symbols[key]
 
+def append_node(first, last):
+    # This function appends last node to the end of first node.
+
+    next = first
+    while next.next is not None:
+        next = next.next
+    next.next = last
