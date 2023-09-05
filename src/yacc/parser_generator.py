@@ -10,17 +10,19 @@ from src.yacc.grammar_parser import Rule
 from src.yacc.grammar_parser import EPSILON
 
 class LRItem:
-    """LR(0) Item
+    """LR(0) Item - A production choice with a distinguished position in its right-hand side.
     """
     def __init__(self):
         self.left_symbol = ''
         self.string = []
         self.lookahead = []
-        self.mark = 0   # index of symbol to read
+        self.mark = 0   # index(position) of symbol to read
         self.rule_id = 0
         self.searched = False
 
     def mark_symbol(self):
+        """ This method returns mark symbol (symbol to read)
+        """
         if self.mark < len(self.string):
             return self.string[self.mark]
         else:
@@ -117,18 +119,20 @@ class LRItem:
         return new_item
 
 class Closure:
+    """ Set of closure items in a state
+    """
     def __init__(self):
-        self.items = []
-        self.mark_symbols = []
+        self.items = []        # set of closure items
+        self.mark_symbols = [] # set of mark symbols of closure items.
+                               # they are used in computing GOTO
 
     def print(self):
         for i in self.items:
             print('  ' + str(i))
 
-        # next_state = self.id+1
-        # for m in self.mark_symbols:
-        #     print('  -- ' + m + ' --> I' + str(next_state))
-        #     next_state += 1
+    def write(self, f):
+        for i in self.items:
+            f.write('  ' + str(i) + '\n')
 
     def __eq__(self, value: 'Closure') -> bool:
         result = True
@@ -174,8 +178,8 @@ class State:
         State.STATE_ID += 1
 
         self.closure = closure
-        self.action = {}
-        self.goto = {}
+        self.action = {}              # shift/reduce
+        self.goto = {}                # The next state to transition to on nonterminals
         self.next_state_table = {}    # dictionary for next state. next_state = next_state_table[lookahead]
         self.prev_state_table = {}
 
@@ -186,7 +190,16 @@ class State:
         print('I{}'.format(self.id))
         self.closure.print()
 
+    def write(self, f):
+        """ This method writes state in file f.
+        """
+        f.write('I{}\n'.format(self.id))
+        self.closure.write(f)
+
+
     def print_with_padding(self, s, len_padded=7):
+        """ This method print s with leading white spaces to make padded length of string len_padded.
+        """
         s_pad = s
         while len(s_pad) < len_padded:
             s_pad = ' ' + s_pad
@@ -194,23 +207,30 @@ class State:
         print(s_pad, end='')
 
     def print_table_header(self):
+        """ This method prints headers with padds
+            Terminal symbols, Nonterminal symbols
+        """
         self.print_with_padding('|')
         
+        # Action: shift and reduce actions on terminals
         for key in self.action:
             self.print_with_padding(key)
 
+        # GOTO: The next state to transition to on nonterminals
         for key in self.goto:
             self.print_with_padding(key)
 
         print('')
 
     def print_table_row(self):
+        """ This method prints actions/gotos of the state
+        """
         self.print_with_padding('{}|'.format(self.id))
 
-        # action
+        # Action
         for key in self.action:
             self.print_with_padding('{}'.format(str(self.action[key])))
-        # goto
+        # GOTO
         for key in self.goto:
             if self.goto[key] >= 0:
                 self.print_with_padding('{}'.format(self.goto[key]))
@@ -220,6 +240,8 @@ class State:
         print('')
 
 class ParserGenerator:
+    """ This class generates parser
+    """
     def __init__(self):
         self.rules = {}
         self.aug_rules = []
@@ -339,12 +361,17 @@ class ParserGenerator:
                                         num_changes += self.rules[Xi].add_follow(f)
 
     def compute_LR0_closures(self, items) -> Closure:
+        """ This method computes LR(0) closures.
+            If I is a set of LR(0) items, CLOSURE(I) can be computed as follows
+            1. All LR(0) items in I are added.
+            2. If A -> X1 .X2 X3 is included in CLOSURE(I) and X2 -> X4 exists, X2 -> .X4 is added
+        """
         num_changes = 1
 
         closure = Closure()
+
         for i in items:
             closure.items.append(i)
-            # print(i)
 
         while num_changes > 0:
             num_changes = 0
@@ -364,6 +391,7 @@ class ParserGenerator:
                         rule = self.rules[mark_symbol]
 
                         for str, rule_id in zip(rule.strings, rule.rule_ids):
+                            # create LR(0) item with mark = 0
                             new_item = LRItem()
                             new_item.left_symbol = mark_symbol
                             new_item.string = str
@@ -377,12 +405,18 @@ class ParserGenerator:
         return closure
 
     def comptue_LR0_goto(self, closure:Closure, x):
+        """ This method computes LR(0) item GOTOs.
+            x: mark item
+            If I is set of items and A -> a.Xb is in I,
+            GOTO(I, x) = CLOSURE( A -> aX.b )
+        """
         items = []
 
         item: LRItem
         for item in closure.items:
             if item.mark < len(item.string) and item.string[item.mark] == x:
                 new_item = item.copy()
+                # A -> a.Xb ==> A -> aX.b
                 new_item.mark += 1
 
                 if new_item not in items:
@@ -392,7 +426,11 @@ class ParserGenerator:
         return closure
 
     def compute_LR0_items(self):
-        """ This method computes LR(0) items
+        """ This method computes LR(0) items (0 lookahead)
+            LR(0) items: Production rules with mark '.' on the right hand side.
+            1. The start of augmented rules e.g. S' -> S (kernel item).
+            2. Items with mark=0 e.g. A -> .a (closure item).
+            3. Items with mark=end e.g. A -> a. (reduction item).
         """
         # augmented grammar        
         self.generate_augmented_rules()
@@ -461,77 +499,6 @@ class ParserGenerator:
 
                     State.STATE_ID -= 1
 
-
-    def compute_LR1_closures(self, items) -> Closure:        
-        """ This method computes LR(1) closures
-        """
-        closure = Closure()
-        for i in items:
-            closure.items.append(i)
-            # print(i)
-
-        changed = True
-        while changed:
-            changed = False
-
-            item : LRItem
-            for item in closure.items:
-                if item.mark < len(item.string):
-                    # symbol to read (mark symbol)
-                    mark_symbol = item.string[item.mark]
-
-                    if mark_symbol not in closure.mark_symbols:
-                        closure.mark_symbols.append(mark_symbol)
-
-                    # for mark symbol A, if rules A -> X1... exist, add A -> X1...
-                    if mark_symbol in self.rules:
-                        rule: Rule
-                        rule = self.rules[mark_symbol]
-
-                        for str, rule_id in zip(rule.strings, rule.rule_ids):
-                            new_item = LRItem()
-                            new_item.left_symbol = mark_symbol
-                            new_item.string = str
-                            new_item.rule_id = rule_id
-                            new_item.add_lookahead(item.lookahead)
-
-                            if item.mark+1 < len(item.string):
-                                la = item.string[item.mark+1]
-                                if la in self.terminals:
-                                    new_item.add_lookahead(la)
-                                else:
-                                    new_item.add_lookahead(self.rules[la].first)
-
-                                for la in item.lookahead:
-                                    if la in self.terminals:
-                                        new_item.add_lookahead(la)
-                                    else:
-                                        new_item.add_lookahead(self.rules[la].first)
-
-                            if new_item not in closure.items:
-                                closure.items.append(new_item)
-                                changed = True
-                                # print(new_item)
-
-        return closure
-
-    def comptue_LR1_goto(self, closure:Closure, x):
-        """GOTO for computing LR(1) items
-        """
-        items = []
-
-        item: LRItem
-        for item in closure.items:
-            if item.mark < len(item.string) and item.string[item.mark] == x:
-                new_item = item.copy()
-                new_item.mark += 1
-
-                if new_item not in items:
-                    items.append(new_item)
-        
-        closure = self.compute_LR1_closures(items)
-        return closure
-    
     def generate_augmented_rules(self):
         # augmented grammar with numbering
         self.aug_rules = []
@@ -556,108 +523,6 @@ class ParserGenerator:
                 ar.rule_ids = [rule_id]
                 self.aug_rules.append(ar)
                 rule_id += 1
-
-    def compute_LR1_items(self):
-        """ This method computes LR(1) items
-        """
-        self.generate_augmented_rules()
-
-        rule0 = self.aug_rules[0]
-        item0 = LRItem()
-        item0.left_symbol = rule0.left_symbol
-        item0.string = rule0.strings[0]
-
-        self.start_item = item0
-
-        start_item_accept = item0.copy()
-        start_item_accept.mark += 1
-        self.start_item_accept = start_item_accept
-
-        closure = self.compute_LR1_closures([item0])
-        s0 = State(closure)
-        self.states.append(s0)
-
-        if self.verbose:
-            s0.print()
-
-        changed = True
-        while changed:
-            changed = False
-
-            state:State
-            for state in self.states:
-                for m in state.closure.mark_symbols:
-
-                    closure = self.comptue_LR1_goto(state.closure, m)
-                    new_state = State(closure)
-
-                    if new_state not in self.states:
-                        if self.verbose:
-                            print('GOTO(I{}, {}) = '.format(state.id, m), end='')                        
-                        self.states.append(new_state)
-
-                        # mark the next state to be used in construction of parsing table.
-                        state.next_state_table[m] = new_state.id
-
-                        if self.verbose:
-                            new_state.print()
-                        # changed = True
-                    else:
-
-                        next_state_id = -1
-                        for idx_state in range(len(self.states)):
-                            if self.states[idx_state] == new_state:
-                                next_state_id = self.states[idx_state].id
-                                break
-                        
-                        state.next_state_table[m] = next_state_id
-    
-                        if self.verbose:
-                            print('GOTO(I{}, {}) = I{}'.format(state.id, m, next_state_id))
-
-                        State.STATE_ID -= 1
-
-    def construct_clr_parsing_table(self):
-        """ This method constructs CLR parsing table
-        """
-        state: State
-        for state in self.states:
-            
-            for t in self.terminals:
-                state.action[t] = Action()
-            state.action['$'] = Action()
-            
-            for n in self.non_terminals:
-                state.goto[n] = -1
-                
-            item: LRItem
-            for item in state.closure.items:
-                mark_symbol = item.mark_symbol()
-                
-                if mark_symbol is not None:
-                    if mark_symbol in self.terminals:
-                        # state.action[mark_symbol] = Action()
-                        state.action[mark_symbol].next_state = state.next_state_table[mark_symbol]
-                        state.action[mark_symbol].action = Action.SHIFT
-                    else:
-                        state.goto[mark_symbol] = state.next_state_table[mark_symbol]
-                
-                else:
-                    mark_symbol = '$'
-                    if self.start_item_accept in state.closure.items:
-                        # state.action[mark_symbol] = Action()
-                        state.action[mark_symbol].action = Action.ACCEPT
-
-                    else:
-                        for lk in item.lookahead:
-                            state.action[lk].action = Action.REDUCE
-                            state.action[lk].reduction_rule = item.rule_id
-                        if item.is_lookahead_empty():
-                            state.action['$'].action = Action.REDUCE
-                            state.action['$'].reduction_rule = item.rule_id
-
-            state.print_table_row()
-        print('done')
 
     def clear_search_flag(self):
         for state in self.states:
@@ -829,9 +694,10 @@ class ParserGenerator:
         state.print_table_header()
         for state in self.states:
             state.print_table_row()
-        # TODO: To save in log file
-        for state in self.states:
-            state.print()
+
+        with open('state.log', 'w') as f:
+            for state in self.states:
+                state.write(f)
 
         print('done')
 

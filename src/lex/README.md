@@ -1,1 +1,1 @@
-# Lex - lexer generator
+# Lex - Lexical Analyzer (Lexer) Generator
