@@ -276,7 +276,8 @@ class ParserGenerator:
         self.compute_follow()        
 
     def compute_first(self):
-        
+        """ This method computes first symbols
+        """
         # while there are changes to any nonterminal
         num_changes = 1
         while num_changes > 0:
@@ -365,6 +366,8 @@ class ParserGenerator:
             If I is a set of LR(0) items, CLOSURE(I) can be computed as follows
             1. All LR(0) items in I are added.
             2. If A -> X1 .X2 X3 is included in CLOSURE(I) and X2 -> X4 exists, X2 -> .X4 is added
+
+            @param items [in] List of LR(0) items
         """
         num_changes = 1
 
@@ -405,10 +408,12 @@ class ParserGenerator:
         return closure
 
     def comptue_LR0_goto(self, closure:Closure, x):
-        """ This method computes LR(0) item GOTOs.
-            x: mark item
+        """ This method computes LR(0) item GOTOs.            
             If I is set of items and A -> a.Xb is in I,
             GOTO(I, x) = CLOSURE( A -> aX.b )
+
+            @param closure [in] closure from which transition to other states on the mark item
+            @param x       [in] mark item
         """
         items = []
 
@@ -702,6 +707,10 @@ class ParserGenerator:
         print('done')
 
     def generate_parser(self, grammar_path, verbose=True):
+        """ This method generate parser of grammar defined in grammar_path
+            @param grammar_path [in] Grammar file path
+            @param verbose      [in] Verbosity flag. If True, parser generation takes much longer time than verbose is False.
+        """
         self.verbose = verbose
 
         self.open(grammar_path)
@@ -717,7 +726,9 @@ class ParserGenerator:
         return alias
 
     def export(self, file_path):
-    
+        """ This method exportes generated parser code.
+            @param file_path [in] Path of parser to be generated
+        """
         INDENT1 = '            '
         INDENT2 = '                '
         INDENT3 = '                    '

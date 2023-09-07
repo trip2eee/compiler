@@ -3,7 +3,7 @@
 ## Terminologies
 
 ### First sets
-Set of symbols that can come first.
+Set of symbols that can come first in each production rule.
 
 1. If $X$ is a terminal, then $First(X) = \lbrace X \rbrace$.
 
@@ -33,9 +33,13 @@ A production choice with a distinguished position in its right-hand side.
 ### LALR parser
 Lookahead LR parsing
 
-### Closure
+### Closure ($\epsilon$-Closure)
 
-Items with mark=0 e.g. $A -> .a$
+The closure of a single state $s$ is the set of states reachable by a series of zero or more $\epsilon$-transitions.
+
+Items with mark=0 e.g. $A \rightarrow .X_1 X_2$
+
+If $A \rightarrow X_1 .X_2$ is in closure and production rule for $X_2$ such as $X_2 \rightarrow a$ exists, $X_2 \rightarrow a$ is also added to the closure.
 
 ## Class
 
