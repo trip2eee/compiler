@@ -4,12 +4,17 @@ import enum
 
 class OpType(enum.IntEnum):
     TERMINAL = 0
-    EXP = 1
-    STMT = 2
-    IF_STMT = 3
-    TERM = 4
-    VAR_DECL = 5
-    FUNC_DECL = 6
+    NUMBER = 1
+    ID = 2
+    EXP = 3
+    STMT = 4
+    IF_STMT = 5
+    TERM = 6
+    VAR_DECL = 7
+    FUNC_DECL = 8
+    RETURN = 9
+    FUNC_CALL = 10
+    STRING = 11
 
 class TreeNode:
     def __init__(self):
@@ -95,6 +100,9 @@ PARAM;
 
 PARAM : TYPE_SPEC ID {
     $$ = TreeNode()
+    $$.op_type = OpType.VAR_DECL
+    $$.childs[0] = $1
+    $$.childs[1] = $2
 };
 
 COMPOUND_STMT : '{' STMT_LIST '}' {
@@ -112,7 +120,7 @@ STMT {
 } |
 COMMENT;
 
-STMT : EXP_STMT | IF_STMT | FOR_STMT | VAR_DECL
+STMT : EXP_STMT | IF_STMT | FOR_STMT | VAR_DECL | RETURN_STMT
 ;
 
 EXP_STMT : EXP ';' | ';'
@@ -142,6 +150,12 @@ FOR_STMT : FOR '(' EXP ';' EXP ';' EXP ')' COMPOUND_STMT {
     $$.childs[1] = $5
     $$.childs[2] = $7
     $$.childs[3] = $9
+};
+
+RETURN_STMT: RETURN EXP ';' {
+    $$ = TreeNode()
+    $$.op_type = OpType.RETURN
+    $$.childs[0] = $2
 };
 
 EXP : SIMPLE_EXP | 
@@ -194,10 +208,41 @@ NUMBER {
     # convert text into integer
     $$ = $1
     $$.value = int($$.text)
+    $$.op_type = OpType.NUMBER
 } | 
-ID | 
+ID {
+    $$ = $1
+    $$.op_type = OpType.ID
+} | 
 '(' EXP ')' {
     $$ = $2
+} |
+CALL {
+    $$ = $1
+} |
+STRING {
+    $$ = $1
+    $$.op_type = OpType.STRING
+}
+;
+
+CALL:
+ID '(' ')' {
+    $$ = $1
+    $$.op_type = OpType.FUNC_CALL
+} |
+ID '(' ARGS_LIST ')' {
+    $$ = $1
+    $$.childs[0] = $3
+    $$.op_type = OpType.FUNC_CALL
+};
+
+ARGS_LIST: EXP {
+    $$ = $1
+} |
+ARGS_LIST ',' EXP {
+    $$ = $1
+    append_node($$, $3)
 };
 
 %%

@@ -30,12 +30,19 @@ from cmm_parser_table import *
         yytype = ELSE
     elif yytext == 'for':
         yytype = FOR
+    elif yytext == 'return':
+        yytype = RETURN
     else:
         yytype = ID
 }
 
 '[0-9]+' {
     yytype = NUMBER
+}
+
+'".*"' {
+    yytype = STRING
+    #yytext = yytext[1:-1]
 }
 
 '\+'

@@ -87,7 +87,7 @@ class Parser:
                 # Error
                 # Enter panic mode for error recovery.                
                 error_code = ''
-                while shift == -1 and reduce == -1:
+                while shift == -1 and reduce == -1 and len(stack) > 0:
                     elem:StackElem
                     elem = stack.pop()
 
@@ -100,5 +100,8 @@ class Parser:
                 
                 print('Syntax Error: ', end='')
                 print(error_code)
+
+                if len(stack) == 0:
+                    break
 
         return result

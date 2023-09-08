@@ -22,10 +22,9 @@ class TestCMM(unittest.TestCase):
 
         program = parser.parse(list_tokens)
 
-        codegen.generate(program, 'test.pcode', verbose=True)
+        codegen.generate(program, 'examples/c_minus/test.pcode', verbose=True)
 
         print('done')
-
 
 if __name__ == '__main__':
     unittest.main()

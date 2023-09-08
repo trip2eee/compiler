@@ -1,21 +1,25 @@
+int global;
 int value = 10;
 int k = 1*10 + 2*(5+5);
 
 int add(int a, int b)
 {
     int c = a + b;
+    return c;
 }
 
-int main()
+void main()
 {
-    int local;
-
-    if(k==10)
+    int a = add(1+2, value);
+    
+    if(k == 13)
     {
-        value = 11;
+        printf("true");
     }
     else
     {
-        value = 12;
+        printf("false");
     }
 }
+
+
