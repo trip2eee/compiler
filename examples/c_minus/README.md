@@ -84,7 +84,7 @@ ret   ; sp=bp, pop bp, pop return address and jump
 
 | Macro | Description |
 | - | - |
-| str db | Copy string ending with 0 at the end of the global area. 0s are padded to make the last address multiple of 4. |
+| db {addr} {values} | define bytes. |
 
 
 

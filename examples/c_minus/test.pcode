@@ -1,47 +1,44 @@
-    ldc_i32  10
-    sto_i32  4           ; store to value
-    ldc_i32  1
-    ldc_i32  10
-    mul_i32
-    ldc_i32  2
-    ldc_i32  5
-    ldc_i32  5
-    add_i32
-    mul_i32
-    add_i32
-    sto_i32  8           ; store to k
-    str db   "true"      ; string 12:20
-    str db   "false"     ; string 20:28
-    call     main
-    stp                  ; end program
-add:
-    lda_i32  bp+0        ; load a
-    lda_i32  bp+4        ; load b
-    add_i32
-    sto_i32  bp+8        ; store to c
-    lda_i32  bp+8        ; load c
-    sto_i32  bp-4        ; return value
-    ret
-main:
-    ldc_i32  0           ; reserve for return value
-    mst                  ; mark stack
-    ldc_i32  1
-    ldc_i32  2
-    add_i32
-    lda_i32  4           ; load value
-    cup      add         ; call user procedure
-    sto_i32  bp+0        ; store to a
-    lda_i32  8           ; load k
-    ldc_i32  13
-    equ_i32
-    jne      LF22
-    mst                  ; mark stack
-    ldc_i32  12
-    csp      printf      ; call standard procedure
-    jmp      LE22
-LF22:
-    mst                  ; mark stack
-    ldc_i32  20
-    csp      printf      ; call standard procedure
-LE22:
-    ret
+ldc_i32   10
+sto_i32   4              ; store to value
+ldc_i32   1
+ldc_i32   10
+mul_i32
+ldc_i32   2
+ldc_i32   5
+ldc_i32   5
+add_i32
+mul_i32
+add_i32
+sto_i32   8              ; store to k
+db 12     "true", 0, 0, 0, 0
+db 20     "false", 0, 0, 0
+mst                      ; mark stack
+cup       24             ; call main() function
+stp                      ; end program
+lda_i32   bp+0           ; load a
+lda_i32   bp+4           ; load b
+add_i32
+sto_i32   bp+8           ; store to c
+lda_i32   bp+8           ; load c
+sto_i32   bp-4           ; return value
+ret
+ldc_i32   0              ; reserve for return value
+mst                      ; mark stack
+ldc_i32   1
+ldc_i32   2
+add_i32
+lda_i32   4              ; load value
+cup       17             ; call user procedure add
+sto_i32   bp+0           ; store to a
+lda_i32   8              ; load k
+ldc_i32   13
+equ_i32
+jne       40
+mst                      ; mark stack
+ldc_i32   12
+csp       printf         ; call standard procedure printf
+jmp       43
+mst                      ; mark stack
+ldc_i32   20
+csp       printf         ; call standard procedure printf
+ret

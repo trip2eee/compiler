@@ -10,6 +10,7 @@ class SymbolType(enum.IntEnum):
     FUNCTION = 2
     TYPE = 3
     STD_FUNCTION = 4
+    STRING_VALUE = 5
 
 class SymbolInfo:
     def __init__(self, type:TreeNode, name:TreeNode, value:TreeNode=None, args:TreeNode=None, symtype=SymbolType.VARIABLE, const=False, local_flag=True):
@@ -35,7 +36,10 @@ class SymbolInfo:
             self.name = ''
 
         if value is not None:
-            self.value = value.value
+            if isinstance(value, str):
+                self.value = value
+            else:
+                self.value = value.value
             self.init = True
         else:
             self.value = None
@@ -45,12 +49,17 @@ class SymbolInfo:
         self.symtype = symtype
         
         # determine size based on type
-        size = self.get_size(self.type)
-        if size >= 0:
-            self.size = size        # variable/return type size
+        if SymbolType.STRING_VALUE == self.symtype:
+            self.size = len(self.value) + 1
+            if self.size % 4 != 0:
+                self.size += 4 - (self.size % 4)
         else:
-            print('ERROR: undefined type ' + str(type.text))
-            self.size = 0
+            size = self.get_size(self.type)
+            if size >= 0:
+                self.size = size        # variable/return type size
+            else:
+                print('ERROR: undefined type ' + str(type.text))
+                self.size = 0
 
         self.const = const
         self.addr = 0                # address assigned in add_symbol of SymbolTable.
@@ -81,7 +90,7 @@ class SymbolTable:
             sinfo.addr = self.last_addr
             self.symbols[sinfo.name] = sinfo
 
-            if sinfo.symtype == SymbolType.VARIABLE or sinfo.symtype == SymbolType.ARRAY:
+            if sinfo.symtype == SymbolType.VARIABLE or sinfo.symtype == SymbolType.ARRAY or sinfo.symtype == SymbolType.STRING_VALUE:
                 self.last_addr += sinfo.size
 
     def find_symbol(self, name):
@@ -97,7 +106,7 @@ class SymbolTable:
 
         return symbol
 
-INDENT = '    '
+INDENT = ''
 class Label:
     def __init__(self):
         self.name = ''
@@ -121,7 +130,7 @@ class PCode:
         
         if self.inst is not None:
 
-            col_op = 13
+            col_op = 10
 
             s = INDENT
             s += self.inst  # instruction
@@ -161,17 +170,6 @@ class PCode:
 
         return s
 
-class Data:
-    def __init__(self):
-        self.name = ''
-        self.string = ''
-        self.array = []
-        self.addr = 0
-    
-    def __str__(self):
-        s = INDENT + self.name + ' ' + self.string
-        return s
-
 class CodeGenerator:
     """ Code generator class
         This class generates p-code that can be executed by runtime environment.
@@ -186,7 +184,6 @@ class CodeGenerator:
         self.function_def_code = []        
         self.labels = {}
 
-        self.list_data = []
         self.list_code = None # instruction list
 
         sinfo = SymbolInfo('void', 'printf', symtype=SymbolType.STD_FUNCTION)
@@ -198,15 +195,18 @@ class CodeGenerator:
     def select_function_def_code(self):
         self.list_code = self.function_def_code
 
-    def add_data(self, data:Data):
-        self.list_data.append(data)
-
     def add_code(self, code:PCode):        
         self.list_code.append(code)
 
     def add_label(self, label):
         if label.name not in self.labels:
             self.labels[label.name] = label
+
+    def get_label(self, name):
+        if name in self.labels:
+            return self.labels[name]
+        else:
+            return None
 
     def generate_var_decl(self, node, local_flag=True):
         var_type = node.childs[0]
@@ -261,27 +261,28 @@ class CodeGenerator:
 
     def generate_string(self, str_node:TreeNode):
 
-        start_addr = self.global_symtab.last_addr
-        last_addr = start_addr + len(str_node.text) + 1 # +1 for EOS
-
-        if last_addr % 4 != 0:
-            last_addr += 4 - last_addr % 4
-        self.global_symtab.last_addr = last_addr
-
         cur_list_code = self.list_code
         self.select_global_var_code()
+
+        sinfo = SymbolInfo('char', '$'+str(len(self.list_code)), value=str_node.text[1:-1], symtype=SymbolType.STRING_VALUE)
+        self.global_symtab.add_symbol(sinfo)
         
         code = PCode()
-        code.inst = 'str db'
-        code.op = str_node.text
-        code.comment = 'string ' + str(start_addr) + ':' + str(last_addr)
+        code.inst = 'db ' + str(sinfo.addr) + ' '
+        code.op = str_node.text + ', 0'
+
+        len_str = len(str_node.text) - 2 + 1 # -2 for " ", +1 for 0
+        if len_str % 4 != 0:
+            for i in range(4 - len_str % 4):
+                code.op += ', 0'
+
         self.add_code(code)
 
         self.list_code = cur_list_code
 
         code = PCode()
         code.inst = 'ldc_i32'
-        code.op = start_addr
+        code.op = sinfo.addr
         self.add_code(code)
         
     
@@ -392,15 +393,21 @@ class CodeGenerator:
             self.generate_exp(arg)
             arg = arg.next
 
+        label = self.get_label(call_node.text)
+        if label is None:
+            label = Label()
+            label.name = call_node.text
+            self.add_label(label)
+
         code = PCode()
         if SymbolType.FUNCTION == sinfo.symtype:
             code.inst = 'cup'
-            code.op = call_node.text
-            code.comment = 'call user procedure'
+            code.op = label
+            code.comment = 'call user procedure ' + call_node.text
         else:
             code.inst = 'csp'
-            code.op = call_node.text
-            code.comment = 'call standard procedure'
+            code.op = label
+            code.comment = 'call standard procedure ' + call_node.text
         
         self.add_code(code)
 
@@ -415,6 +422,7 @@ class CodeGenerator:
             # if-statement
             label_end = Label()
             label_end = 'LE' + str(len(self.list_code))
+            self.add_label(label_end)
 
             code = PCode()
             code.inst = 'jne'
@@ -427,10 +435,12 @@ class CodeGenerator:
             # if-else statement
             label_false = Label()
             label_false.name = 'LF' + str(len(self.list_code))
+            self.add_label(label_false)
 
             label_end = Label()
-            label_end = 'LE' + str(len(self.list_code))
-       
+            label_end.name = 'LE' + str(len(self.list_code))
+            self.add_label(label_end)
+
             code = PCode()
             code.inst = 'jne'
             code.label = label_false
@@ -531,13 +541,15 @@ class CodeGenerator:
         # reset address
         # self.cur_symtab.last_addr = 0
 
-        label = Label()
-        label.name = func_name.text
-        self.add_label(label)
+        label = self.get_label(func_name.text)
+        if label is None:
+            label = Label()
+            label.name = func_name.text
+            self.add_label(label)
 
         code = PCode()
         code.inst = None
-        code.label = func_name.text
+        code.label = label
         self.add_code(code)
 
         self.generate_stmt(func_body)
@@ -557,13 +569,19 @@ class CodeGenerator:
 
         self.select_function_def_code()
 
-        label = Label()    
+        label = Label()
         label.name = 'main'
         self.add_label(label)
 
         code = PCode()
-        code.inst = 'call'
+        code.inst = 'mst'
+        code.comment = 'mark stack'
+        self.add_code(code)
+
+        code = PCode()
+        code.inst = 'cup'
         code.label = label
+        code.comment = 'call main() function'
         self.add_code(code)
 
         code = PCode()
@@ -593,6 +611,17 @@ class CodeGenerator:
 
             node = node.next
 
+        # find address
+        if True:
+            addr = len(self.global_var_code)
+
+            for i in range(len(self.function_def_code)):
+                code = self.function_def_code[i]
+                if code.inst is not None:
+                    addr += 1
+                else:
+                    code.label.addr = addr
+
         # write code
         with open(path, 'w') as f:
 
@@ -600,5 +629,6 @@ class CodeGenerator:
                 f.write(str(code) + '\n')
             
             for code in self.function_def_code:
-                f.write(str(code) + '\n')
+                if code.inst != None:
+                    f.write(str(code) + '\n')
 
