@@ -10,7 +10,6 @@ class SymbolType(enum.IntEnum):
     FUNCTION = 2
     TYPE = 3
     STD_FUNCTION = 4
-    STRING_VALUE = 5
 
 class SymbolInfo:
     def __init__(self, type:TreeNode, name:TreeNode, value:TreeNode=None, args:TreeNode=None, symtype=SymbolType.VARIABLE, const=False, local_flag=True):
@@ -49,17 +48,12 @@ class SymbolInfo:
         self.symtype = symtype
         
         # determine size based on type
-        if SymbolType.STRING_VALUE == self.symtype:
-            self.size = len(self.value) + 1
-            if self.size % 4 != 0:
-                self.size += 4 - (self.size % 4)
+        size = self.get_size(self.type)
+        if size >= 0:
+            self.size = size        # variable/return type size
         else:
-            size = self.get_size(self.type)
-            if size >= 0:
-                self.size = size        # variable/return type size
-            else:
-                print('ERROR: undefined type ' + str(type.text))
-                self.size = 0
+            print('ERROR: undefined type ' + str(type.text))
+            self.size = 0
 
         self.const = const
         self.addr = 0                # address assigned in add_symbol of SymbolTable.
@@ -90,7 +84,7 @@ class SymbolTable:
             sinfo.addr = self.last_addr
             self.symbols[sinfo.name] = sinfo
 
-            if sinfo.symtype == SymbolType.VARIABLE or sinfo.symtype == SymbolType.ARRAY or sinfo.symtype == SymbolType.STRING_VALUE:
+            if sinfo.symtype == SymbolType.VARIABLE or sinfo.symtype == SymbolType.ARRAY:
                 self.last_addr += sinfo.size
 
     def find_symbol(self, name):
@@ -106,14 +100,31 @@ class SymbolTable:
 
         return symbol
 
+class Data:
+    def __init__(self, name, value, dtype):
+        self.name = name
+        self.addr = 0
+        self.value = value
+        self.dtype = dtype
+
+    def __str__(self):
+        s = ''
+
+        if 'char' == self.dtype:
+            s = 'db ' + str(self.addr) + ' ' + self.value
+        else:
+            print('ERROR: undefined data type')
+            assert(0)
+        return s
+
 INDENT = ''
 class Label:
     def __init__(self):
         self.name = ''
-        self.addr = 0
+        self.addr = -1
 
     def __str__(self):
-        if self.addr > 0:
+        if self.addr > -1:
             return str(self.addr)
         else:
             return self.name
@@ -124,7 +135,7 @@ class PCode:
         self.op = None
         self.label = None   # label to branch
         self.comment = ''
-        self.addr = 0
+        self.addr = -1
 
     def __str__(self):
         
@@ -185,9 +196,14 @@ class CodeGenerator:
         self.labels = {}
 
         self.list_code = None # instruction list
+        self.list_data = []
 
         sinfo = SymbolInfo('void', 'printf', symtype=SymbolType.STD_FUNCTION)
         self.cur_symtab.add_symbol(sinfo)
+        label = Label()
+        label.name = 'printf'
+        label.addr = 0
+        self.add_label(label)
 
     def select_global_var_code(self):
         self.list_code = self.global_var_code
@@ -259,30 +275,24 @@ class CodeGenerator:
         code.comment = 'load ' + id_node.text
         self.add_code(code)
 
-    def generate_string(self, str_node:TreeNode):
-
-        cur_list_code = self.list_code
-        self.select_global_var_code()
-
-        sinfo = SymbolInfo('char', '$'+str(len(self.list_code)), value=str_node.text[1:-1], symtype=SymbolType.STRING_VALUE)
-        self.global_symtab.add_symbol(sinfo)
+    def generate_string(self, str_node:TreeNode):        
         
-        code = PCode()
-        code.inst = 'db ' + str(sinfo.addr) + ' '
-        code.op = str_node.text + ', 0'
-
+        value = str_node.text + ', 0'
         len_str = len(str_node.text) - 2 + 1 # -2 for " ", +1 for 0
         if len_str % 4 != 0:
             for i in range(4 - len_str % 4):
-                code.op += ', 0'
+                value += ', 0'
+            len_str += 4 - (len_str % 4)        
 
-        self.add_code(code)
+        data = Data(name='$'+str(len(self.list_code)), value=value, dtype='char')
+        data.addr = self.global_symtab.last_addr
+        self.list_data.append(data)
 
-        self.list_code = cur_list_code
+        self.global_symtab.last_addr += len_str
 
         code = PCode()
         code.inst = 'ldc_i32'
-        code.op = sinfo.addr
+        code.op = data.addr
         self.add_code(code)
         
     
@@ -624,6 +634,16 @@ class CodeGenerator:
 
         # write code
         with open(path, 'w') as f:
+
+            # summary
+            # global memory size
+            f.write('.global {}'.format(self.global_symtab.last_addr) + '\n')
+
+            f.write('.data\n')
+            for data in self.list_data:
+                f.write(str(data) + '\n')
+
+            f.write('.code\n')
 
             for code in self.global_var_code:
                 f.write(str(code) + '\n')
