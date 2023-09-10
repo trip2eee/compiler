@@ -146,9 +146,8 @@ class PCode:
             s = INDENT
             s += self.inst  # instruction
 
-            if self.op is not None:                
-                while len(s) < col_op:
-                    s += ' '
+            if self.op is not None:
+                s += ' '
                 # If operand exists
                 if isinstance(self.op, SymbolInfo):
                     self.op : SymbolInfo
@@ -168,8 +167,7 @@ class PCode:
                     s += str(self.op)
 
             elif self.label is not None:
-                while len(s) < col_op:
-                    s += ' '
+                s += ' '
                 s += str(self.label)
 
             if self.comment is not '':
@@ -277,11 +275,11 @@ class CodeGenerator:
 
     def generate_string(self, str_node:TreeNode):        
         
-        value = str_node.text + ', 0'
+        value = str_node.text + ' 0'
         len_str = len(str_node.text) - 2 + 1 # -2 for " ", +1 for 0
         if len_str % 4 != 0:
             for i in range(4 - len_str % 4):
-                value += ', 0'
+                value += ' 0'
             len_str += 4 - (len_str % 4)        
 
         data = Data(name='$'+str(len(self.list_code)), value=value, dtype='char')
@@ -549,7 +547,8 @@ class CodeGenerator:
             # symbol.addr -= (self.cur_symtab.last_addr)
 
         # reset address
-        # self.cur_symtab.last_addr = 0
+        # self.cur_symtab.last_addr = 8
+        self.cur_symtab.last_addr += 4 # for program counter (pc)
 
         label = self.get_label(func_name.text)
         if label is None:

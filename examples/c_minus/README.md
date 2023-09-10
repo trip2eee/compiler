@@ -65,11 +65,11 @@ ret   ; sp=bp, pop bp, pop return address and jump
 | sub_i32 | 32-bit integer subtraction|
 | mul_i32 | 32-bit integer multiplication |
 | div_i32 | 32-bit integer division |
-| sto_i32 | store top to address |
+| sto_i32 | pop 32-bit integer and store to address |
 | ent | entry |
-| ret | return |
-| mst | mark stack |
-| cup | call user procedure |
+| ret | return (pop pc, sp=bp, pop bp)|
+| mst | mark stack (push bp, bp=sp, sp=bp) |
+| cup | call user procedure (push pc)|
 | csp | call standard (built-in) procedure |
 | cmp | compare tow values |
 | jmp | unconditional jump |

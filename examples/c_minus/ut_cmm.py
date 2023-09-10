@@ -3,6 +3,7 @@ sys.path += '../../'
 from examples.c_minus.cmm_parser import Parser
 from examples.c_minus.cmm_lexer import Lexer
 from examples.c_minus.code_generator import CodeGenerator
+from examples.c_minus.runenv import RunEnv
 import unittest
 
 class TestCMM(unittest.TestCase):
@@ -23,6 +24,9 @@ class TestCMM(unittest.TestCase):
         program = parser.parse(list_tokens)
 
         codegen.generate(program, 'examples/c_minus/test.pcode', verbose=True)
+
+        runenv = RunEnv()
+        runenv.exec('examples/c_minus/test.pcode')
 
         print('done')
 
