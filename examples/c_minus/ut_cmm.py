@@ -28,7 +28,7 @@ class TestCMM(unittest.TestCase):
         runenv = RunEnv()
         runenv.exec('examples/c_minus/test.pcode')
 
-        print('done')
+        self.assertEqual(runenv.ostream[0], 'true')
 
 if __name__ == '__main__':
     unittest.main()

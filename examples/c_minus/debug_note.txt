@@ -1,0 +1,18 @@
+mst:
+bp=36
+@sp = 40, push 0 ; for PC
+@sp = 44, push bp
+
+bp = 48
+sp = 48
+
+
+cup add
+- pc = 29
+- bp-8 = 40
+- data[40] = pc
+- pc = 15
+
+
+ret
+-bp = 36

@@ -1,5 +1,7 @@
 """
 @brief C-- Runtime Environment
+@author Jongmin Park (trip2eee@gmail.com)
+@date September 10, 2023
 """
 
 ENDIAN = 'little'
@@ -16,13 +18,15 @@ class RunEnv:
         self.list_code = [] # code memory
         self.list_data = None
 
-        self.global_size = 0
-        self.stack_size = 1024
+        self.global_size = 0    # The size of gobal/static is determined by .global directive.
+        self.stack_size = 1024  # reserved stack size
 
         # special purpose registers
         self.pc = 0 # program counter
         self.bp = 0 # base pointer
         self.sp = 0 # stack pointer
+
+        self.ostream = []   # output stream for test
 
     def exec(self, code_path):
         self.load_code(code_path)
@@ -32,7 +36,7 @@ class RunEnv:
         self.sp = self.global_size
 
         while True:
-            # featch
+            # fetch
             code = self.list_code[self.pc]
             self.pc += 1
 
@@ -53,11 +57,19 @@ class RunEnv:
                 self.cup(code)
             elif 'ret' == code.inst:
                 self.ret()
+            elif 'cmp' == code.inst:
+                self.cmp()
+            elif 'jmp' == code.inst:
+                self.jmp(code)
+            elif 'jne' == code.inst:
+                self.jne(code)
+            elif 'csp' == code.inst:
+                self.csp(code)
             elif 'stp' == code.inst:
-                print('End program')
                 break
             else:
-                print('undefined instruction')
+                print('undefined instruction:', code.inst, self.pc-1)
+                assert(0)
     
     def push_i32(self, i32):
         b = int.to_bytes(i32, 4, byteorder=ENDIAN)
@@ -70,19 +82,77 @@ class RunEnv:
         
         return int.from_bytes(b, byteorder=ENDIAN)
 
-    def mst(self):        
-        self.push_i32(self.bp)
-        self.bp = self.sp
-        self.sp = self.bp
+    def printf(self):
+        # string pointer
+        addr = self.bp+0
+        pstr = self.list_data[addr]
 
-    def cup(self, code):
-        self.push_i32(self.pc)
+        str_out = ''
+        c = self.list_data[pstr:pstr+1].decode()        
+        while c != '\0':
+            str_out += c
+            print(c, end='')
+            pstr += 1
+            c = self.list_data[pstr:pstr+1].decode()
+
+        self.ostream.append(str_out)
+
+    def cup(self, code):        
+        addr = self.bp - 8
+        self.list_data[addr:addr+4] = int.to_bytes(self.pc, 4, byteorder=ENDIAN)
+
         self.pc = code.op
 
+    def csp(self, code):
+        addr = self.bp - 8
+        self.list_data[addr:addr+4] = int.to_bytes(self.pc, 4, byteorder=ENDIAN)
+
+        if code.op == 0:
+            # printf
+            self.printf()
+        
+        self.ret()  # return
+
+    def jmp(self, code): 
+        # unconditional branch       
+        self.pc = code.op        
+
+    def jne(self, code):
+        a = self.pop_i32()
+        if a == 0:
+            self.pc = code.op
+        else:
+            pass    # no operation        
+
+    def cmp(self):
+        a = self.pop_i32()
+        b = self.pop_i32()
+        if a==b:
+            # equal
+            self.push_i32(1)
+        else:
+            # not equal
+            self.push_i32(0)
+
+
+    def mst(self):
+        self.push_i32(0)        # reserve memory for pc
+        self.push_i32(self.bp)
+        self.bp = self.sp       # set new base pointer
+        self.sp = self.bp       # set new stack pointer
+
     def ret(self):
-        self.pc = self.pop_i32()
-        self.sp = self.bp
-        self.bp = self.pop_i32()        
+        # read pc
+        addr = self.bp - 8
+        self.pc = int.from_bytes(self.list_data[addr:addr+4], byteorder=ENDIAN)
+
+        # restore sp
+        self.sp = self.bp - 8 # for bp and pc
+
+        # read bp
+        addr = self.bp - 4
+        self.bp = int.from_bytes(self.list_data[addr:addr+4], byteorder=ENDIAN)        
+        
 
     def ldc_i32(self, code):
         self.push_i32(code.op)
@@ -97,14 +167,14 @@ class RunEnv:
         self.push_i32(value)
 
     def sto_i32(self, code):
-        b = self.pop_i32()
+        a = self.pop_i32()
 
         if code.base == 0:
             addr = code.op
         else:
             addr = self.bp + code.op
 
-        self.list_data[addr:addr+4] = int.to_bytes(b, 4, byteorder=ENDIAN)
+        self.list_data[addr:addr+4] = int.to_bytes(a, 4, byteorder=ENDIAN)
     
     def add_i32(self, code):
         b = self.pop_i32()
@@ -132,7 +202,7 @@ class RunEnv:
                     self.list_data = bytearray(self.global_size + self.stack_size)
                 
                 elif '.data' == tokens[0]:
-                    print('initialize data')
+                    pass
                 
                 elif 'db' == tokens[0]:
                     addr = int(tokens[1])
@@ -152,8 +222,8 @@ class RunEnv:
                             addr += 1
 
                 elif '.code' == tokens[0]:
-                    print('read codes')
-                
+                    pass
+
                 else:
                     code = Code()
                     code.inst = tokens[0]

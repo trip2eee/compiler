@@ -1,5 +1,7 @@
 """
 @brief C-- p-code generator
+@author Jongmin Park (trip2eee@gmail.com)
+@date September 4, 2023
 """
 
 from examples.c_minus.cmm_parser_table import *
@@ -254,7 +256,6 @@ class CodeGenerator:
             self.add_code(code)
         else:
             # declaration with no initial value
-            print(var_type.text + ' ' + var_name.text)
 
             sinfo = SymbolInfo(var_type, var_name, local_flag=local_flag)
             self.cur_symtab.add_symbol(sinfo)
@@ -361,7 +362,7 @@ class CodeGenerator:
                         code.op = symbol
                         code.comment = 'store to ' + exp.childs[0].text
                     elif exp.text == '==':
-                        code.inst = 'equ_i32'                
+                        code.inst = 'cmp'                
                     else:
                         print('Error: Undefined operator')
                         assert(0)
@@ -505,7 +506,7 @@ class CodeGenerator:
         code.comment = 'return value'
         sinfo = SymbolInfo(type=None, name=None)
         sinfo.local = True
-        sinfo.addr = -4
+        sinfo.addr = -12
         code.op = sinfo
         self.add_code(code)
 
@@ -538,17 +539,6 @@ class CodeGenerator:
             self.cur_symtab.add_symbol(sinfo)
 
             arg = arg.next
-
-        # change the addresses in form of (bp+offset)
-        # Add 8 bytes for return address and base pointer (bp)
-        for key in self.cur_symtab.symbols:
-            symbol:SymbolInfo
-            symbol = self.cur_symtab.symbols[key]
-            # symbol.addr -= (self.cur_symtab.last_addr)
-
-        # reset address
-        # self.cur_symtab.last_addr = 8
-        self.cur_symtab.last_addr += 4 # for program counter (pc)
 
         label = self.get_label(func_name.text)
         if label is None:
@@ -615,7 +605,6 @@ class CodeGenerator:
                 sinfo = SymbolInfo(func_type, func_name, args=func_args, symtype=SymbolType.FUNCTION)
                 self.cur_symtab.add_symbol(sinfo)
 
-                print(func_type.text + ' ' + func_name.text)
                 self.generate_function(node)
 
             node = node.next

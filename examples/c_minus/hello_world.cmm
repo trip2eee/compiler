@@ -12,7 +12,7 @@ void main()
 {
     int a = add(1+2, value);
     
-    if(k == 13)
+    if(a == 13)
     {
         printf("true");
     }

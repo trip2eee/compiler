@@ -28,20 +28,26 @@ int add(int a, int b)
 call add(10, 20)
 
 ```
-ldc 0 ; memory for return value [bp-4]
-mst   ; push return address and bp, bp=sp, sp=bp
+ldc 0 ; memory for return value [bp-12]
+mst   ; push 0    -> reserve memory for pc (bp-8)
+      ; push bp   -> store bp (bp-4)
+      ; bp=sp
+      ; sp=bp
 
-ldc 10
-ldc 20
+ldc 10  ; argument 1, bp+0
+ldc 20  ; argument 2, bp+4
 
-cup add
+cup add ; [bp-8] = pc
+        ; pc = addr(add)
 
 add:
 lda 0
 lda 4
 add
-sto bp-4
-ret   ; sp=bp, pop bp, pop return address and jump
+sto bp-12  ; return value
+ret   ; pc = [bp-8]
+      ; sp = bp - 8 (bp and pc)
+      ; bp = [bp-4]
 
 ```
 
@@ -67,10 +73,10 @@ ret   ; sp=bp, pop bp, pop return address and jump
 | div_i32 | 32-bit integer division |
 | sto_i32 | pop 32-bit integer and store to address |
 | ent | entry |
+| mst | mark stack (push 0 (for pc), push bp, bp=sp, sp=bp) |
+| cup | call user procedure (sto bp-8)|
+| csp | call standard (built-in) procedure (sto bp-8)|
 | ret | return (pop pc, sp=bp, pop bp)|
-| mst | mark stack (push bp, bp=sp, sp=bp) |
-| cup | call user procedure (push pc)|
-| csp | call standard (built-in) procedure |
 | cmp | compare tow values |
 | jmp | unconditional jump |
 | jeq | jump if euqual or true |
@@ -80,11 +86,23 @@ ret   ; sp=bp, pop bp, pop return address and jump
 - i32 : 32-bit integer
 - f32 : 32-bit single precision floating point
 
-## Macro
+## Standard Procedure
+Currently implemented standard (build-in) procedures are described in the table.
+
+| Function | Description |
+| - | - |
+| printf | printf. formatted string and escape characters are not supported yet |
+
+
+## Directives
 
 | Macro | Description |
 | - | - |
+| .global {size} | define the size of global/static area |
+| .data | define the start of data section |
 | db {addr} {values} | define bytes. |
+| .code | define the start of code section |
+
 
 
 

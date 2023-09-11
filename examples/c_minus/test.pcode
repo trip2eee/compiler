@@ -21,9 +21,9 @@ stp                      ; end program
 lda_i32 bp+0             ; load a
 lda_i32 bp+4             ; load b
 add_i32
-sto_i32 bp+12            ; store to c
-lda_i32 bp+12            ; load c
-sto_i32 bp-4             ; return value
+sto_i32 bp+8             ; store to c
+lda_i32 bp+8             ; load c
+sto_i32 bp-12            ; return value
 ret
 ldc_i32 0                ; reserve for return value
 mst                      ; mark stack
@@ -32,11 +32,10 @@ ldc_i32 2
 add_i32
 lda_i32 4                ; load value
 cup 15                   ; call user procedure add
-# TODO: Pop arguments
-sto_i32 bp+4             ; store to a
-lda_i32 8                ; load k
+sto_i32 bp+0             ; store to a
+lda_i32 bp+0             ; load a
 ldc_i32 13
-equ_i32
+cmp
 jne 38
 mst                      ; mark stack
 ldc_i32 12
