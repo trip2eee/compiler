@@ -19,7 +19,7 @@ class TestCMM(unittest.TestCase):
     def test_hello_world(self):
         self.lexer.scan('examples/c_minus/tests/hello_world.cmm')
         program = self.parser.parse(self.lexer.list_tokens)
-        self.codegen.generate(program, 'examples/c_minus/out.pcode', verbose=True)        
+        self.codegen.generate(program, 'examples/c_minus/out.pcode', verbose=True)
         self.runenv.exec('examples/c_minus/out.pcode')
 
         self.assertEqual(self.runenv.stdout[0], 'Hello, World\n')
@@ -27,15 +27,23 @@ class TestCMM(unittest.TestCase):
     def test_if_stmt(self):
         self.lexer.scan('examples/c_minus/tests/if_stmt.cmm')
         program = self.parser.parse(self.lexer.list_tokens)
-        self.codegen.generate(program, 'examples/c_minus/out.pcode', verbose=True)        
+        self.codegen.generate(program, 'examples/c_minus/out.pcode', verbose=True)
         self.runenv.exec('examples/c_minus/out.pcode')
 
         self.assertEqual(self.runenv.stdout[0], 'a + b = 30\n')
 
+    def test_for_stmt(self):
+        self.lexer.scan('examples/c_minus/tests/for_stmt.cmm')
+        program = self.parser.parse(self.lexer.list_tokens)
+        self.codegen.generate(program, 'examples/c_minus/out.pcode', verbose=True)
+        self.runenv.exec('examples/c_minus/out.pcode')
+
+        self.assertEqual(self.runenv.stdout[0], 'sum = 55\n')
+
     def test_func_call(self):
         self.lexer.scan('examples/c_minus/tests/func_call.cmm')
         program = self.parser.parse(self.lexer.list_tokens)
-        self.codegen.generate(program, 'examples/c_minus/out.pcode', verbose=True)        
+        self.codegen.generate(program, 'examples/c_minus/out.pcode', verbose=True)
         self.runenv.exec('examples/c_minus/out.pcode')
 
         self.assertEqual(self.runenv.stdout[0], 'true\n')

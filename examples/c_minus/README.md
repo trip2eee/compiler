@@ -31,13 +31,14 @@ call add(10, 20)
 ldc 0 ; memory for return value [bp-12]
 mst   ; push 0    -> reserve memory for pc (bp-8)
       ; push bp   -> store bp (bp-4)
-      ; bp=sp
-      ; sp=bp
+      ; mark bp
+      ; sp: not changed
 
 ldc 10  ; argument 1, bp+0
 ldc 20  ; argument 2, bp+4
 
-cup add ; [bp-8] = pc
+cup add ; bp = marked bp
+        ; [bp-8] = pc
         ; pc = addr(add)
 
 add:
@@ -73,9 +74,9 @@ ret   ; pc = [bp-8]
 | div_i32 | 32-bit integer division |
 | sto_i32 | pop 32-bit integer and store to address |
 | ent | entry |
-| mst | mark stack (push 0 (for pc), push bp, bp=sp, sp=bp) |
-| cup | call user procedure (sto bp-8)|
-| csp | call standard (built-in) procedure (sto bp-8)|
+| mst | mark stack (push 0 (for pc), push bp, marked_bp=sp) |
+| cup | call user procedure (bp=marked_bp, sto bp-8)|
+| csp | call standard (built-in) procedure (bp=marked_bp, sto bp-8)|
 | ret | return (pop pc, sp=bp, pop bp)|
 | cmp | compare tow values |
 | jmp | unconditional jump |
@@ -91,7 +92,7 @@ Currently implemented standard (build-in) procedures are described in the table.
 
 | Function | Description |
 | - | - |
-| printf | printf. formatted string and escape characters are not supported yet |
+| printf | printf. |
 
 
 ## Directives

@@ -164,7 +164,8 @@ class RunEnv:
 
     def jne(self, code):
         a = self.pop_i32()
-        if a == 0:
+        if a != 0:
+            # if not equal(0)
             self.pc = code.op
         else:
             pass    # no operation        
@@ -174,10 +175,12 @@ class RunEnv:
         b = self.pop_i32()
         if a==b:
             # equal
+            self.push_i32(0)
+        elif a < b:
             self.push_i32(1)
         else:
-            # not equal
-            self.push_i32(0)
+            # a > b:
+            self.push_i32(2)
 
 
     def mst(self):

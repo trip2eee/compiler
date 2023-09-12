@@ -9,12 +9,14 @@ class OpType(enum.IntEnum):
     EXP = 3
     STMT = 4
     IF_STMT = 5
-    TERM = 6
-    VAR_DECL = 7
-    FUNC_DECL = 8
-    RETURN = 9
-    FUNC_CALL = 10
-    STRING = 11
+    FOR_STMT = 6
+    WHILE_STMT = 7
+    TERM = 8
+    VAR_DECL = 9
+    FUNC_DECL = 10
+    RETURN = 11
+    FUNC_CALL = 12
+    STRING = 13
 
 class TreeNode:
     def __init__(self):
@@ -150,7 +152,16 @@ FOR_STMT : FOR '(' EXP ';' EXP ';' EXP ')' COMPOUND_STMT {
     $$.childs[1] = $5
     $$.childs[2] = $7
     $$.childs[3] = $9
-};
+} | 
+FOR '(' VAR_DECL EXP ';' EXP ')' COMPOUND_STMT {
+    $$ = TreeNode()
+    $$.op_type = OpType.FOR_STMT
+    $$.childs[0] = $3
+    $$.childs[1] = $4
+    $$.childs[2] = $6
+    $$.childs[3] = $8
+}
+;
 
 RETURN_STMT: RETURN EXP ';' {
     $$ = TreeNode()
