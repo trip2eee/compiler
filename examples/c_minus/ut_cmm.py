@@ -16,36 +16,32 @@ class TestCMM(unittest.TestCase):
     def tearDown(self):
         pass
 
-    def test_hello_world(self):
-        self.lexer.scan('examples/c_minus/tests/hello_world.cmm')
+    def run_code(self, code_path):
+        print('run', code_path)
+
+        self.lexer.scan('examples/c_minus/tests/' + code_path)
         program = self.parser.parse(self.lexer.list_tokens)
         self.codegen.generate(program, 'examples/c_minus/out.pcode', verbose=True)
         self.runenv.exec('examples/c_minus/out.pcode')
 
+    def test_hello_world(self):
+        self.run_code('hello_world.cmm')
+        
         self.assertEqual(self.runenv.stdout[0], 'Hello, World\n')
 
     def test_if_stmt(self):
-        self.lexer.scan('examples/c_minus/tests/if_stmt.cmm')
-        program = self.parser.parse(self.lexer.list_tokens)
-        self.codegen.generate(program, 'examples/c_minus/out.pcode', verbose=True)
-        self.runenv.exec('examples/c_minus/out.pcode')
-
+        self.run_code('if_stmt.cmm')
+        
         self.assertEqual(self.runenv.stdout[0], 'a + b = 30\n')
 
     def test_for_stmt(self):
-        self.lexer.scan('examples/c_minus/tests/for_stmt.cmm')
-        program = self.parser.parse(self.lexer.list_tokens)
-        self.codegen.generate(program, 'examples/c_minus/out.pcode', verbose=True)
-        self.runenv.exec('examples/c_minus/out.pcode')
+        self.run_code('for_stmt.cmm')
 
         self.assertEqual(self.runenv.stdout[0], 'sum = 55\n')
 
     def test_func_call(self):
-        self.lexer.scan('examples/c_minus/tests/func_call.cmm')
-        program = self.parser.parse(self.lexer.list_tokens)
-        self.codegen.generate(program, 'examples/c_minus/out.pcode', verbose=True)
-        self.runenv.exec('examples/c_minus/out.pcode')
-
+        self.run_code('func_call.cmm')
+        
         self.assertEqual(self.runenv.stdout[0], 'true\n')
 
 if __name__ == '__main__':

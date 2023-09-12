@@ -16,8 +16,8 @@ lda_i32 bp+0             ; load a
 lda_i32 bp+4             ; load b
 add_i32
 ldc_i32 30
-cmp
-jne 22
+equ
+jpf 22
 mst                      ; mark stack
 ldc_i32 0
 lda_i32 bp+0             ; load a

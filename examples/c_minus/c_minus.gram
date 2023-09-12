@@ -17,6 +17,7 @@ class OpType(enum.IntEnum):
     RETURN = 11
     FUNC_CALL = 12
     STRING = 13
+    COMMENT = 14
 
 class TreeNode:
     def __init__(self):
@@ -52,7 +53,11 @@ DECL
 }
 ;
 
-DECL : VAR_DECL | FUNC_DECL | COMMENT
+DECL : VAR_DECL | FUNC_DECL | 
+COMMENT {
+    $$ = $1
+    $1.op_type = OpType.COMMENT
+}
 ;
 
 VAR_DECL : TYPE_SPEC ID ';'
@@ -120,7 +125,10 @@ STMT_LIST : STMT_LIST STMT {
 STMT {
     $$ = $1
 } |
-COMMENT;
+COMMENT {
+    $$ = $1
+    $1.op_type = OpType.COMMENT
+};
 
 STMT : EXP_STMT | IF_STMT | FOR_STMT | VAR_DECL | RETURN_STMT
 ;

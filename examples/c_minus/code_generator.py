@@ -374,9 +374,17 @@ class CodeGenerator:
                         code.op = symbol
                         code.comment = 'store to ' + exp.childs[0].text
                     elif exp.text == '==':
-                        code.inst = 'cmp'                
+                        code.inst = 'equ'
+                    elif exp.text == '<=':
+                        code.inst = 'lte'
+                    elif exp.text == '>=':
+                        code.inst = 'gte'
+                    elif exp.text == '<':
+                        code.inst = 'lst'
+                    elif exp.text == '>':
+                        code.inst = 'grt'
                     else:
-                        print('Error: Undefined operator')
+                        print('Error: Undefined operator ' + exp.text)
                         assert(0)
 
                     self.add_code(code)
@@ -446,7 +454,7 @@ class CodeGenerator:
             self.add_label(label_end)
 
             code = PCode()
-            code.inst = 'jne'
+            code.inst = 'jpf'
             code.label = label_end
             self.add_code(code)
 
@@ -463,7 +471,7 @@ class CodeGenerator:
             self.add_label(label_end)
 
             code = PCode()
-            code.inst = 'jne'
+            code.inst = 'jpf'
             code.label = label_false
             self.add_code(code)
 
@@ -484,6 +492,55 @@ class CodeGenerator:
             code.label = label_end
             self.add_code(code)
 
+    def generate_for_stmt(self, for_node:TreeNode):
+        node_init   = for_node.childs[0]
+        node_test   = for_node.childs[1]
+        node_update = for_node.childs[2]
+        node_body   = for_node.childs[3]
+
+        
+        self.generate_stmt(node_init)
+
+        # TODO: To change add_label() to take name and return label instance
+        label_begin = Label()
+        label_begin.name = 'LFOR' + str(len(self.list_code))
+        self.add_label(label_begin)
+
+        label_end = Label()
+        label_end.name = 'LFOR' + str(len(self.list_code))
+        self.add_label(label_end)
+
+        code = PCode()
+        code.label = label_begin
+        self.add_code(code)
+        
+        # test statement
+        self.generate_stmt(node_test)        
+
+        code = PCode()
+        code.inst = 'jpf'
+        code.label = label_end
+        code.comment = 'if false, jump to the end of for-loop'
+        self.add_code(code)
+
+        # loop body
+        self.generate_stmt(node_body)
+
+        # update
+        self.generate_stmt(node_update)
+
+        code = PCode()
+        code.inst = 'jmp'
+        code.label = label_begin
+        self.add_code(code)
+        
+        code = PCode()
+        code.label = label_end
+        self.add_code(code)
+
+
+
+
     def generate_stmt(self, stmt_node:TreeNode):
         node = stmt_node
 
@@ -502,6 +559,10 @@ class CodeGenerator:
                 self.generate_number(node)
             elif OpType.FUNC_CALL == node.op_type:
                 self.generate_call(node)
+            elif OpType.FOR_STMT == node.op_type:
+                self.generate_for_stmt(node)
+            elif OpType.COMMENT == node.op_type:
+                pass # skip comment
             else:
                 print('ERROR: Undefined operation type')
                 assert(0)

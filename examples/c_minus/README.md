@@ -78,10 +78,10 @@ ret   ; pc = [bp-8]
 | cup | call user procedure (bp=marked_bp, sto bp-8)|
 | csp | call standard (built-in) procedure (bp=marked_bp, sto bp-8)|
 | ret | return (pop pc, sp=bp, pop bp)|
-| cmp | compare tow values |
+| equ | test if two values equal |
 | jmp | unconditional jump |
-| jeq | jump if euqual or true |
-| jne | jump if not euqual or false|
+| jpt | jump if true |
+| jpf | jump if false|
 | stp | stop |
 
 - i32 : 32-bit integer

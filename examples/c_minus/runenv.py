@@ -58,12 +58,20 @@ class RunEnv:
                 self.cup(code)
             elif 'ret' == code.inst:
                 self.ret()
-            elif 'cmp' == code.inst:
-                self.cmp()
+            elif 'equ' == code.inst:
+                self.equ()
+            elif 'lte' == code.inst:
+                self.lte()
+            elif 'gte' == code.inst:
+                self.gte()
+            elif 'lst' == code.inst:
+                self.lst()
+            elif 'grt' == code.inst:
+                self.grt()
             elif 'jmp' == code.inst:
                 self.jmp(code)
-            elif 'jne' == code.inst:
-                self.jne(code)
+            elif 'jpf' == code.inst:
+                self.jpf(code)
             elif 'csp' == code.inst:
                 self.csp(code)
             elif 'stp' == code.inst:
@@ -162,26 +170,67 @@ class RunEnv:
         # unconditional branch       
         self.pc = code.op        
 
-    def jne(self, code):
+    def jpf(self, code):
         a = self.pop_i32()
-        if a != 0:
-            # if not equal(0)
+        if a == 0:
+            # if false
             self.pc = code.op
         else:
             pass    # no operation        
 
-    def cmp(self):
+    def equ(self):
         a = self.pop_i32()
         b = self.pop_i32()
         if a==b:
             # equal
-            self.push_i32(0)
-        elif a < b:
             self.push_i32(1)
         else:
-            # a > b:
-            self.push_i32(2)
+            # not equal
+            self.push_i32(0)
 
+    def lte(self):
+        # pushed in order of a, b
+        # pop in reverse order
+        b = self.pop_i32()
+        a = self.pop_i32()
+        if a<=b:
+            # less than or equal to
+            self.push_i32(1)
+        else:
+            self.push_i32(0)
+
+    def gte(self):
+        # pushed in order of a, b
+        # pop in reverse order
+        b = self.pop_i32()
+        a = self.pop_i32()
+        if a>=b:
+            # greater than or equal to
+            self.push_i32(1)
+        else:
+            self.push_i32(0)
+
+    def lst(self):
+        # pushed in order of a, b
+        # pop in reverse order
+        b = self.pop_i32()
+        a = self.pop_i32()
+        if a<b:
+            # less than
+            self.push_i32(1)
+        else:
+            self.push_i32(0)
+
+    def grt(self):
+        # pushed in order of a, b
+        # pop in reverse order
+        b = self.pop_i32()
+        a = self.pop_i32()
+        if a<b:
+            # greater than
+            self.push_i32(1)
+        else:
+            self.push_i32(0)
 
     def mst(self):
         self.push_i32(0)        # reserve memory for pc
