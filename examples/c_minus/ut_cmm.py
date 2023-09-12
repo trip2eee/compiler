@@ -8,27 +8,37 @@ import unittest
 
 class TestCMM(unittest.TestCase):
     def setUp(self):
-        pass
+        self.lexer = Lexer()
+        self.parser = Parser()
+        self.codegen = CodeGenerator()
+        self.runenv = RunEnv()
 
     def tearDown(self):
         pass
 
-    def test_parse(self):
-        lexer = Lexer()
-        parser = Parser()
-        codegen = CodeGenerator()
+    def test_hello_world(self):
+        self.lexer.scan('examples/c_minus/tests/hello_world.cmm')
+        program = self.parser.parse(self.lexer.list_tokens)
+        self.codegen.generate(program, 'examples/c_minus/out.pcode', verbose=True)        
+        self.runenv.exec('examples/c_minus/out.pcode')
 
-        lexer.scan('examples/c_minus/hello_world.cmm')
-        list_tokens = lexer.list_tokens
+        self.assertEqual(self.runenv.stdout[0], 'Hello, World\n')
 
-        program = parser.parse(list_tokens)
+    def test_if_stmt(self):
+        self.lexer.scan('examples/c_minus/tests/if_stmt.cmm')
+        program = self.parser.parse(self.lexer.list_tokens)
+        self.codegen.generate(program, 'examples/c_minus/out.pcode', verbose=True)        
+        self.runenv.exec('examples/c_minus/out.pcode')
 
-        codegen.generate(program, 'examples/c_minus/test.pcode', verbose=True)
+        self.assertEqual(self.runenv.stdout[0], 'a + b = 30\n')
 
-        runenv = RunEnv()
-        runenv.exec('examples/c_minus/test.pcode')
+    def test_func_call(self):
+        self.lexer.scan('examples/c_minus/tests/func_call.cmm')
+        program = self.parser.parse(self.lexer.list_tokens)
+        self.codegen.generate(program, 'examples/c_minus/out.pcode', verbose=True)        
+        self.runenv.exec('examples/c_minus/out.pcode')
 
-        self.assertEqual(runenv.ostream[0], 'true')
+        self.assertEqual(self.runenv.stdout[0], 'true\n')
 
 if __name__ == '__main__':
     unittest.main()

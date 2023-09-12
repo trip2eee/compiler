@@ -14,12 +14,14 @@ void main()
     
     if(a == 13)
     {
-        printf("true");
+        printf("true\n");
     }
     else
     {
-        printf("false");
+        printf("false\n");
     }
+    
+    printf("k: %d\n", k);
 }
 
 

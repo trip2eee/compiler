@@ -26,13 +26,14 @@ class RunEnv:
         self.bp = 0 # base pointer
         self.sp = 0 # stack pointer
 
-        self.ostream = []   # output stream for test
+        self.stdout = []   # output stream for test
 
     def exec(self, code_path):
         self.load_code(code_path)
 
         self.pc = 0
         self.bp = 0
+        self.bp_marked = 0
         self.sp = self.global_size
 
         while True:
@@ -82,28 +83,72 @@ class RunEnv:
         
         return int.from_bytes(b, byteorder=ENDIAN)
 
+    def print_string(self, str):
+        print(str, end='')
+
+    def bytes_to_int(self, bytes):
+        return int.from_bytes(bytes, byteorder=ENDIAN)
+    
     def printf(self):
         # string pointer
-        addr = self.bp+0
-        pstr = self.list_data[addr]
+        ptr_arg0 = self.bp+0
+        ptr_arg = ptr_arg0
+        ptr_format = self.list_data[ptr_arg0]
 
         str_out = ''
-        c = self.list_data[pstr:pstr+1].decode()        
+        c = self.list_data[ptr_format:ptr_format+1].decode()
+        ptr_format += 1
         while c != '\0':
-            str_out += c
-            print(c, end='')
-            pstr += 1
-            c = self.list_data[pstr:pstr+1].decode()
+            if c == '\\':
+                # if escape character
+                c = self.list_data[ptr_format:ptr_format+1].decode()
+                ptr_format += 1
+                if c == '\0':
+                    break
+                elif c == 'n':
+                    self.print_string('\n')
+                    str_out += '\n'
+                elif c == 't':
+                    self.print_string('\t')
+                    str_out += '\t'
+                else:
+                    self.print_string('\\')
+                    self.print_string(c)
+                    str_out += '\\'
+                    str_out += c
+            elif c == '%':
+                # if specifier character
+                c = self.list_data[ptr_format:ptr_format+1].decode()
+                ptr_format += 1
+                if c == 'd':
+                    ptr_arg += 4
+                    data = self.list_data[ptr_arg:ptr_arg+4]
+                    value = self.bytes_to_int(data)
+                    self.print_string(str(value))
+                    str_out += str(value)
+                else:
+                    self.print_string('%')
+                    self.print_string(c)
+                    str_out += '%'
+                    str_out += c
+            else:                
+                self.print_string(c)
+                str_out += c
+            
+            c = self.list_data[ptr_format:ptr_format+1].decode()
+            ptr_format += 1
 
-        self.ostream.append(str_out)
+        self.stdout.append(str_out)
 
-    def cup(self, code):        
+    def cup(self, code):
+        self.bp = self.bp_marked    # set new base pointer
         addr = self.bp - 8
         self.list_data[addr:addr+4] = int.to_bytes(self.pc, 4, byteorder=ENDIAN)
 
         self.pc = code.op
 
     def csp(self, code):
+        self.bp = self.bp_marked    # set new base pointer
         addr = self.bp - 8
         self.list_data[addr:addr+4] = int.to_bytes(self.pc, 4, byteorder=ENDIAN)
 
@@ -138,20 +183,20 @@ class RunEnv:
     def mst(self):
         self.push_i32(0)        # reserve memory for pc
         self.push_i32(self.bp)
-        self.bp = self.sp       # set new base pointer
-        self.sp = self.bp       # set new stack pointer
+        self.bp_marked = self.sp
+        # sp: not changed
 
     def ret(self):
         # read pc
         addr = self.bp - 8
-        self.pc = int.from_bytes(self.list_data[addr:addr+4], byteorder=ENDIAN)
+        self.pc = self.bytes_to_int(self.list_data[addr:addr+4])
 
         # restore sp
         self.sp = self.bp - 8 # for bp and pc
 
         # read bp
         addr = self.bp - 4
-        self.bp = int.from_bytes(self.list_data[addr:addr+4], byteorder=ENDIAN)        
+        self.bp = self.bytes_to_int(self.list_data[addr:addr+4])
         
 
     def ldc_i32(self, code):
@@ -163,7 +208,7 @@ class RunEnv:
         else:
             addr = self.bp + code.op
 
-        value = int.from_bytes(self.list_data[addr:addr+4], byteorder=ENDIAN)
+        value = self.bytes_to_int(self.list_data[addr:addr+4])
         self.push_i32(value)
 
     def sto_i32(self, code):
@@ -192,39 +237,53 @@ class RunEnv:
                 l = f.readline().strip()
 
                 if l == '':
-                    break
+                    break                
 
-                tokens = l.split(' ')
-
-                if '.global' == tokens[0]:
+                if l.startswith('.global'):
                     # initialize data memory
+                    tokens = l.split(' ')
                     self.global_size = int(tokens[1])
                     self.list_data = bytearray(self.global_size + self.stack_size)
                 
-                elif '.data' == tokens[0]:
+                elif l.startswith('.data'):
                     pass
                 
-                elif 'db' == tokens[0]:
-                    addr = int(tokens[1])
+                elif l.startswith('db'):
+                    # addr = int(tokens[1])
 
-                    for i in range(2, len(tokens)):
-                        d = tokens[i]
+                    addr = 0
+                    data = l[3:]
+                    i = 0
+                    while '0' <= data[i] <= '9':
+                        addr *= 10
+                        addr += int(data[i])
+                        i += 1
 
-                        # if string
-                        if d[0] == '"':
-                            j = 1
-                            while d[j] != '"':
-                                self.list_data[addr] = ord(d[j])
-                                addr += 1
-                                j += 1
+                    i += 1
+                    if data[i] == '"':
+                        i += 1
+                        while data[i] != '"':
+                            self.list_data[addr] = ord(data[i])
+                            addr += 1
+                            i += 1
+                        idx_start = i+2
+
+                    for i in range(idx_start, len(data)):
+                        value = 0
+                        if '0' <= data[i] <= '0':
+                            value *= 10
+                            value += int(data[i])
                         else:
-                            self.list_data[addr] = int(d)
+                            self.list_data[addr] = value
                             addr += 1
 
-                elif '.code' == tokens[0]:
+
+                elif l.startswith('.code'):
                     pass
 
                 else:
+                    tokens = l.split(' ')
+
                     code = Code()
                     code.inst = tokens[0]
                     if len(tokens) >= 2 and tokens[1] != '':                        

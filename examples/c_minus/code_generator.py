@@ -234,6 +234,12 @@ class CodeGenerator:
             var_value = node.childs[2]
             sinfo = SymbolInfo(var_type, var_name, var_value, local_flag=local_flag)
             self.cur_symtab.add_symbol(sinfo)
+            
+            code = PCode()
+            code.inst = 'ldc_i32'
+            code.op = 0
+            code.comment = 'declare variable ' + var_name.text
+            self.add_code(code)
 
             # if terminal value
             if OpType.NUMBER == var_value.op_type:
@@ -246,19 +252,25 @@ class CodeGenerator:
                 self.generate_call(var_value)
             else:
                 print('unknown operation')
-                assert(0)
+                assert(0)            
 
             code = PCode()
             code.inst = 'sto_i32'
             symbol = self.cur_symtab.symbols[var_name.text]
             code.op = symbol
-            code.comment = 'store to ' + var_name.text            
+            code.comment = 'store to ' + var_name.text
             self.add_code(code)
         else:
             # declaration with no initial value
-
             sinfo = SymbolInfo(var_type, var_name, local_flag=local_flag)
             self.cur_symtab.add_symbol(sinfo)
+
+            code = PCode()
+            code.inst = 'ldc_i32'
+            code.op = 0
+            code.comment = 'uninitialized variable ' + var_name.text
+            self.add_code(code)
+
     
     def generate_number(self, num_node:TreeNode):
         code = PCode()
