@@ -91,7 +91,7 @@ class Parser:
                     elem:StackElem
                     elem = stack.pop()
 
-                    if elem.node is not None:                        
+                    if elem.node is not None:
                         error_code = elem.node.text + ' ' + error_code
 
                         state = stack[-1].state

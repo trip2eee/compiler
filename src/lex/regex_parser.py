@@ -143,16 +143,22 @@ class Parser:
             else:
                 # Error
                 # Enter panic mode for error recovery.
-                print('Syntax Error:')
-                while shift == -1 and reduce == -1:
+                error_code = ''                
+                while shift == -1 and reduce == -1 and len(stack) > 0:
                     elem:StackElem
                     elem = stack.pop()
 
                     if elem.node is not None:
-                        print(elem.node.value)
+                        error_code = elem.node.value + ' ' + error_code
 
                         state = stack[-1].state
                         shift = tbl_shift[state][node.type]
                         reduce = tbl_reduce[state][node.type]
+                
+                print('Syntax Error: ', end='')
+                print(error_code)
+
+                if len(stack) == 0:
+                    break
 
         return result

@@ -1,5 +1,7 @@
 # C-- language
 %{
+# TODO: To implement array, struct/class
+
 import enum
 
 class OpType(enum.IntEnum):
@@ -18,6 +20,8 @@ class OpType(enum.IntEnum):
     FUNC_CALL = 12
     STRING = 13
     COMMENT = 14
+    INCREMENT = 15
+    DECREMENT = 16
 
 class TreeNode:
     def __init__(self):
@@ -130,7 +134,7 @@ COMMENT {
     $1.op_type = OpType.COMMENT
 };
 
-STMT : EXP_STMT | IF_STMT | FOR_STMT | VAR_DECL | RETURN_STMT
+STMT : EXP_STMT | IF_STMT | FOR_STMT | WHILE_STMT | VAR_DECL | RETURN_STMT
 ;
 
 EXP_STMT : EXP ';' | ';'
@@ -168,6 +172,14 @@ FOR '(' VAR_DECL EXP ';' EXP ')' COMPOUND_STMT {
     $$.childs[1] = $4
     $$.childs[2] = $6
     $$.childs[3] = $8
+}
+;
+
+WHILE_STMT : WHILE '(' EXP ')' COMPOUND_STMT {
+    $$ = TreeNode()
+    $$.op_type = OpType.WHILE_STMT
+    $$.childs[0] = $3
+    $$.childs[1] = $5
 }
 ;
 
@@ -229,10 +241,34 @@ NUMBER {
     $$.value = int($$.text)
     $$.op_type = OpType.NUMBER
 } | 
+'+' FACTOR {
+    $$ = $2
+} |
+'-' FACTOR {
+    $$ = TreeNode()
+    $$.op_type = OpType.EXP
+    $$.text = '*'
+    
+    $$.childs[0] = TreeNode()
+    $$.childs[0].value = -1
+    $$.childs[0].op_type = OpType.NUMBER
+
+    $$.childs[1] = $2
+} |
 ID {
     $$ = $1
     $$.op_type = OpType.ID
-} | 
+} |
+ID '++' {
+    $$ = TreeNode()
+    $$.childs[0] = $1
+    $$.op_type = OpType.INCREMENT
+} |
+ID '--' {
+    $$ = TreeNode()
+    $$.childs[0] = $1
+    $$.op_type = OpType.DECREMENT
+} |
 '(' EXP ')' {
     $$ = $2
 } |

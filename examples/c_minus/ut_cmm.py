@@ -26,23 +26,37 @@ class TestCMM(unittest.TestCase):
 
     def test_hello_world(self):
         self.run_code('hello_world.cmm')
-        
-        self.assertEqual(self.runenv.stdout[0], 'Hello, World\n')
+        self.assertEqual(self.runenv.stdout, 'Hello, World\n')
+    
+    def test_expressions(self):
+        self.run_code('expressions.cmm')
+        self.assertEqual(self.runenv.stdout, 'c = 20, d = -100\n')
 
     def test_if_stmt(self):
         self.run_code('if_stmt.cmm')
-        
-        self.assertEqual(self.runenv.stdout[0], 'a + b = 30\n')
+        self.assertEqual(self.runenv.stdout, 'a + b = 30\n')
 
     def test_for_stmt(self):
         self.run_code('for_stmt.cmm')
+        self.assertEqual(self.runenv.stdout, 'sum = 55\n')
+    
+    def test_while_stmt(self):
+        self.run_code('while_stmt.cmm')
+        self.assertEqual(self.runenv.stdout, 'i = -1\n')
 
-        self.assertEqual(self.runenv.stdout[0], 'sum = 55\n')
+    def test_nested_stmt(self):
+        self.run_code('nested_stmt.cmm')
+        self.assertEqual(self.runenv.stdout, '1 0 1 1 0 1 ')        
 
     def test_func_call(self):
         self.run_code('func_call.cmm')
-        
-        self.assertEqual(self.runenv.stdout[0], 'true\n')
+        self.assertEqual(self.runenv.stdout, 'true\nk = 30\n')
+
+    def test_func_recursive_call(self):
+        self.run_code('func_recursive_call.cmm')
+        self.assertEqual(self.runenv.stdout, '5! = 120\n')
 
 if __name__ == '__main__':
     unittest.main()
+
+

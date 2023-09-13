@@ -3,11 +3,9 @@
 
 from cmm_parser_table import *
 
-
 %}
 
 %%
-
 
 '\/\/(.*)\n' {
     yytype = COMMENT
@@ -30,6 +28,8 @@ from cmm_parser_table import *
         yytype = ELSE
     elif yytext == 'for':
         yytype = FOR
+    elif yytext == 'while':
+        yytype = WHILE
     elif yytext == 'return':
         yytype = RETURN
     else:
@@ -47,6 +47,8 @@ from cmm_parser_table import *
 
 '\+'
 '\-'
+'\+\+'
+'\-\-'
 '\*'
 '\/'
 '=' 

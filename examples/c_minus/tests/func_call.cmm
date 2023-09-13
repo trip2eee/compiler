@@ -21,7 +21,7 @@ void main()
         printf("false\n");
     }
     
-    printf("k: %d\n", k);
+    printf("k = %d\n", k);
 }
 
 

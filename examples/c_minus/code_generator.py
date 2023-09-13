@@ -155,7 +155,8 @@ class PCode:
                     self.op : SymbolInfo
 
                     # if load and store instructions
-                    if self.inst[:3] == 'lda' or self.inst[:3] == 'sto':
+                    inst = self.inst[:3]
+                    if inst == 'lda' or inst == 'sto' or inst == 'inc' or inst == 'dec':
                         if self.op.local:
                             if self.op.addr >= 0:
                                 s += 'bp+' + str(self.op.addr)
@@ -218,6 +219,12 @@ class CodeGenerator:
         if label.name not in self.labels:
             self.labels[label.name] = label
 
+    def add_label_by_name(self, name):
+        if name not in self.labels:
+            label = Label()
+            label.name = name + str(len(self.list_code))
+            self.labels[name] = label
+
     def get_label(self, name):
         if name in self.labels:
             return self.labels[name]
@@ -251,7 +258,7 @@ class CodeGenerator:
             elif OpType.FUNC_CALL == var_value.op_type:
                 self.generate_call(var_value)
             else:
-                print('unknown operation')
+                print('ERROR: Unknown Operation', var_value.op_type)
                 assert(0)            
 
             code = PCode()
@@ -337,6 +344,13 @@ class CodeGenerator:
                         else:
                             exp = None
 
+                    elif OpType.FUNC_CALL == exp.op_type:
+                        self.generate_call(exp)
+                        if len(stack) > 0:
+                            exp = stack.pop()
+                        else:
+                            exp = None
+
                 elif exp.childs[1] is not None and exp.childs[1].visited == False:
                     stack.append(exp)
                     exp = exp.childs[1]
@@ -355,16 +369,24 @@ class CodeGenerator:
                         else:
                             exp = None
 
+                    elif OpType.FUNC_CALL == exp.op_type:
+                        self.generate_call(exp)
+                        if len(stack) > 0:
+                            exp = stack.pop()
+                        else:
+                            exp = None
+
                 else:
                     # if both the left and the right children are visited.
 
                     code = PCode()
                     if exp.text == '+':
                         code.inst = 'add_i32'
+                    elif exp.text == '-':
+                        code.inst = 'sub_i32'
                     elif exp.text == '*':
                         code.inst = 'mul_i32'
                     elif exp.text == '=':
-
                         if OpType.TERMINAL != exp.childs[0].op_type:
                             print('Error: LVALUE is not ID')
                             assert(0)
@@ -498,7 +520,6 @@ class CodeGenerator:
         node_update = for_node.childs[2]
         node_body   = for_node.childs[3]
 
-        
         self.generate_stmt(node_init)
 
         # TODO: To change add_label() to take name and return label instance
@@ -538,8 +559,67 @@ class CodeGenerator:
         code.label = label_end
         self.add_code(code)
 
+    def generate_dec_stmt(self, exp:TreeNode):        
+        if OpType.TERMINAL != exp.childs[0].op_type:
+            print('Error: LVALUE is not ID')
+            assert(0)
 
+        code = PCode()
+        code.inst = 'dec_i32'
+        symbol = self.cur_symtab.find_symbol(exp.childs[0].text)
+        code.op = symbol
+        code.comment = 'decrease ' + exp.childs[0].text
+        self.add_code(code)
+    
+    def generate_inc_stmt(self, exp:TreeNode):
+        if OpType.TERMINAL != exp.childs[0].op_type:
+            print('Error: LVALUE is not ID')
+            assert(0)
 
+        code = PCode()
+        code.inst = 'inc_i32'
+        symbol = self.cur_symtab.find_symbol(exp.childs[0].text)
+        code.op = symbol
+        code.comment = 'increase ' + exp.childs[0].text
+        self.add_code(code)
+
+    def generate_while_stmt(self, for_node:TreeNode):
+        node_test   = for_node.childs[0]
+        node_body   = for_node.childs[1]
+
+        # TODO: To change add_label() to take name and return label instance
+        label_begin = Label()
+        label_begin.name = 'WHILE' + str(len(self.list_code))
+        self.add_label(label_begin)
+
+        code = PCode()
+        code.label = label_begin
+        self.add_code(code)
+
+        # test statement
+        self.generate_stmt(node_test)
+
+        label_end = Label()
+        label_end.name = 'WHILE' + str(len(self.list_code))
+        self.add_label(label_end)
+
+        code = PCode()
+        code.inst = 'jpf'
+        code.label = label_end
+        code.comment = 'if false, jump to the end of while-loop'
+        self.add_code(code)
+
+        # loop body
+        self.generate_stmt(node_body)
+
+        code = PCode()
+        code.inst = 'jmp'
+        code.label = label_begin
+        self.add_code(code)
+        
+        code = PCode()
+        code.label = label_end
+        self.add_code(code)
 
     def generate_stmt(self, stmt_node:TreeNode):
         node = stmt_node
@@ -561,10 +641,16 @@ class CodeGenerator:
                 self.generate_call(node)
             elif OpType.FOR_STMT == node.op_type:
                 self.generate_for_stmt(node)
+            elif OpType.WHILE_STMT == node.op_type:
+                self.generate_while_stmt(node)
+            elif OpType.DECREMENT == node.op_type:
+                self.generate_dec_stmt(node)
+            elif OpType.INCREMENT == node.op_type:
+                self.generate_inc_stmt(node)
             elif OpType.COMMENT == node.op_type:
                 pass # skip comment
             else:
-                print('ERROR: Undefined operation type')
+                print('ERROR: Undefined operation type', node.op_type)
                 assert(0)
 
             node = node.next
@@ -640,7 +726,7 @@ class CodeGenerator:
         self.verbose = verbose
 
         self.select_function_def_code()
-
+        # TODO: To handle main function with return type int
         label = Label()
         label.name = 'main'
         self.add_label(label)
