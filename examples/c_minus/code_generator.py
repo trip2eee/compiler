@@ -201,10 +201,8 @@ class CodeGenerator:
 
         sinfo = SymbolInfo('void', 'printf', symtype=SymbolType.STD_FUNCTION)
         self.cur_symtab.add_symbol(sinfo)
-        label = Label()
-        label.name = 'printf'
-        label.addr = 0
-        self.add_label(label)
+        label_printf = self.new_named_label('printf')
+        label_printf.addr = 0
 
     def select_global_var_code(self):
         self.list_code = self.global_var_code
@@ -215,15 +213,24 @@ class CodeGenerator:
     def add_code(self, code:PCode):        
         self.list_code.append(code)
 
-    def add_label(self, label):
-        if label.name not in self.labels:
-            self.labels[label.name] = label
-
-    def add_label_by_name(self, name):
+    def new_label(self):
+        """ This method create a new label with name L@<id>
+        """
+        label = Label()
+        label.name = "L@{:08d}".format(len(self.labels))
+        self.labels[label.name] = label
+        return label
+    
+    def new_named_label(self, name):
+        """ This method create a new named label.
+        """
         if name not in self.labels:
+            # if there is label with the name
             label = Label()
-            label.name = name + str(len(self.list_code))
-            self.labels[name] = label
+            label.name = name
+            self.labels[label.name] = label
+        
+        return self.labels[name]
 
     def get_label(self, name):
         if name in self.labels:
@@ -471,9 +478,7 @@ class CodeGenerator:
 
         if block_false == None:
             # if-statement
-            label_end = Label()
-            label_end = 'LE' + str(len(self.list_code))
-            self.add_label(label_end)
+            label_end = self.new_label()
 
             code = PCode()
             code.inst = 'jpf'
@@ -484,13 +489,8 @@ class CodeGenerator:
         
         else:
             # if-else statement
-            label_false = Label()
-            label_false.name = 'LF' + str(len(self.list_code))
-            self.add_label(label_false)
-
-            label_end = Label()
-            label_end.name = 'LE' + str(len(self.list_code))
-            self.add_label(label_end)
+            label_false = self.new_label()
+            label_end = self.new_label()
 
             code = PCode()
             code.inst = 'jpf'
@@ -522,14 +522,8 @@ class CodeGenerator:
 
         self.generate_stmt(node_init)
 
-        # TODO: To change add_label() to take name and return label instance
-        label_begin = Label()
-        label_begin.name = 'LFOR' + str(len(self.list_code))
-        self.add_label(label_begin)
-
-        label_end = Label()
-        label_end.name = 'LFOR' + str(len(self.list_code))
-        self.add_label(label_end)
+        label_begin = self.new_label()
+        label_end = self.new_label()
 
         code = PCode()
         code.label = label_begin
@@ -587,21 +581,15 @@ class CodeGenerator:
         node_test   = for_node.childs[0]
         node_body   = for_node.childs[1]
 
-        # TODO: To change add_label() to take name and return label instance
-        label_begin = Label()
-        label_begin.name = 'WHILE' + str(len(self.list_code))
-        self.add_label(label_begin)
+        label_begin = self.new_label()
+        label_end = self.new_label()
 
         code = PCode()
         code.label = label_begin
         self.add_code(code)
 
         # test statement
-        self.generate_stmt(node_test)
-
-        label_end = Label()
-        label_end.name = 'WHILE' + str(len(self.list_code))
-        self.add_label(label_end)
+        self.generate_stmt(node_test)        
 
         code = PCode()
         code.inst = 'jpf'
@@ -699,14 +687,9 @@ class CodeGenerator:
 
             arg = arg.next
 
-        label = self.get_label(func_name.text)
-        if label is None:
-            label = Label()
-            label.name = func_name.text
-            self.add_label(label)
+        label = self.new_named_label(func_name.text)
 
         code = PCode()
-        code.inst = None
         code.label = label
         self.add_code(code)
 
@@ -726,19 +709,24 @@ class CodeGenerator:
         self.verbose = verbose
 
         self.select_function_def_code()
-        # TODO: To handle main function with return type int
-        label = Label()
-        label.name = 'main'
-        self.add_label(label)
+
+        label_main = self.new_named_label('main')
 
         code = PCode()
         code.inst = 'mst'
         code.comment = 'mark stack'
         self.add_code(code)
-
+        
+        # To handle main function with return type int
+        code = PCode()
+        code.inst = 'ldc_i32'
+        code.op = 0
+        code.comment = 'reserve for return value of int main()'
+        self.add_code(code)
+    
         code = PCode()
         code.inst = 'cup'
-        code.label = label
+        code.label = label_main
         code.comment = 'call main() function'
         self.add_code(code)
 
@@ -759,7 +747,6 @@ class CodeGenerator:
                 func_type = node.childs[0]
                 func_name = node.childs[1]
                 func_args = node.childs[2]
-                func_body = node.childs[3]
 
                 sinfo = SymbolInfo(func_type, func_name, args=func_args, symtype=SymbolType.FUNCTION)
                 self.cur_symtab.add_symbol(sinfo)
@@ -768,8 +755,10 @@ class CodeGenerator:
 
             node = node.next
 
+        debug_mode = False
+
         # find address
-        if True:
+        if debug_mode == False:
             addr = len(self.global_var_code)
 
             for i in range(len(self.function_def_code)):
@@ -796,6 +785,6 @@ class CodeGenerator:
                 f.write(str(code) + '\n')
             
             for code in self.function_def_code:
-                if code.inst != None:
+                if code.inst != None or debug_mode == True:
                     f.write(str(code) + '\n')
 

@@ -46,7 +46,7 @@ class TestCMM(unittest.TestCase):
 
     def test_nested_stmt(self):
         self.run_code('nested_stmt.cmm')
-        self.assertEqual(self.runenv.stdout, '1 0 1 1 0 1 ')        
+        self.assertEqual(self.runenv.stdout, '1 0 1 1 0 1 \n')        
 
     def test_func_call(self):
         self.run_code('func_call.cmm')

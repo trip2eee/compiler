@@ -1,5 +1,23 @@
 # C-- language
 
+An interpreter language with C-like syntax.
+
+File tree
+
+- [tests](tests): test codes written in C--
+- [c_minus.gram](c_minus.gram): C-- grammar to generate parser
+- [c_minus.lex](c_minus.lex): C-- tokens to generate lexer
+- [code_generator.py](code_generator.py): This file generates machine code to be executed by [runenv.py](runenv.py)
+- [runenv.py](runenv.py): Runtime environment to execute machine code.
+- [ut_cmm.py](ut_cmm.py): C-- unit test.
+
+Automatically generated files
+
+- [cmm_lexer.py](cmm_lexer.py): C-- lexer
+- [cmm_parser.py](cmm_parser.py): C-- parser
+- [cmm_parser_table.py](cmm_parser_table.py): C-- parser table
+
+
 ## Semantic Analysis
 
 ## Runtime Environment

@@ -13,6 +13,8 @@ class Code:
         self.base = 0
 
 class RunEnv:
+    """ C-- Runtime environment
+    """
     def __init__(self):
                 
         self.list_code = [] # code memory
@@ -29,6 +31,9 @@ class RunEnv:
         self.stdout = ''   # output stream for test
 
     def exec(self, code_path):
+        """This method executes pcode file.
+        @param code_path [in] Input pcode file path
+        """
         self.load_code(code_path)
 
         self.pc = 0
@@ -328,6 +333,10 @@ class RunEnv:
         self.list_data[addr:addr+4] = self.i32_to_bytes(value-1)
 
     def load_code(self, code_path):
+        """This method loads pcode file and performs the follwing jobs.
+           - initialize global memory
+           - store pcodes in self.list_code.
+        """
         with open(code_path, 'r') as f:
             while True:
                 l = f.readline().strip()

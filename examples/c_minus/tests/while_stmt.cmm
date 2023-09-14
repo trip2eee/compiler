@@ -1,4 +1,4 @@
-void main()
+int main()
 {
     int i;
     i = 10;
@@ -9,6 +9,8 @@ void main()
     }
 
     printf("i = %d\n", i);
+
+    return 0;
 }
 
 
