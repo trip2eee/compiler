@@ -33,9 +33,10 @@ Automatically generated files
 
 - Heap (grows upward)
 
-#### Functiona call process
 
-```C
+### Functiona call process
+
+```C++
 int add(int a, int b)
 {
     int c = a + b;
@@ -69,6 +70,15 @@ ret   ; pc = [bp-8]
       ; bp = [bp-4]
 
 ```
+### Array
+```C++
+int a[10];
+
+a[0] = 10;
+// ind
+//
+//
+```
 
 ### Procedure Activation Record
 - Arguments
@@ -83,16 +93,19 @@ ret   ; pc = [bp-8]
 ## P-code
 | P-code | Description |
 |-|-|
-| ldc_i32 n| load constant n and push onto the stack|
-| lda_i32 addr| load value from the address and push onto the stack|
-| lod_i32 a| load value of variable a and push onto the stack|
+| ldc_i32 *n*| load constant *n* and push onto the stack|
+| lda *var*| load address of variable *var* and push onto the stack|
+| lod_i32 *var*| load value of variable *var* and push onto the stack|
+| ind_i32 *index*| pops address of an array from stack, add offset to the address, push value at the resulting location (indirect load). pop addr -> push *(*addr* + *index* * 4) |
+| ixa *s*| indexed address. pop *addr*, pop *index* -> push (*addr* + *s* * *index*) |
 | add_i32 | pops two 32-bit integers from the stack, add them, and push the result |
 | sub_i32 | 32-bit integer subtraction|
 | mul_i32 | 32-bit integer multiplication |
 | div_i32 | 32-bit integer division |
-| sto_i32 | pop 32-bit integer and store to address |
+| sto_i32 | Pop *addr* and 32-bit integer *val*. Then store to *(*addr*) = *val* |
+| stn_i32 | read value at the top of the stack and store to address (stack preserved) |
 | ent | entry |
-| mst | mark stack (push 0 (for pc), push bp, marked_bp=sp) |
+| mst | mark stack (push 0 (for pc), push bp, marked_bp=sp)*.|
 | cup | call user procedure (bp=marked_bp, sto bp-8)|
 | csp | call standard (built-in) procedure (bp=marked_bp, sto bp-8)|
 | ret | return (pop pc, sp=bp, pop bp)|
@@ -102,8 +115,9 @@ ret   ; pc = [bp-8]
 | jpf | jump if false|
 | stp | stop |
 
-- i32 : 32-bit integer
-- f32 : 32-bit single precision floating point
+- i32: 32-bit integer
+- f32: 32-bit single precision floating point
+- *: marked_bp is saved not to pop function arguments from stack at the end of the function call.
 
 ## Standard Procedure
 Currently implemented standard (build-in) procedures are described in the table.

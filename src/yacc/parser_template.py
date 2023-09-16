@@ -85,7 +85,8 @@ class Parser:
                 break
             else:
                 # Error
-                # Enter panic mode for error recovery.                
+                # Enter panic mode for error recovery.
+                first_node = None
                 error_code = ''
                 while shift == -1 and reduce == -1 and len(stack) > 0:
                     elem:StackElem
@@ -93,12 +94,13 @@ class Parser:
 
                     if elem.node is not None:
                         error_code = elem.node.text + ' ' + error_code
+                        first_node = elem.node
 
                         state = stack[-1].state
                         shift = tbl_shift[state][node.type]
                         reduce = tbl_reduce[state][node.type]
                 
-                print('Syntax Error: ', end='')
+                print('Syntax Error [Line:{}, Col:{}] '.format(first_node.idx_line, first_node.idx_col), end='')
                 print(error_code)
 
                 if len(stack) == 0:

@@ -63,6 +63,8 @@ from cmm_parser_table import *
 '\{'
 '\}'
 '\,'
+'\['
+'\]'
 
 %%
 

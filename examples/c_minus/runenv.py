@@ -49,10 +49,12 @@ class RunEnv:
             # decode & execute
             if 'ldc_i32' == code.inst:
                 self.ldc_i32(code)
-            elif 'lda_i32' == code.inst:
-                self.lda_i32(code)
+            elif 'lod_i32' == code.inst:
+                self.lod_i32(code)
+            elif 'lda' == code.inst:
+                self.lda(code)
             elif 'sto_i32' == code.inst:
-                self.sto_i32(code)
+                self.sto_i32()
             elif 'add_i32' == code.inst:
                 self.add_i32(code)
             elif 'sub_i32' == code.inst:
@@ -283,7 +285,16 @@ class RunEnv:
     def ldc_i32(self, code):
         self.push_i32(code.op)
 
-    def lda_i32(self, code):
+    def lda(self, code):
+        """Load address of a variable
+        """
+        if code.base == 0:
+            addr = code.op
+        else:
+            addr = self.bp + code.op
+        self.push_i32(addr)
+
+    def lod_i32(self, code):
         if code.base == 0:
             addr = code.op
         else:
@@ -291,15 +302,10 @@ class RunEnv:
         value = self.bytes_to_i32(self.list_data[addr:addr+4])
         self.push_i32(value)
 
-    def sto_i32(self, code):
-        a = self.pop_i32()
-
-        if code.base == 0:
-            addr = code.op
-        else:
-            addr = self.bp + code.op
-
-        self.list_data[addr:addr+4] = self.i32_to_bytes(a)
+    def sto_i32(self):
+        val = self.pop_i32()
+        addr = self.pop_i32()
+        self.list_data[addr:addr+4] = self.i32_to_bytes(val)
     
     def add_i32(self, code):
         b = self.pop_i32()

@@ -6,6 +6,8 @@
 
 from examples.c_minus.cmm_parser_table import *
 
+VAL_UNINIT = -858993460 # 0xCCCCCCCC
+
 class SymbolType(enum.IntEnum):
     VARIABLE = 0
     ARRAY = 1
@@ -48,6 +50,7 @@ class SymbolInfo:
 
         self.args = args
         self.symtype = symtype
+        self.num_elements = 1
         
         # determine size based on type
         size = self.get_size(self.type)
@@ -156,7 +159,7 @@ class PCode:
 
                     # if load and store instructions
                     inst = self.inst[:3]
-                    if inst == 'lda' or inst == 'sto' or inst == 'inc' or inst == 'dec':
+                    if inst == 'lod' or inst == 'lda' or inst == 'sto' or inst == 'inc' or inst == 'dec':
                         if self.op.local:
                             if self.op.addr >= 0:
                                 s += 'bp+' + str(self.op.addr)
@@ -251,8 +254,13 @@ class CodeGenerator:
             
             code = PCode()
             code.inst = 'ldc_i32'
-            code.op = 0
+            code.op = VAL_UNINIT
             code.comment = 'declare variable ' + var_name.text
+            self.add_code(code)
+
+            code = PCode()
+            code.inst = 'lda'
+            code.op = sinfo
             self.add_code(code)
 
             # if terminal value
@@ -266,7 +274,7 @@ class CodeGenerator:
                 self.generate_call(var_value)
             else:
                 print('ERROR: Unknown Operation', var_value.op_type)
-                assert(0)            
+                assert(0)
 
             code = PCode()
             code.inst = 'sto_i32'
@@ -281,11 +289,34 @@ class CodeGenerator:
 
             code = PCode()
             code.inst = 'ldc_i32'
-            code.op = 0
+            code.op = VAL_UNINIT
             code.comment = 'uninitialized variable ' + var_name.text
             self.add_code(code)
 
-    
+    def generate_var_array_decl(self, node, local_flag=True):
+        array_type = node.childs[0]
+        array_name = node.childs[1]
+        array_size = node.childs[2]
+
+        if node.childs[3] is not None:
+            # not implemented.
+            assert(0)
+        else:
+            # declaration with no initial value
+            sinfo = SymbolInfo(array_type, array_name, symtype=SymbolType.ARRAY, local_flag=local_flag)
+            sinfo.num_elements = array_size
+            self.cur_symtab.add_symbol(sinfo)
+
+            array_size.value = int(array_size.text)
+
+            for i in range(array_size.value):
+                code = PCode()
+                code.inst = 'ldc_i32'
+                code.op = VAL_UNINIT
+                if i == 0:
+                    code.comment = 'uninitialized variable ' + array_name.text
+                self.add_code(code)
+
     def generate_number(self, num_node:TreeNode):
         code = PCode()
         code.inst = 'ldc_i32'
@@ -295,7 +326,7 @@ class CodeGenerator:
     def generate_id(self, id_node:TreeNode):
         symbol = self.cur_symtab.find_symbol(id_node.text)
         code = PCode()
-        code.inst = 'lda_i32'
+        code.inst = 'lod_i32'
         code.op = symbol
         code.comment = 'load ' + id_node.text
         self.add_code(code)
@@ -393,15 +424,6 @@ class CodeGenerator:
                         code.inst = 'sub_i32'
                     elif exp.text == '*':
                         code.inst = 'mul_i32'
-                    elif exp.text == '=':
-                        if OpType.TERMINAL != exp.childs[0].op_type:
-                            print('Error: LVALUE is not ID')
-                            assert(0)
-
-                        code.inst = 'sto_i32'
-                        symbol = self.cur_symtab.find_symbol(exp.childs[0].text)
-                        code.op = symbol
-                        code.comment = 'store to ' + exp.childs[0].text
                     elif exp.text == '==':
                         code.inst = 'equ'
                     elif exp.text == '<=':
@@ -423,6 +445,38 @@ class CodeGenerator:
                     else:
                         exp = None
 
+
+    def generate_assign_exp(self, assign_node:TreeNode):
+
+        # lda <addr>
+        # lod <value>
+        # sto  ; *(<addr>) = value
+
+        # compute L-value
+        # ID
+        # ID[exp]
+        # call()[exp]
+        # *(exp)
+        assign_node.childs[0]
+
+        code = PCode()
+        if OpType.TERMINAL != assign_node.childs[0].op_type:
+            print('Error: L-Value is not ID')
+            assert(0)
+
+        code.inst = 'lda'   # load address of a variable
+        symbol = self.cur_symtab.find_symbol(assign_node.childs[0].text)
+        code.op = symbol
+        self.add_code(code)
+
+        # compute R-value
+        self.generate_exp(assign_node.childs[1])
+
+        code = PCode()
+        code.inst = 'sto_i32'
+        self.add_code(code)
+        
+
     def generate_call(self, call_node:TreeNode):
 
         # get function name
@@ -436,7 +490,7 @@ class CodeGenerator:
         if sinfo.size > 0:
             code = PCode()
             code.inst = 'ldc_i32'
-            code.op = 0
+            code.op = VAL_UNINIT
             code.comment = 'reserve for return value'
             self.add_code(code)
 
@@ -615,10 +669,14 @@ class CodeGenerator:
         while node is not None:
             if OpType.VAR_DECL == node.op_type:
                 self.generate_var_decl(node)
+            elif OpType.VAR_ARRAY_DECL == node.op_type:
+                self.generate_var_array_decl(node)
             elif OpType.IF_STMT == node.op_type:
                 self.generate_if_stmt(node)
             elif OpType.EXP == node.op_type:
                 self.generate_exp(node)
+            elif OpType.ASSIGN_EXP == node.op_type:
+                self.generate_assign_exp(node)
             elif OpType.RETURN == node.op_type:
                 self.generate_return(node)
             elif OpType.ID == node.op_type:
@@ -645,16 +703,20 @@ class CodeGenerator:
 
     def generate_return(self, ret_node:TreeNode):
         
-        op = ret_node.childs[0]
-        self.generate_exp(op)
-
         code = PCode()
-        code.inst = 'sto_i32'
+        code.inst = 'lda'
         code.comment = 'return value'
         sinfo = SymbolInfo(type=None, name=None)
         sinfo.local = True
         sinfo.addr = -12
         code.op = sinfo
+        self.add_code(code)
+
+        op = ret_node.childs[0]
+        self.generate_exp(op)        
+
+        code = PCode()
+        code.inst = 'sto_i32'        
         self.add_code(code)
 
     def generate_function(self, func_node):
@@ -720,7 +782,7 @@ class CodeGenerator:
         # To handle main function with return type int
         code = PCode()
         code.inst = 'ldc_i32'
-        code.op = 0
+        code.op = VAL_UNINIT
         code.comment = 'reserve for return value of int main()'
         self.add_code(code)
     

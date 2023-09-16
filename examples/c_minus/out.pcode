@@ -3,22 +3,24 @@
 db 0 "i = %d\n" 0 0 0 0
 .code
 mst                      ; mark stack
-ldc_i32 0                ; reserve for return value of int main()
+ldc_i32 -858993460       ; reserve for return value of int main()
 cup 4                    ; call main() function
 stp                      ; end program
-ldc_i32 0                ; uninitialized variable i
+ldc_i32 -858993460       ; uninitialized variable i
+lda bp+0
 ldc_i32 10
-sto_i32 bp+0             ; store to i
-lda_i32 bp+0             ; load i
+sto_i32
+lod_i32 bp+0             ; load i
 ldc_i32 0
 gte
-jpf 13                   ; if false, jump to the end of while-loop
+jpf 14                   ; if false, jump to the end of while-loop
 dec_i32 bp+0             ; decrease i
-jmp 7
+jmp 8
 mst                      ; mark stack
 ldc_i32 0
-lda_i32 bp+0             ; load i
+lod_i32 bp+0             ; load i
 csp 0                    ; call standard procedure printf
+lda bp-12                ; return value
 ldc_i32 0
-sto_i32 bp-12            ; return value
+sto_i32
 ret

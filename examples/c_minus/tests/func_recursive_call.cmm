@@ -1,3 +1,4 @@
+// This function computes factorial using recursive call
 int fact(int a)
 {
     if(a == 1) {

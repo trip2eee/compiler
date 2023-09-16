@@ -56,6 +56,10 @@ class TestCMM(unittest.TestCase):
         self.run_code('func_recursive_call.cmm')
         self.assertEqual(self.runenv.stdout, '5! = 120\n')
 
+    def test_array(self):
+        self.run_code('array.cmm')
+        # self.assertEqual(self.runenv.stdout, '5! = 120\n')
+
 if __name__ == '__main__':
     unittest.main()
 
