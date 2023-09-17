@@ -16,7 +16,7 @@ class SymbolType(enum.IntEnum):
     STD_FUNCTION = 4
 
 class SymbolInfo:
-    def __init__(self, type:TreeNode, name:TreeNode, value:TreeNode=None, args:TreeNode=None, symtype=SymbolType.VARIABLE, const=False, local_flag=True):
+    def __init__(self, type:TreeNode, name:TreeNode, value:TreeNode=None, args:TreeNode=None, symtype=SymbolType.VARIABLE, const=False, local_flag=True, num_elem=1):
         """ Symbol Information
             type [in] symbol type node
             name [in] symbol name node
@@ -49,13 +49,14 @@ class SymbolInfo:
             self.init = False
 
         self.args = args
-        self.symtype = symtype
-        self.num_elements = 1
-        
+        self.symtype = symtype        
         # determine size based on type
-        size = self.get_size(self.type)
-        if size >= 0:
-            self.size = size        # variable/return type size
+        elem_size = self.get_size(self.type)
+        self.elem_size = elem_size          # size of data type
+        self.num_elements = num_elem        # number of elements (array)
+
+        if elem_size >= 0:
+            self.size = elem_size * self.num_elements        # total size
         else:
             print('ERROR: undefined type ' + str(type.text))
             self.size = 0
@@ -302,14 +303,14 @@ class CodeGenerator:
             # not implemented.
             assert(0)
         else:
+            array_size = int(array_size.text)
+
             # declaration with no initial value
-            sinfo = SymbolInfo(array_type, array_name, symtype=SymbolType.ARRAY, local_flag=local_flag)
+            sinfo = SymbolInfo(array_type, array_name, symtype=SymbolType.ARRAY, local_flag=local_flag, num_elem=array_size)
             sinfo.num_elements = array_size
-            self.cur_symtab.add_symbol(sinfo)
+            self.cur_symtab.add_symbol(sinfo)            
 
-            array_size.value = int(array_size.text)
-
-            for i in range(array_size.value):
+            for i in range(array_size):
                 code = PCode()
                 code.inst = 'ldc_i32'
                 code.op = VAL_UNINIT
@@ -325,11 +326,36 @@ class CodeGenerator:
 
     def generate_id(self, id_node:TreeNode):
         symbol = self.cur_symtab.find_symbol(id_node.text)
-        code = PCode()
-        code.inst = 'lod_i32'
-        code.op = symbol
-        code.comment = 'load ' + id_node.text
-        self.add_code(code)
+        
+        if id_node.childs[2] is None:
+            # if ID
+            code = PCode()
+            code.inst = 'lod_i32'
+            code.op = symbol
+            code.comment = 'load ' + id_node.text
+            self.add_code(code)
+        else:
+            # if ID[EXP] (array)
+            code = PCode()
+            code.inst = 'lda'
+            code.op = symbol
+            code.comment = 'load ' + id_node.text
+            self.add_code(code)
+
+            # compute index
+            self.generate_exp(id_node.childs[2])
+
+            code = PCode()
+            code.inst = 'ixa'   # indexed address
+            code.op = 4         # TODO: To use symbol.elem_size
+            self.add_code(code)
+
+            code = PCode()
+            code.inst = 'ind_i32'   # indexed address
+            code.op = 0
+            self.add_code(code)
+
+            # TODO: To make flag to compute address or value
 
     def generate_string(self, str_node:TreeNode):        
         
@@ -426,6 +452,8 @@ class CodeGenerator:
                         code.inst = 'mul_i32'
                     elif exp.text == '==':
                         code.inst = 'equ'
+                    elif exp.text == '!=':
+                        code.inst = 'neq'
                     elif exp.text == '<=':
                         code.inst = 'lte'
                     elif exp.text == '>=':
@@ -457,8 +485,6 @@ class CodeGenerator:
         # ID[exp]
         # call()[exp]
         # *(exp)
-        assign_node.childs[0]
-
         code = PCode()
         if OpType.TERMINAL != assign_node.childs[0].op_type:
             print('Error: L-Value is not ID')
@@ -469,8 +495,19 @@ class CodeGenerator:
         code.op = symbol
         self.add_code(code)
 
+        offset_node = assign_node.childs[1]
+        if offset_node is not None:
+            # compute offset (index)
+            self.generate_exp(offset_node)
+
+            # scale index. addr + op*index
+            code = PCode()
+            code.inst = 'ixa'
+            code.op = 4
+            self.add_code(code)
+            
         # compute R-value
-        self.generate_exp(assign_node.childs[1])
+        self.generate_exp(assign_node.childs[2])
 
         code = PCode()
         code.inst = 'sto_i32'
@@ -540,7 +577,11 @@ class CodeGenerator:
             self.add_code(code)
 
             self.generate_stmt(block_true)
-        
+
+            code = PCode()
+            code.label = label_end
+            self.add_code(code)
+            
         else:
             # if-else statement
             label_false = self.new_label()

@@ -53,8 +53,12 @@ class RunEnv:
                 self.lod_i32(code)
             elif 'lda' == code.inst:
                 self.lda(code)
+            elif 'ixa' == code.inst:
+                self.ixa(code)
             elif 'sto_i32' == code.inst:
                 self.sto_i32()
+            elif 'ind_i32' == code.inst:
+                self.ind_i32(code)
             elif 'add_i32' == code.inst:
                 self.add_i32(code)
             elif 'sub_i32' == code.inst:
@@ -73,6 +77,8 @@ class RunEnv:
                 self.ret()
             elif 'equ' == code.inst:
                 self.equ()
+            elif 'neq' == code.inst:
+                self.neq()
             elif 'lte' == code.inst:
                 self.lte()
             elif 'gte' == code.inst:
@@ -219,6 +225,16 @@ class RunEnv:
             # not equal
             self.push_i32(0)
 
+    def neq(self):
+        a = self.pop_i32()
+        b = self.pop_i32()
+        if a==b:
+            # equal
+            self.push_i32(0)
+        else:
+            # not equal
+            self.push_i32(1)
+
     def lte(self):
         # pushed in order of a, b
         # pop in reverse order
@@ -285,6 +301,14 @@ class RunEnv:
     def ldc_i32(self, code):
         self.push_i32(code.op)
 
+    def ixa(self, code):
+        # load index, address
+        index = self.pop_i32()
+        addr = self.pop_i32()
+        # compute new address
+        addr = addr + (index * code.op)        
+        self.push_i32(addr)
+
     def lda(self, code):
         """Load address of a variable
         """
@@ -306,6 +330,11 @@ class RunEnv:
         val = self.pop_i32()
         addr = self.pop_i32()
         self.list_data[addr:addr+4] = self.i32_to_bytes(val)
+    
+    def ind_i32(self, code):
+        addr = self.pop_i32() + code.op
+        val = self.bytes_to_i32(self.list_data[addr:addr+4])
+        self.push_i32(val)
     
     def add_i32(self, code):
         b = self.pop_i32()

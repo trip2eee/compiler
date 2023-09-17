@@ -58,7 +58,7 @@ class TestCMM(unittest.TestCase):
 
     def test_array(self):
         self.run_code('array.cmm')
-        # self.assertEqual(self.runenv.stdout, '5! = 120\n')
+        self.assertEqual(self.runenv.stdout, '2 3 5 7 9 \n')
 
 if __name__ == '__main__':
     unittest.main()

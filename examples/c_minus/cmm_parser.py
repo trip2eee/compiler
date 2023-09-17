@@ -153,51 +153,55 @@ class Parser:
                 elif reduce==47:
                     node = reduce_rule_47(params[0])
                 elif reduce==48:
-                    node = reduce_rule_48(params[0], params[1], params[2])
+                    node = reduce_rule_48(params[0])
                 elif reduce==49:
-                    node = reduce_rule_49(params[0])
+                    node = reduce_rule_49(params[0], params[1], params[2])
                 elif reduce==50:
-                    node = reduce_rule_50(params[0], params[1], params[2])
+                    node = reduce_rule_50(params[0])
                 elif reduce==51:
-                    node = reduce_rule_51(params[0])
+                    node = reduce_rule_51(params[0], params[1], params[2])
                 elif reduce==52:
-                    node = reduce_rule_52(params[0])
+                    node = reduce_rule_52(params[0], params[1], params[2], params[3], params[4], params[5])
                 elif reduce==53:
-                    node = reduce_rule_53(params[0], params[1], params[2])
+                    node = reduce_rule_53(params[0])
                 elif reduce==54:
                     node = reduce_rule_54(params[0])
                 elif reduce==55:
-                    node = reduce_rule_55(params[0])
+                    node = reduce_rule_55(params[0], params[1], params[2])
                 elif reduce==56:
                     node = reduce_rule_56(params[0])
                 elif reduce==57:
                     node = reduce_rule_57(params[0])
                 elif reduce==58:
-                    node = reduce_rule_58(params[0], params[1])
+                    node = reduce_rule_58(params[0])
                 elif reduce==59:
-                    node = reduce_rule_59(params[0], params[1])
+                    node = reduce_rule_59(params[0])
                 elif reduce==60:
-                    node = reduce_rule_60(params[0])
+                    node = reduce_rule_60(params[0], params[1])
                 elif reduce==61:
                     node = reduce_rule_61(params[0], params[1])
                 elif reduce==62:
-                    node = reduce_rule_62(params[0], params[1])
+                    node = reduce_rule_62(params[0])
                 elif reduce==63:
                     node = reduce_rule_63(params[0], params[1], params[2], params[3])
                 elif reduce==64:
-                    node = reduce_rule_64(params[0], params[1], params[2])
+                    node = reduce_rule_64(params[0], params[1])
                 elif reduce==65:
-                    node = reduce_rule_65(params[0])
+                    node = reduce_rule_65(params[0], params[1])
                 elif reduce==66:
-                    node = reduce_rule_66(params[0])
+                    node = reduce_rule_66(params[0], params[1], params[2])
                 elif reduce==67:
-                    node = reduce_rule_67(params[0], params[1], params[2])
+                    node = reduce_rule_67(params[0])
                 elif reduce==68:
-                    node = reduce_rule_68(params[0], params[1], params[2], params[3])
+                    node = reduce_rule_68(params[0])
                 elif reduce==69:
-                    node = reduce_rule_69(params[0])
+                    node = reduce_rule_69(params[0], params[1], params[2])
                 elif reduce==70:
-                    node = reduce_rule_70(params[0], params[1], params[2])
+                    node = reduce_rule_70(params[0], params[1], params[2], params[3])
+                elif reduce==71:
+                    node = reduce_rule_71(params[0])
+                elif reduce==72:
+                    node = reduce_rule_72(params[0], params[1], params[2])
 
                 else:
                     node = None

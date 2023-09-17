@@ -1,8 +1,38 @@
+// Sorting test
 int main()
 {
     int arr[10];
     
-    arr[0] = 1;
+    arr[0] = 5;
+    arr[1] = 9;
+    arr[2] = 7;
+    arr[3] = 3;
+    arr[4] = 2;
+
+    for(int i = 0; i < 5; i++)
+    {
+        int sel = i;
+        for(int j = i+1; j < 5; j++)
+        {
+            if(arr[j] < arr[sel])
+            {
+                sel = j;
+            }
+        }
+    
+        if(sel != i)
+        {
+            int temp = arr[i];
+            arr[i] = arr[sel];
+            arr[sel] = temp;
+        }
+    }
+
+    for(int k = 0; k < 5; k++)
+    {
+        printf("%d ", arr[k]);
+    }
+    printf("\n");
 
     return 0;
 }

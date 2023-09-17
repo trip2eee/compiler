@@ -53,6 +53,7 @@ from cmm_parser_table import *
 '\/'
 '=' 
 '==' EQU
+'!=' NEQ
 '<=' LTE
 '>=' GTE
 '<'  LT
