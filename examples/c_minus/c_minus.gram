@@ -36,9 +36,8 @@ class TreeNode:
 
         self.op_type = OpType.TERMINAL
         self.next = None
-        self.childs = [None] * 4
-
-        self.visited = False
+        self.childs = [None] * 4    # index 0 and 1 are dedicated to left and right child nodes in EXP nodes.
+        self.visited = False        # visit flag for EXP node tree traverse.
 %}
 
 %%
@@ -318,7 +317,7 @@ ID '(' ')' {
 } |
 ID '(' ARGS_LIST ')' {
     $$ = $1
-    $$.childs[0] = $3
+    $$.childs[2] = $3
     $$.op_type = OpType.FUNC_CALL
 };
 
