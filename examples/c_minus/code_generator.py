@@ -94,17 +94,25 @@ class SymbolTable:
                 self.last_addr += sinfo.size
 
     def find_symbol(self, name):
+        """ This method finds symbol with the input name
+            @param name [in] input name
+            @return symbol, from_parent
+                    symbol: symbol class instance
+                    from_cur_symtab: True if from current symbol table. Otherwise, the symbol is from parent symbol table.
+        """
         tab = self
         symbol = None
+        from_cur_symtab = True
 
         while tab is not None:
             if name in tab.symbols:
                 symbol = tab.symbols[name]    
                 break
             else:
-                tab = tab.parent        
+                tab = tab.parent
+                from_cur_symtab = False
 
-        return symbol
+        return symbol, from_cur_symtab
 
 class Data:
     def __init__(self, name, value, dtype):
@@ -245,78 +253,74 @@ class CodeGenerator:
     def generate_var_decl(self, node, local_flag=True):
         var_type = node.childs[0]
         var_name = node.childs[1]
+        var_value = node.childs[2]
 
-        if node.childs[2] is not None:
-            # declaration with initial value
-
-            var_value = node.childs[2]
+        symbol, from_cur_symtab = self.cur_symtab.find_symbol(var_name.text)
+        if symbol is None or from_cur_symtab == False:
             sinfo = SymbolInfo(var_type, var_name, var_value, local_flag=local_flag)
             self.cur_symtab.add_symbol(sinfo)
             
-            code = PCode()
-            code.inst = 'ldc_i32'
-            code.op = VAL_UNINIT
-            code.comment = 'declare variable ' + var_name.text
-            self.add_code(code)
-
-            code = PCode()
-            code.inst = 'lda'
-            code.op = sinfo
-            self.add_code(code)
-
-            # if terminal value
-            if OpType.NUMBER == var_value.op_type:
-                self.generate_number(var_value)
-            elif OpType.ID == var_value.op_type:
-                self.generate_id(var_value)
-            elif OpType.EXP == var_value.op_type:
-                self.generate_exp(var_value)
-            elif OpType.FUNC_CALL == var_value.op_type:
-                self.generate_call(var_value)
-            else:
-                print('ERROR: Unknown Operation', var_value.op_type)
-                assert(0)
-
-            code = PCode()
-            code.inst = 'sto_i32'
-            symbol = self.cur_symtab.symbols[var_name.text]
-            code.op = symbol
-            code.comment = 'store to ' + var_name.text
-            self.add_code(code)
-        else:
-            # declaration with no initial value
-            sinfo = SymbolInfo(var_type, var_name, local_flag=local_flag)
-            self.cur_symtab.add_symbol(sinfo)
-
-            code = PCode()
-            code.inst = 'ldc_i32'
-            code.op = VAL_UNINIT
-            code.comment = 'uninitialized variable ' + var_name.text
-            self.add_code(code)
-
-    def generate_var_array_decl(self, node, local_flag=True):
-        array_type = node.childs[0]
-        array_name = node.childs[1]
-        array_size = node.childs[2]
-
-        if node.childs[3] is not None:
-            # not implemented.
-            assert(0)
-        else:
-            array_size = int(array_size.text)
-
-            # declaration with no initial value
-            sinfo = SymbolInfo(array_type, array_name, symtype=SymbolType.ARRAY, local_flag=local_flag, num_elem=array_size)
-            sinfo.num_elements = array_size
-            self.cur_symtab.add_symbol(sinfo)            
-
-            for i in range(array_size):
+            if var_value is not None:
+                # declaration with initial value
                 code = PCode()
                 code.inst = 'ldc_i32'
                 code.op = VAL_UNINIT
-                if i == 0:
-                    code.comment = 'uninitialized variable ' + array_name.text
+                code.comment = 'declare variable ' + var_name.text
                 self.add_code(code)
+
+                code = PCode()
+                code.inst = 'lda'
+                code.op = sinfo
+                self.add_code(code)
+
+                # if terminal value
+                self.generate_exp(var_value)
+
+                code = PCode()
+                code.inst = 'sto_i32'
+                symbol = self.cur_symtab.symbols[var_name.text]
+                code.op = symbol
+                code.comment = 'store to ' + var_name.text
+                self.add_code(code)
+            else:
+                # declaration with no initial value
+                code = PCode()
+                code.inst = 'ldc_i32'
+                code.op = VAL_UNINIT
+                code.comment = 'uninitialized variable ' + var_name.text
+                self.add_code(code)
+                
+        else:
+            print('Error [Line:{}, Col:{}] variable {} is already declared.'.format(node.childs[1].idx_line, node.childs[1].idx_col, var_name.text))        
+
+    def generate_var_array_decl(self, node, local_flag=True):
+        array_type  = node.childs[0]
+        array_name  = node.childs[1]
+        array_size  = node.childs[2]
+        array_value = node.childs[3]
+
+        array_size = int(array_size.text)
+
+        symbol, from_cur_symtab = self.cur_symtab.find_symbol(array_name.text)
+        if symbol is None or from_cur_symtab == False:
+            sinfo = SymbolInfo(array_type, array_name, symtype=SymbolType.ARRAY, local_flag=local_flag, num_elem=array_size)
+            sinfo.num_elements = array_size
+            self.cur_symtab.add_symbol(sinfo)
+
+            if array_value is not None:
+                # not implemented.
+                assert(0)
+            else:
+                # declaration with no initial value
+                for i in range(array_size):
+                    code = PCode()
+                    code.inst = 'ldc_i32'
+                    code.op = VAL_UNINIT
+                    if i == 0:
+                        code.comment = 'uninitialized variable ' + array_name.text
+                    self.add_code(code)
+        else:
+            print('Error [Line:{}, Col:{}] variable {} is already declared.'.format(node.childs[1].idx_line, node.childs[1].idx_col, array_name.text))
 
     def generate_number(self, num_node:TreeNode):
         code = PCode()
@@ -325,7 +329,7 @@ class CodeGenerator:
         self.add_code(code)
 
     def generate_id(self, id_node:TreeNode):
-        symbol = self.cur_symtab.find_symbol(id_node.text)
+        symbol, _ = self.cur_symtab.find_symbol(id_node.text)
         
         if id_node.childs[2] is None:
             # if ID
@@ -382,67 +386,31 @@ class CodeGenerator:
         exp = exp_node
         stack = []
 
-        if OpType.ID == exp.op_type:
-            self.generate_id(exp)
-        elif OpType.NUMBER == exp.op_type:
-            self.generate_number(exp)
-        elif OpType.STRING == exp.op_type:
-            self.generate_string(exp)
-        else:
-            # TODO: To implement in recursive call??
-            while exp is not None:
-                if exp.childs[0] is not None and exp.childs[0].visited == False:
-                    stack.append(exp)
-                    exp = exp.childs[0]
-                    exp.visited = True
 
-                    # in left leaf node
-                    if exp.childs[0] is None and exp.childs[1] is None:
-                        if OpType.NUMBER == exp.op_type:
-                            self.generate_number(exp)
-                        elif OpType.ID == exp.op_type:
-                            self.generate_id(exp)
+        # TODO: To implement in recursive call??
+        while exp is not None:
+            if exp.childs[0] is not None and exp.childs[0].visited == False:
+                stack.append(exp)
+                exp = exp.childs[0]
+                exp.visited = True
 
-                        if len(stack) > 0:
-                            exp = stack.pop()
-                        else:
-                            exp = None
+            elif exp.childs[1] is not None and exp.childs[1].visited == False:
+                stack.append(exp)
+                exp = exp.childs[1]
+                exp.visited = True
 
-                    elif OpType.FUNC_CALL == exp.op_type:
-                        self.generate_call(exp)
-                        if len(stack) > 0:
-                            exp = stack.pop()
-                        else:
-                            exp = None
-
-                elif exp.childs[1] is not None and exp.childs[1].visited == False:
-                    stack.append(exp)
-                    exp = exp.childs[1]
-                    exp.visited = True
-
-                    # in right leaf node
-                    if exp.childs[0] is None and exp.childs[1] is None:
-
-                        if OpType.NUMBER == exp.op_type:
-                            self.generate_number(exp)
-                        elif OpType.ID == exp.op_type:
-                            self.generate_id(exp)
-
-                        if len(stack) > 0:
-                            exp = stack.pop()
-                        else:
-                            exp = None
-
-                    elif OpType.FUNC_CALL == exp.op_type:
-                        self.generate_call(exp)
-                        if len(stack) > 0:
-                            exp = stack.pop()
-                        else:
-                            exp = None
-
+            else:
+                # if terminal nodes
+                if OpType.ID == exp.op_type:
+                    self.generate_id(exp)
+                elif OpType.NUMBER == exp.op_type:
+                    self.generate_number(exp)
+                elif OpType.STRING == exp.op_type:
+                    self.generate_string(exp)
+                elif OpType.FUNC_CALL == exp.op_type:
+                    self.generate_call(exp)
                 else:
                     # if both the left and the right children are visited.
-
                     code = PCode()
                     if exp.text == '+':
                         code.inst = 'add_i32'
@@ -468,10 +436,10 @@ class CodeGenerator:
 
                     self.add_code(code)
 
-                    if len(stack) > 0:
-                        exp = stack.pop()
-                    else:
-                        exp = None
+                if len(stack) > 0:
+                    exp = stack.pop()
+                else:
+                    exp = None
 
 
     def generate_assign_exp(self, assign_node:TreeNode):
@@ -491,7 +459,7 @@ class CodeGenerator:
             assert(0)
 
         code.inst = 'lda'   # load address of a variable
-        symbol = self.cur_symtab.find_symbol(assign_node.childs[0].text)
+        symbol, _ = self.cur_symtab.find_symbol(assign_node.childs[0].text)
         code.op = symbol
         self.add_code(code)
 
@@ -520,7 +488,7 @@ class CodeGenerator:
         func_name = call_node.text
 
         sinfo:SymbolInfo
-        sinfo = self.cur_symtab.find_symbol(func_name)
+        sinfo, _ = self.cur_symtab.find_symbol(func_name)
         if SymbolType.FUNCTION != sinfo.symtype and SymbolType.STD_FUNCTION != sinfo.symtype:
             print("ERROR: " + func_name + ' is not a function')
 
@@ -537,7 +505,7 @@ class CodeGenerator:
         self.add_code(code)
 
         # function arguments
-        arg = call_node.childs[0]
+        arg = call_node.childs[2]
         while arg is not None:
             self.generate_exp(arg)
             arg = arg.next
@@ -566,7 +534,7 @@ class CodeGenerator:
         block_false = if_node.childs[2]
 
         self.generate_exp(cond)
-
+        
         if block_false == None:
             # if-statement
             label_end = self.new_label()
@@ -615,6 +583,13 @@ class CodeGenerator:
         node_update = for_node.childs[2]
         node_body   = for_node.childs[3]
 
+        # new symbol table for for-statement
+        symtab = SymbolTable()
+        symtab.parent = self.cur_symtab
+        symtab.last_addr = self.cur_symtab.last_addr    # for scope, base pointer is preserved.
+        self.cur_symtab = symtab
+
+        # initialization statement
         self.generate_stmt(node_init)
 
         label_begin = self.new_label()
@@ -625,7 +600,7 @@ class CodeGenerator:
         self.add_code(code)
         
         # test statement
-        self.generate_stmt(node_test)        
+        self.generate_stmt(node_test)
 
         code = PCode()
         code.inst = 'jpf'
@@ -634,7 +609,10 @@ class CodeGenerator:
         self.add_code(code)
 
         # loop body
-        self.generate_stmt(node_body)
+        if OpType.COMPOUND_STMT == node_body.op_type:
+            self.generate_stmt(node_body.childs[0])
+        else:
+            self.generate_stmt(node_body)
 
         # update
         self.generate_stmt(node_update)
@@ -648,29 +626,7 @@ class CodeGenerator:
         code.label = label_end
         self.add_code(code)
 
-    def generate_dec_stmt(self, exp:TreeNode):        
-        if OpType.TERMINAL != exp.childs[0].op_type:
-            print('Error: LVALUE is not ID')
-            assert(0)
-
-        code = PCode()
-        code.inst = 'dec_i32'
-        symbol = self.cur_symtab.find_symbol(exp.childs[0].text)
-        code.op = symbol
-        code.comment = 'decrease ' + exp.childs[0].text
-        self.add_code(code)
-    
-    def generate_inc_stmt(self, exp:TreeNode):
-        if OpType.TERMINAL != exp.childs[0].op_type:
-            print('Error: LVALUE is not ID')
-            assert(0)
-
-        code = PCode()
-        code.inst = 'inc_i32'
-        symbol = self.cur_symtab.find_symbol(exp.childs[0].text)
-        code.op = symbol
-        code.comment = 'increase ' + exp.childs[0].text
-        self.add_code(code)
+        self.cur_symtab = self.cur_symtab.parent
 
     def generate_while_stmt(self, for_node:TreeNode):
         node_test   = for_node.childs[0]
@@ -704,6 +660,41 @@ class CodeGenerator:
         code.label = label_end
         self.add_code(code)
 
+    def generate_compound_stmt(self, comp_node:TreeNode):
+        # new symbol table for compound statement
+        symtab = SymbolTable()
+        symtab.parent = self.cur_symtab
+        symtab.last_addr = self.cur_symtab.last_addr    # for scope, base pointer is preserved.
+        self.cur_symtab = symtab
+
+        self.generate_stmt(comp_node.childs[0])
+
+        self.cur_symtab = self.cur_symtab.parent
+
+    def generate_dec_stmt(self, exp:TreeNode):        
+        if OpType.TERMINAL != exp.childs[0].op_type:
+            print('Error: LVALUE is not ID')
+            assert(0)
+
+        code = PCode()
+        code.inst = 'dec_i32'
+        symbol, _ = self.cur_symtab.find_symbol(exp.childs[0].text)
+        code.op = symbol
+        code.comment = 'decrease ' + exp.childs[0].text
+        self.add_code(code)
+    
+    def generate_inc_stmt(self, exp:TreeNode):
+        if OpType.TERMINAL != exp.childs[0].op_type:
+            print('Error: LVALUE is not ID')
+            assert(0)
+
+        code = PCode()
+        code.inst = 'inc_i32'
+        symbol, _ = self.cur_symtab.find_symbol(exp.childs[0].text)
+        code.op = symbol
+        code.comment = 'increase ' + exp.childs[0].text
+        self.add_code(code)
+
     def generate_stmt(self, stmt_node:TreeNode):
         node = stmt_node
 
@@ -730,6 +721,8 @@ class CodeGenerator:
                 self.generate_for_stmt(node)
             elif OpType.WHILE_STMT == node.op_type:
                 self.generate_while_stmt(node)
+            elif OpType.COMPOUND_STMT == node.op_type:
+                self.generate_compound_stmt(node)
             elif OpType.DECREMENT == node.op_type:
                 self.generate_dec_stmt(node)
             elif OpType.INCREMENT == node.op_type:

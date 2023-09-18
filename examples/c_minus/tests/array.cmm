@@ -9,6 +9,7 @@ int main()
     arr[3] = 3;
     arr[4] = 2;
 
+    // Sort array in increasing order
     for(int i = 0; i < 5; i++)
     {
         int sel = i;
@@ -21,18 +22,19 @@ int main()
         }
     
         if(sel != i)
-        {
+        {            
             int temp = arr[i];
             arr[i] = arr[sel];
             arr[sel] = temp;
         }
     }
 
-    for(int k = 0; k < 5; k++)
+    for(int i = 0; i < 5; i++)
     {
-        printf("%d ", arr[k]);
+        printf("%d ", arr[i]);
     }
     printf("\n");
 
     return 0;
 }
+

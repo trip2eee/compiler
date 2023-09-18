@@ -24,6 +24,7 @@ class OpType(enum.IntEnum):
     INCREMENT = 16
     DECREMENT = 17
     VAR_ARRAY_DECL = 18
+    COMPOUND_STMT = 19
 
 class TreeNode:
     def __init__(self):
@@ -133,7 +134,9 @@ TYPE_SPEC ID '[' NUMBER ']' {
 ;
 
 COMPOUND_STMT : '{' STMT_LIST '}' {
-    $$ = $2;
+    $$ = TreeNode()
+    $$.op_type = OpType.COMPOUND_STMT
+    $$.childs[0] = $2;
 }
 ;
 
