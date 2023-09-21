@@ -4,22 +4,23 @@
 The goal of this project is as follows
 1. To develop parser generator similar to YACC(Yet Another Compiler Compiler) based on LALR(1) method in python (*DONE*).
 2. To develop lexical analyzer similar to lex in python.
-3. To develop an interpreter to execute a script language.
-4. To develop a compiler to make executable file.
+3. To develop an interpreter to execute C-- language.
 
 ## 2. Current Status
 
 1. Handwritten C-- lexer [scanner.py](src/scanner.py) and parser based on Recurrent-Descent [rd_parser.py](src/rd_parser.py) have been implemented. Due to the limitation of applied method, the codes are not going to be updated.
 2. Parser generator has been implemented.
-   - Parser code: [parser_generator.py](src/parser_generator.py)
+   - Parser code: [src/yacc](src/yacc)
 
 3. Parser generator has been tested for simple calculator ([examples/calc/](examples/calc)).
     1. run generate_calc.py to generate parser from [calc.gram](examples/calc/calc.gram)
     2. [calc_parser_table.py](examples/calc/calc_parser_table.py) and [calc_parser.py](examples/calc/calc_parser.py) are generated.
-    3. Currently handwritten lexer code is being used since lexer generator is not implemented yet.
+    3. In this example, handwritten lexer code is used since lexer generator was not implemented in this moment.
     4. run units test by executing ut_calc.py
 
-4. Lexer generator based on RegEx is under development.
+4. Lexer generator based on RegEx is under development [src/lex](src/lex) (*DONE*).
+
+5. C-- interpreter (code generation & runtime environment) [examples/c_minus](examples/c_minus) (*DONE*).
 
 ## 3. Usages
 #### 3.1 Grammar File Format

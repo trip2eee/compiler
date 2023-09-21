@@ -100,8 +100,9 @@ class Parser:
                         shift = tbl_shift[state][node.type]
                         reduce = tbl_reduce[state][node.type]
                 
-                print('Syntax Error [Line:{}, Col:{}] '.format(first_node.idx_line, first_node.idx_col), end='')
-                print(error_code)
+                if first_node is not None:
+                    print('Syntax Error [Line:{}, Col:{}] '.format(first_node.idx_line, first_node.idx_col), end='')
+                    print(error_code)
 
                 if len(stack) == 0:
                     break
